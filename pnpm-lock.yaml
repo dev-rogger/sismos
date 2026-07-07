@@ -112,6 +112,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@sismos/shared':
+        specifier: workspace:*
+        version: link:../shared
       mongoose:
         specifier: ^9.7.4
         version: 9.7.4

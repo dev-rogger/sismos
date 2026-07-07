@@ -10,6 +10,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@sismos/shared": "workspace:*",
     "mongoose": "^9.7.4"
   },
   "devDependencies": {

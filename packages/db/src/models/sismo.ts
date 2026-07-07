@@ -1,12 +1,32 @@
-import { Schema, model, models, type InferSchemaType } from "mongoose";
+import {
+  Schema,
+  model,
+  models,
+  type InferSchemaType,
+  type Model,
+} from "mongoose";
 
-// TODO: definir el schema real (fuente, externalId, fecha, magnitud,
-// profundidad, coordenadas, lugar, etc.) alineado con SismoNormalizado
-// de @sismos/shared. Usado para el top 10 de los últimos 10 años y los
-// últimos 10 días.
-const sismoSchema = new Schema({}, { strict: false, timestamps: true });
+const sismoSchema = new Schema(
+  {
+    fuente: { type: String, enum: ["csn", "usgs"], required: true },
+    externalId: { type: String, required: true },
+    fecha: { type: Date, required: true },
+    magnitud: { type: Number, required: true },
+    profundidadKm: { type: Number, required: true },
+    latitud: { type: Number, required: true },
+    longitud: { type: Number, required: true },
+    lugar: { type: String, required: true },
+    refCruzada: {
+      fuente: { type: String, enum: ["csn", "usgs"] },
+      externalId: String,
+    },
+  },
+  { timestamps: true },
+);
+
+sismoSchema.index({ fuente: 1, externalId: 1 }, { unique: true });
 
 export type Sismo = InferSchemaType<typeof sismoSchema>;
 
-export const SismoModel =
-  models.Sismo ?? model("Sismo", sismoSchema, "sismos");
+export const SismoModel: Model<Sismo> =
+  (models.Sismo as Model<Sismo>) ?? model<Sismo>("Sismo", sismoSchema, "sismos");
