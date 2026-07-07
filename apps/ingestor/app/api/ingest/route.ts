@@ -1,7 +1,18 @@
 import { NextResponse } from "next/server";
+import { getMongooseConnection } from "@sismos/db";
+import { runIngest } from "../../../lib/ingest";
 
-// TODO: reemplazar por la consulta real a CSN + USGS, normalización
-// (vía @sismos/shared) y guardado con dedupe (vía @sismos/db).
 export async function GET() {
-  return NextResponse.json({ status: "not implemented yet" });
+  try {
+    await getMongooseConnection();
+  } catch (error) {
+    console.error("[ingest] Mongo connection failed:", error);
+    return NextResponse.json(
+      { error: "Database connection failed" },
+      { status: 500 },
+    );
+  }
+
+  const summary = await runIngest();
+  return NextResponse.json(summary);
 }
