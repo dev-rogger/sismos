@@ -1,0 +1,30 @@
+{
+  "name": "ingestor",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint --max-warnings 0",
+    "check-types": "next typegen && tsc --noEmit"
+  },
+  "dependencies": {
+    "@sismos/db": "workspace:*",
+    "@sismos/shared": "workspace:*",
+    "next": "16.2.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@sismos/eslint-config": "workspace:*",
+    "@sismos/typescript-config": "workspace:*",
+    "@types/node": "^26.1.0",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vercel/config": "^0.5.5",
+    "eslint": "^9.39.1",
+    "typescript": "5.9.2"
+  }
+}
