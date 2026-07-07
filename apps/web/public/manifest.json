@@ -1,0 +1,10 @@
+{
+  "name": "Sismos",
+  "short_name": "Sismos",
+  "description": "Sismos de Chile y el mundo en tiempo real",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": []
+}
