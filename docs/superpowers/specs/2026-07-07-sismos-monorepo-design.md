@@ -19,7 +19,7 @@ PWA gratuita e informativa que muestra sismos de Chile (fuente CSN vía `sismolo
 | Scaffolding | `create-turbo@latest` (no-interactivo) adaptado a la estructura pedida | Reutiliza la base oficial de Vercel en vez de reconstruirla a mano |
 | Node | 24 LTS (`.nvmrc` + `engines`) | Alineado con Vercel Fluid Compute y Next.js 16 |
 | Lint/format | ESLint + Prettier, compartidos vía `packages/eslint-config` y `packages/typescript-config` | Estándar del ecosistema Next.js, mejor cobertura de reglas específicas de Next/App Router que alternativas más nuevas |
-| PWA (apps/web) | Serwist (`@serwist/next`) | Sucesor mantenido de next-pwa, compatible con App Router/Turbopack |
+| PWA (apps/web) | Serwist (`@serwist/next`) | Sucesor mantenido de next-pwa, compatible con App Router. Nota: `@serwist/next` inyecta un webpack config, así que `apps/web` corre con `next dev --webpack` / `next build --webpack` (Next 16 usa Turbopack por defecto pero no tolera un webpack config sin reconocerlo explícitamente) |
 | Stack apps/ingestor | TypeScript + Next.js mínimo (solo route handlers), NO Python | Debe reutilizar `packages/db` y `packages/shared` (TypeScript). Un ingestor en Python obligaría a duplicar modelos Mongoose y lógica de normalización en Python, rompiendo el propósito de esos packages compartidos |
 | Control de versiones | git init + primer commit del esqueleto | Punto de partida versionado desde el inicio |
 
