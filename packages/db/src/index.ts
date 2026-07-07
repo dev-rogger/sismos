@@ -1,3 +1,3 @@
-export * from "./connection";
-export * from "./models/sismo";
-export * from "./models/sismo-historico";
+export * from "./connection.js";
+export * from "./models/sismo.js";
+export * from "./models/sismo-historico.js";

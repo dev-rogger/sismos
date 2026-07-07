@@ -1,3 +1,3 @@
-export * from "./types";
-export * from "./normalize/csn";
-export * from "./normalize/usgs";
+export * from "./types.js";
+export * from "./normalize/csn.js";
+export * from "./normalize/usgs.js";

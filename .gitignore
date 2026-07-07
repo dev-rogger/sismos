@@ -9,6 +9,10 @@ node_modules/
 .next/
 out/
 
+# Serwist (generated service worker output)
+apps/web/public/sw.js
+apps/web/public/sw.js.map
+
 # Build outputs
 dist/
 build/

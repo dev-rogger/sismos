@@ -1,4 +1,4 @@
-import type { SismoNormalizado } from "../types";
+import type { SismoNormalizado } from "../types.js";
 
 // TODO: definir el tipo de entrada real una vez se confirme la forma
 // de la respuesta de sismologia.cl / api-sismologia-chile.
