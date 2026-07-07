@@ -1,0 +1,22 @@
+{
+  "name": "@sismos/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint --max-warnings 0",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mongoose": "^9.7.4"
+  },
+  "devDependencies": {
+    "@sismos/eslint-config": "workspace:*",
+    "@sismos/typescript-config": "workspace:*",
+    "@types/node": "^26.1.0",
+    "eslint": "^9.39.1",
+    "typescript": "5.9.2"
+  }
+}
