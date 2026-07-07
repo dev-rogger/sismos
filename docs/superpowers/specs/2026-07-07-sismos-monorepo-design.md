@@ -7,6 +7,8 @@
 
 PWA gratuita e informativa que muestra sismos de Chile (fuente CSN vía `sismologia.cl` / API comunitaria `api-sismologia-chile`) y a nivel mundial (feed GeoJSON de USGS), en un mapa con animaciones de alerta según magnitud, historial, e instalable. Prioridad: velocidad y eficiencia. Nada de scraping de redes sociales.
 
+**Responsive:** la UI debe verse bien en PC, celular y iPad (desktop, mobile, tablet). No hay layout real todavía (solo placeholder), pero esto aplica como requisito obligatorio para cuando se implemente el mapa/historial/UI real en `apps/web` — no es un nice-to-have a evaluar después.
+
 ## Decisiones tomadas
 
 | Decisión | Elección | Motivo |
@@ -76,6 +78,7 @@ sismos/
 - Notificaciones push
 - Estrategia de cache/offline del service worker
 - Mecanismo real de disparo del ingestor dado el límite de Vercel Cron en plan gratuito
+- Breakpoints/layout responsive concretos del mapa e historial (sidebar en desktop vs. bottom sheet en mobile, etc.) — Tailwind v4 (ya elegido) trae utilidades mobile-first out of the box, así que no hace falta una decisión de tooling nueva, solo diseño de layout cuando exista UI real
 
 ## Fuera de alcance / no incluido
 
