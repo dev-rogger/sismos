@@ -1,10 +1,27 @@
 import type { SismoNormalizado } from "../types.js";
 
-// TODO: definir el tipo de entrada real una vez se confirme la forma
-// de la respuesta de sismologia.cl / api-sismologia-chile.
-export type CsnSismoRaw = Record<string, unknown>;
+export interface CsnSismoRaw {
+  id: string;
+  url: string;
+  map_url: string;
+  local_date: string;
+  utc_date: string;
+  latitude: number;
+  longitude: number;
+  depth: number;
+  magnitude: { value: number; measure_unit: string };
+  geo_reference: string;
+}
 
-// TODO: implementar la normalización real del formato CSN.
-export function normalizeCsnSismo(_raw: CsnSismoRaw): SismoNormalizado {
-  throw new Error("normalizeCsnSismo: not implemented yet");
+export function normalizeCsnSismo(raw: CsnSismoRaw): SismoNormalizado {
+  return {
+    fuente: "csn",
+    externalId: raw.id,
+    fecha: new Date(`${raw.utc_date.replace(" ", "T")}Z`),
+    magnitud: raw.magnitude.value,
+    profundidadKm: raw.depth,
+    latitud: raw.latitude,
+    longitud: raw.longitude,
+    lugar: raw.geo_reference,
+  };
 }

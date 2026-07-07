@@ -1,9 +1,27 @@
 import type { SismoNormalizado } from "../types.js";
 
-// TODO: reemplazar por el tipo real de un Feature del GeoJSON de USGS.
-export type UsgsFeatureRaw = Record<string, unknown>;
+export interface UsgsFeatureRaw {
+  id: string;
+  properties: {
+    mag: number;
+    place: string;
+    time: number;
+  };
+  geometry: {
+    coordinates: [number, number, number];
+  };
+}
 
-// TODO: implementar la normalización real del formato USGS GeoJSON.
-export function normalizeUsgsFeature(_raw: UsgsFeatureRaw): SismoNormalizado {
-  throw new Error("normalizeUsgsFeature: not implemented yet");
+export function normalizeUsgsFeature(raw: UsgsFeatureRaw): SismoNormalizado {
+  const [longitud, latitud, profundidadKm] = raw.geometry.coordinates;
+  return {
+    fuente: "usgs",
+    externalId: raw.id,
+    fecha: new Date(raw.properties.time),
+    magnitud: raw.properties.mag,
+    profundidadKm,
+    latitud,
+    longitud,
+    lugar: raw.properties.place,
+  };
 }
