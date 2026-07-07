@@ -1,4 +1,4 @@
-import type { SismoNormalizado } from "./types.js";
+import type { SismoNormalizado } from "./types";
 
 const EARTH_RADIUS_KM = 6371;
 const TIME_WINDOW_MS = 2 * 60 * 1000;

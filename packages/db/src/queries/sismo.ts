@@ -1,5 +1,5 @@
 import type { SismoFuente, SismoNormalizado } from "@sismos/shared";
-import { SismoModel, type Sismo } from "../models/sismo.js";
+import { SismoModel, type Sismo } from "../models/sismo";
 
 export async function findRecentByFuente(
   fuente: SismoFuente,

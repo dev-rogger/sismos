@@ -1,4 +1,4 @@
-import type { SismoNormalizado } from "../types.js";
+import type { SismoNormalizado } from "../types";
 
 export interface UsgsFeatureRaw {
   id: string;
