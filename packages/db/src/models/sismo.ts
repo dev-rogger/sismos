@@ -1,7 +1,6 @@
-import {
+import mongoose, {
   Schema,
   model,
-  models,
   type InferSchemaType,
   type Model,
 } from "mongoose";
@@ -29,4 +28,5 @@ sismoSchema.index({ fuente: 1, externalId: 1 }, { unique: true });
 export type Sismo = InferSchemaType<typeof sismoSchema>;
 
 export const SismoModel: Model<Sismo> =
-  (models.Sismo as Model<Sismo>) ?? model<Sismo>("Sismo", sismoSchema, "sismos");
+  (mongoose.models.Sismo as Model<Sismo>) ??
+  model<Sismo>("Sismo", sismoSchema, "sismos");

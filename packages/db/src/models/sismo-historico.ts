@@ -1,7 +1,6 @@
-import {
+import mongoose, {
   Schema,
   model,
-  models,
   type InferSchemaType,
   type Model,
 } from "mongoose";
@@ -22,7 +21,7 @@ const sismoHistoricoSchema = new Schema(
 export type SismoHistorico = InferSchemaType<typeof sismoHistoricoSchema>;
 
 export const SismoHistoricoModel: Model<SismoHistorico> =
-  (models.SismoHistorico as Model<SismoHistorico>) ??
+  (mongoose.models.SismoHistorico as Model<SismoHistorico>) ??
   model<SismoHistorico>(
     "SismoHistorico",
     sismoHistoricoSchema,
