@@ -11,8 +11,10 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@sismos/db": "workspace:*",
     "@sismos/shared": "workspace:*",
     "@serwist/next": "^9.5.11",
+    "maplibre-gl": "^5.24.0",
     "next": "16.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
