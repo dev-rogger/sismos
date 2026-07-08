@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { formatearCoordenadas } from "../../lib/coordenadas";
 import { colorPorMagnitud } from "../../lib/magnitud";
 import { regionChilePorLatitud } from "../../lib/region-chile";
 import type { SismoSeleccionado } from "../../lib/tipos-sismo";
@@ -177,6 +178,9 @@ export default function PanelHistorial({
                 {region && (
                   <div className="text-xs text-neutral-500">{region}</div>
                 )}
+                <div className="text-xs text-neutral-500">
+                  {formatearCoordenadas(evento.latitud, evento.longitud)}
+                </div>
                 <div className="text-neutral-400">
                   M{evento.magnitud} —{" "}
                   {new Date(evento.fecha).toLocaleString("es-CL")}
