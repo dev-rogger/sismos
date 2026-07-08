@@ -3,19 +3,15 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { crearElementoMarcador } from "./marcador";
+import { crearElementoMarcador, crearElementoSeleccion } from "./marcador";
+import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
 
-export interface SismoMapa {
-  externalId: string;
-  fecha: string;
-  magnitud: number;
-  latitud: number;
-  longitud: number;
-  lugar: string;
-}
+export type { SismoMapa, SismoSeleccionado };
 
 interface MapaSismosProps {
   sismosIniciales: SismoMapa[];
+  sismoSeleccionado: SismoSeleccionado | null;
+  onSeleccionarDesdeMapa: (sismo: SismoSeleccionado) => void;
 }
 
 const CHILE_CENTER: [number, number] = [-71.5, -35.5];
@@ -28,14 +24,25 @@ function agregarMarcador(
   marcadores: Map<string, maplibregl.Marker>,
   sismo: SismoMapa,
   opciones: { pulsando: boolean },
+  onSeleccionarDesdeMapa: (sismo: SismoSeleccionado) => void,
 ) {
   if (marcadores.has(sismo.externalId)) return;
 
   const el = crearElementoMarcador(sismo.magnitud, opciones);
+  el.addEventListener("click", () => {
+    onSeleccionarDesdeMapa({
+      externalId: sismo.externalId,
+      latitud: sismo.latitud,
+      longitud: sismo.longitud,
+      magnitud: sismo.magnitud,
+      lugar: sismo.lugar,
+    });
+  });
+
   const marker = new maplibregl.Marker({ element: el })
     .setLngLat([sismo.longitud, sismo.latitud])
     .setPopup(
-      new maplibregl.Popup({ offset: 12 }).setHTML(
+      new maplibregl.Popup({ offset: 12, className: "popup-sismo" }).setHTML(
         `<strong>${sismo.lugar}</strong><br/>M${sismo.magnitud} — ${new Date(
           sismo.fecha,
         ).toLocaleString("es-CL")}`,
@@ -46,7 +53,11 @@ function agregarMarcador(
   marcadores.set(sismo.externalId, marker);
 }
 
-export default function MapaSismos({ sismosIniciales }: MapaSismosProps) {
+export default function MapaSismos({
+  sismosIniciales,
+  sismoSeleccionado,
+  onSeleccionarDesdeMapa,
+}: MapaSismosProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const marcadoresRef = useRef<Map<string, maplibregl.Marker>>(new Map());
@@ -56,6 +67,8 @@ export default function MapaSismos({ sismosIniciales }: MapaSismosProps) {
       sismosIniciales[0]?.fecha ?? new Date(0).toISOString(),
     ),
   );
+  const onSeleccionarDesdeMapaRef = useRef(onSeleccionarDesdeMapa);
+  onSeleccionarDesdeMapaRef.current = onSeleccionarDesdeMapa;
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -69,7 +82,9 @@ export default function MapaSismos({ sismosIniciales }: MapaSismosProps) {
     mapRef.current = map;
 
     for (const sismo of sismosIniciales) {
-      agregarMarcador(map, marcadoresRef.current, sismo, { pulsando: false });
+      agregarMarcador(map, marcadoresRef.current, sismo, { pulsando: false }, (s) =>
+        onSeleccionarDesdeMapaRef.current(s),
+      );
     }
 
     const intervalId = setInterval(() => {
@@ -81,9 +96,13 @@ export default function MapaSismos({ sismosIniciales }: MapaSismosProps) {
         })
         .then((data: { sismos: SismoMapa[] }) => {
           for (const sismo of data.sismos) {
-            agregarMarcador(map, marcadoresRef.current, sismo, {
-              pulsando: true,
-            });
+            agregarMarcador(
+              map,
+              marcadoresRef.current,
+              sismo,
+              { pulsando: true },
+              (s) => onSeleccionarDesdeMapaRef.current(s),
+            );
             if (sismo.fecha > ultimaFechaRef.current) {
               ultimaFechaRef.current = sismo.fecha;
             }
@@ -100,6 +119,26 @@ export default function MapaSismos({ sismosIniciales }: MapaSismosProps) {
       mapRef.current = null;
     };
   }, [sismosIniciales]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !sismoSeleccionado) return;
+
+    map.flyTo({
+      center: [sismoSeleccionado.longitud, sismoSeleccionado.latitud],
+      zoom: Math.max(map.getZoom(), 6),
+      speed: 1.2,
+    });
+
+    const el = crearElementoSeleccion();
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([sismoSeleccionado.longitud, sismoSeleccionado.latitud])
+      .addTo(map);
+
+    return () => {
+      marker.remove();
+    };
+  }, [sismoSeleccionado]);
 
   return <div ref={mapContainerRef} className="h-full w-full" />;
 }
