@@ -11,7 +11,7 @@ export type { SismoMapa, SismoSeleccionado };
 interface MapaSismosProps {
   sismosIniciales: SismoMapa[];
   sismoSeleccionado: SismoSeleccionado | null;
-  onSeleccionarDesdeMapa: (sismo: SismoSeleccionado) => void;
+  onSeleccionarDesdeMapa: (sismo: SismoSeleccionado | null) => void;
 }
 
 const CHILE_CENTER: [number, number] = [-71.5, -35.5];
@@ -24,12 +24,17 @@ function agregarMarcador(
   marcadores: Map<string, maplibregl.Marker>,
   sismo: SismoMapa,
   opciones: { pulsando: boolean },
-  onSeleccionarDesdeMapa: (sismo: SismoSeleccionado) => void,
+  sismoSeleccionadoRef: { current: SismoSeleccionado | null },
+  onSeleccionarDesdeMapa: (sismo: SismoSeleccionado | null) => void,
 ) {
   if (marcadores.has(sismo.externalId)) return;
 
   const el = crearElementoMarcador(sismo.magnitud, opciones);
   el.addEventListener("click", () => {
+    if (sismoSeleccionadoRef.current?.externalId === sismo.externalId) {
+      onSeleccionarDesdeMapa(null);
+      return;
+    }
     onSeleccionarDesdeMapa({
       externalId: sismo.externalId,
       latitud: sismo.latitud,
@@ -69,6 +74,8 @@ export default function MapaSismos({
   );
   const onSeleccionarDesdeMapaRef = useRef(onSeleccionarDesdeMapa);
   onSeleccionarDesdeMapaRef.current = onSeleccionarDesdeMapa;
+  const sismoSeleccionadoRef = useRef(sismoSeleccionado);
+  sismoSeleccionadoRef.current = sismoSeleccionado;
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -82,8 +89,13 @@ export default function MapaSismos({
     mapRef.current = map;
 
     for (const sismo of sismosIniciales) {
-      agregarMarcador(map, marcadoresRef.current, sismo, { pulsando: false }, (s) =>
-        onSeleccionarDesdeMapaRef.current(s),
+      agregarMarcador(
+        map,
+        marcadoresRef.current,
+        sismo,
+        { pulsando: false },
+        sismoSeleccionadoRef,
+        (s) => onSeleccionarDesdeMapaRef.current(s),
       );
     }
 
@@ -101,6 +113,7 @@ export default function MapaSismos({
               marcadoresRef.current,
               sismo,
               { pulsando: true },
+              sismoSeleccionadoRef,
               (s) => onSeleccionarDesdeMapaRef.current(s),
             );
             if (sismo.fecha > ultimaFechaRef.current) {

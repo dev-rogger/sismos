@@ -20,7 +20,7 @@ interface ItemHistorial {
 
 interface PanelHistorialProps {
   sismoSeleccionado: SismoSeleccionado | null;
-  onSeleccionar: (sismo: SismoSeleccionado) => void;
+  onSeleccionar: (sismo: SismoSeleccionado | null) => void;
 }
 
 const OPCIONES: { valor: TipoHistorial; etiqueta: string }[] = [
@@ -157,13 +157,17 @@ export default function PanelHistorial({
               <button
                 type="button"
                 onClick={() =>
-                  onSeleccionar({
-                    externalId: evento.externalId,
-                    latitud: evento.latitud,
-                    longitud: evento.longitud,
-                    magnitud: evento.magnitud,
-                    lugar: evento.lugar,
-                  })
+                  onSeleccionar(
+                    seleccionado
+                      ? null
+                      : {
+                          externalId: evento.externalId,
+                          latitud: evento.latitud,
+                          longitud: evento.longitud,
+                          magnitud: evento.magnitud,
+                          lugar: evento.lugar,
+                        },
+                  )
                 }
                 style={{ borderLeftColor: colorPorMagnitud(evento.magnitud) }}
                 className={`w-full rounded-lg border border-l-4 px-3 py-2 text-left text-sm transition-colors ${
