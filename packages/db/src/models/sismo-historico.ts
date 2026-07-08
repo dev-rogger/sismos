@@ -14,6 +14,7 @@ const sismoHistoricoSchema = new Schema(
     latitud: { type: Number, required: true },
     longitud: { type: Number, required: true },
     lugar: { type: String, required: true },
+    bandera: { type: String, default: null },
   },
   { timestamps: true },
 );

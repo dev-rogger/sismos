@@ -11,6 +11,7 @@ export interface SismoHistoricoInput {
   latitud: number;
   longitud: number;
   lugar: string;
+  bandera?: string | null;
 }
 
 export async function upsertSismoHistorico(
