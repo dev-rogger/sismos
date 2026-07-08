@@ -1,7 +1,31 @@
-export default function Home() {
+import { getUltimos10Dias } from "../lib/fetch-sismos";
+import MapaSismos, { type SismoMapa } from "../components/mapa/MapaSismos";
+import PanelHistorial from "../components/historial/PanelHistorial";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  let sismosIniciales: SismoMapa[] = [];
+  try {
+    const sismos = await getUltimos10Dias();
+    sismosIniciales = sismos.map((s) => ({
+      externalId: s.externalId,
+      fecha: s.fecha.toISOString(),
+      magnitud: s.magnitud,
+      latitud: s.latitud,
+      longitud: s.longitud,
+      lugar: s.lugar,
+    }));
+  } catch (error) {
+    console.error("[page] failed to load initial sismos:", error);
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-2xl font-semibold">Sismos — próximamente</h1>
+    <main className="flex h-screen w-screen flex-col lg:flex-row">
+      <div className="relative flex-1">
+        <MapaSismos sismosIniciales={sismosIniciales} />
+      </div>
+      <PanelHistorial />
     </main>
   );
 }
