@@ -66,6 +66,7 @@ async function fetchTopHistoricos(
       latitud: override.latitud ?? normalizado.latitud,
       longitud: override.longitud ?? normalizado.longitud,
       lugar: override.lugar ?? normalizado.lugar,
+      bandera: "🇨🇱",
     };
   });
 }
