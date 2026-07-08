@@ -13,6 +13,7 @@ interface ItemHistorial {
   lugar: string;
   latitud: number;
   longitud: number;
+  bandera: string | null;
 }
 
 interface PanelHistorialProps {
@@ -126,7 +127,7 @@ export default function PanelHistorial({
                 }`}
               >
                 <div className="font-semibold text-neutral-100">
-                  {evento.lugar}
+                  {evento.bandera ?? "🌎"} {evento.lugar}
                 </div>
                 <div className="text-neutral-400">
                   M{evento.magnitud} —{" "}
