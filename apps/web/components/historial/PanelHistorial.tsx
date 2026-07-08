@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { colorPorMagnitud } from "../../lib/magnitud";
+import { regionChilePorLatitud } from "../../lib/region-chile";
 import type { SismoSeleccionado } from "../../lib/tipos-sismo";
 
 type TipoHistorial = "historico" | "top10anios" | "ultimos10dias";
@@ -34,6 +35,7 @@ export default function PanelHistorial({
   const [tipo, setTipo] = useState<TipoHistorial>("ultimos10dias");
   const [eventos, setEventos] = useState<ItemHistorial[]>([]);
   const [expandido, setExpandido] = useState(false);
+  const [soloChile, setSoloChile] = useState(false);
   const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
   useEffect(() => {
@@ -60,6 +62,10 @@ export default function PanelHistorial({
     el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [sismoSeleccionado, eventos]);
 
+  const eventosFiltrados = soloChile
+    ? eventos.filter((evento) => evento.bandera === "🇨🇱")
+    : eventos;
+
   return (
     <div
       className={`fixed inset-x-0 bottom-0 z-10 flex max-h-[80vh] flex-col rounded-t-2xl bg-neutral-900 shadow-lg transition-transform duration-300 lg:static lg:h-full lg:max-h-none lg:w-[360px] lg:translate-y-0 lg:rounded-none lg:border-l lg:border-neutral-800 lg:shadow-none lg:transition-none ${
@@ -79,28 +85,46 @@ export default function PanelHistorial({
         <h2 className="mb-2 text-base font-semibold text-neutral-100">
           Historial de sismos
         </h2>
-        <div className="relative">
-          <select
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value as TipoHistorial)}
-            className="w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <select
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value as TipoHistorial)}
+              className="w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
+            >
+              {OPCIONES.map((opcion) => (
+                <option key={opcion.valor} value={opcion.valor}>
+                  {opcion.etiqueta}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400">
+              ▾
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSoloChile((v) => !v)}
+            aria-pressed={soloChile}
+            className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
+              soloChile
+                ? "border-sky-500 bg-sky-500/10 text-sky-400"
+                : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
+            }`}
           >
-            {OPCIONES.map((opcion) => (
-              <option key={opcion.valor} value={opcion.valor}>
-                {opcion.etiqueta}
-              </option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400">
-            ▾
-          </span>
+            🇨🇱 Solo Chile
+          </button>
         </div>
       </div>
 
       <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
-        {eventos.map((evento) => {
+        {eventosFiltrados.map((evento) => {
           const seleccionado =
             evento.externalId === sismoSeleccionado?.externalId;
+          const region =
+            evento.bandera === "🇨🇱"
+              ? regionChilePorLatitud(evento.latitud)
+              : null;
           return (
             <li
               key={evento.externalId}
@@ -129,6 +153,9 @@ export default function PanelHistorial({
                 <div className="font-semibold text-neutral-100">
                   {evento.bandera ?? "🌎"} {evento.lugar}
                 </div>
+                {region && (
+                  <div className="text-xs text-neutral-500">{region}</div>
+                )}
                 <div className="text-neutral-400">
                   M{evento.magnitud} —{" "}
                   {new Date(evento.fecha).toLocaleString("es-CL")}
