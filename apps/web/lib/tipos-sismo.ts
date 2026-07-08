@@ -5,6 +5,7 @@ export interface SismoMapa {
   latitud: number;
   longitud: number;
   lugar: string;
+  bandera: string | null;
 }
 
 export interface SismoSeleccionado {

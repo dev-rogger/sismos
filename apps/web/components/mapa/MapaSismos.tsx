@@ -12,6 +12,8 @@ interface MapaSismosProps {
   sismosIniciales: SismoMapa[];
   sismoSeleccionado: SismoSeleccionado | null;
   onSeleccionarDesdeMapa: (sismo: SismoSeleccionado | null) => void;
+  soloChile: boolean;
+  magnitudMinima: number;
 }
 
 const CHILE_CENTER: [number, number] = [-71.5, -35.5];
@@ -19,53 +21,28 @@ const CHILE_ZOOM = 4;
 const POLL_INTERVAL_MS = 30 * 1000;
 const ESTILO_URL = "https://tiles.openfreemap.org/styles/liberty";
 
-function agregarMarcador(
-  map: maplibregl.Map,
-  marcadores: Map<string, maplibregl.Marker>,
+function pasaFiltro(
   sismo: SismoMapa,
-  opciones: { pulsando: boolean },
-  sismoSeleccionadoRef: { current: SismoSeleccionado | null },
-  onSeleccionarDesdeMapa: (sismo: SismoSeleccionado | null) => void,
-) {
-  if (marcadores.has(sismo.externalId)) return;
-
-  const el = crearElementoMarcador(sismo.magnitud, opciones);
-  el.addEventListener("click", () => {
-    if (sismoSeleccionadoRef.current?.externalId === sismo.externalId) {
-      onSeleccionarDesdeMapa(null);
-      return;
-    }
-    onSeleccionarDesdeMapa({
-      externalId: sismo.externalId,
-      latitud: sismo.latitud,
-      longitud: sismo.longitud,
-      magnitud: sismo.magnitud,
-      lugar: sismo.lugar,
-    });
-  });
-
-  const marker = new maplibregl.Marker({ element: el })
-    .setLngLat([sismo.longitud, sismo.latitud])
-    .setPopup(
-      new maplibregl.Popup({ offset: 12, className: "popup-sismo" }).setHTML(
-        `<strong>${sismo.lugar}</strong><br/>M${sismo.magnitud} — ${new Date(
-          sismo.fecha,
-        ).toLocaleString("es-CL")}`,
-      ),
-    )
-    .addTo(map);
-
-  marcadores.set(sismo.externalId, marker);
+  soloChile: boolean,
+  magnitudMinima: number,
+): boolean {
+  if (soloChile && sismo.bandera !== "🇨🇱") return false;
+  if (sismo.magnitud < magnitudMinima) return false;
+  return true;
 }
 
 export default function MapaSismos({
   sismosIniciales,
   sismoSeleccionado,
   onSeleccionarDesdeMapa,
+  soloChile,
+  magnitudMinima,
 }: MapaSismosProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const todosSismosRef = useRef<Map<string, SismoMapa>>(new Map());
   const marcadoresRef = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const nuevosRef = useRef<Set<string>>(new Set());
   const ultimaFechaRef = useRef<string>(
     sismosIniciales.reduce(
       (max, s) => (s.fecha > max ? s.fecha : max),
@@ -76,6 +53,66 @@ export default function MapaSismos({
   onSeleccionarDesdeMapaRef.current = onSeleccionarDesdeMapa;
   const sismoSeleccionadoRef = useRef(sismoSeleccionado);
   sismoSeleccionadoRef.current = sismoSeleccionado;
+  const soloChileRef = useRef(soloChile);
+  soloChileRef.current = soloChile;
+  const magnitudMinimaRef = useRef(magnitudMinima);
+  magnitudMinimaRef.current = magnitudMinima;
+
+  function crearMarcador(
+    map: maplibregl.Map,
+    sismo: SismoMapa,
+    pulsando: boolean,
+  ): maplibregl.Marker {
+    const el = crearElementoMarcador(sismo.magnitud, { pulsando });
+    el.addEventListener("click", () => {
+      if (sismoSeleccionadoRef.current?.externalId === sismo.externalId) {
+        onSeleccionarDesdeMapaRef.current(null);
+        return;
+      }
+      onSeleccionarDesdeMapaRef.current({
+        externalId: sismo.externalId,
+        latitud: sismo.latitud,
+        longitud: sismo.longitud,
+        magnitud: sismo.magnitud,
+        lugar: sismo.lugar,
+      });
+    });
+
+    return new maplibregl.Marker({ element: el })
+      .setLngLat([sismo.longitud, sismo.latitud])
+      .setPopup(
+        new maplibregl.Popup({ offset: 12, className: "popup-sismo" }).setHTML(
+          `<strong>${sismo.lugar}</strong><br/>M${sismo.magnitud} — ${new Date(
+            sismo.fecha,
+          ).toLocaleString("es-CL")}`,
+        ),
+      )
+      .addTo(map);
+  }
+
+  function sincronizarMarcadores(map: maplibregl.Map) {
+    const soloChileActual = soloChileRef.current;
+    const magnitudMinimaActual = magnitudMinimaRef.current;
+
+    for (const sismo of todosSismosRef.current.values()) {
+      const debeMostrarse = pasaFiltro(
+        sismo,
+        soloChileActual,
+        magnitudMinimaActual,
+      );
+      const yaExiste = marcadoresRef.current.has(sismo.externalId);
+
+      if (debeMostrarse && !yaExiste) {
+        const pulsando = nuevosRef.current.has(sismo.externalId);
+        const marker = crearMarcador(map, sismo, pulsando);
+        marcadoresRef.current.set(sismo.externalId, marker);
+        nuevosRef.current.delete(sismo.externalId);
+      } else if (!debeMostrarse && yaExiste) {
+        marcadoresRef.current.get(sismo.externalId)?.remove();
+        marcadoresRef.current.delete(sismo.externalId);
+      }
+    }
+  }
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -89,15 +126,9 @@ export default function MapaSismos({
     mapRef.current = map;
 
     for (const sismo of sismosIniciales) {
-      agregarMarcador(
-        map,
-        marcadoresRef.current,
-        sismo,
-        { pulsando: false },
-        sismoSeleccionadoRef,
-        (s) => onSeleccionarDesdeMapaRef.current(s),
-      );
+      todosSismosRef.current.set(sismo.externalId, sismo);
     }
+    sincronizarMarcadores(map);
 
     const intervalId = setInterval(() => {
       const desde = ultimaFechaRef.current;
@@ -108,18 +139,13 @@ export default function MapaSismos({
         })
         .then((data: { sismos: SismoMapa[] }) => {
           for (const sismo of data.sismos) {
-            agregarMarcador(
-              map,
-              marcadoresRef.current,
-              sismo,
-              { pulsando: true },
-              sismoSeleccionadoRef,
-              (s) => onSeleccionarDesdeMapaRef.current(s),
-            );
+            todosSismosRef.current.set(sismo.externalId, sismo);
+            nuevosRef.current.add(sismo.externalId);
             if (sismo.fecha > ultimaFechaRef.current) {
               ultimaFechaRef.current = sismo.fecha;
             }
           }
+          sincronizarMarcadores(map);
         })
         .catch((error) => {
           console.error("[MapaSismos] poll error:", error);
@@ -131,7 +157,15 @@ export default function MapaSismos({
       map.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sismosIniciales]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    sincronizarMarcadores(map);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [soloChile, magnitudMinima]);
 
   useEffect(() => {
     const map = mapRef.current;

@@ -15,6 +15,7 @@ export default async function Home() {
       latitud: s.latitud,
       longitud: s.longitud,
       lugar: s.lugar,
+      bandera: s.bandera ?? null,
     }));
   } catch (error) {
     console.error("[page] failed to load initial sismos:", error);

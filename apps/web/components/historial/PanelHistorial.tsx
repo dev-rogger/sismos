@@ -21,6 +21,10 @@ interface ItemHistorial {
 interface PanelHistorialProps {
   sismoSeleccionado: SismoSeleccionado | null;
   onSeleccionar: (sismo: SismoSeleccionado | null) => void;
+  soloChile: boolean;
+  onSoloChileChange: (soloChile: boolean) => void;
+  magnitudMinima: number;
+  onMagnitudMinimaChange: (magnitudMinima: number) => void;
 }
 
 const OPCIONES: { valor: TipoHistorial; etiqueta: string }[] = [
@@ -32,12 +36,14 @@ const OPCIONES: { valor: TipoHistorial; etiqueta: string }[] = [
 export default function PanelHistorial({
   sismoSeleccionado,
   onSeleccionar,
+  soloChile,
+  onSoloChileChange,
+  magnitudMinima,
+  onMagnitudMinimaChange,
 }: PanelHistorialProps) {
   const [tipo, setTipo] = useState<TipoHistorial>("ultimos10dias");
   const [eventos, setEventos] = useState<ItemHistorial[]>([]);
   const [expandido, setExpandido] = useState(false);
-  const [soloChile, setSoloChile] = useState(false);
-  const [magnitudMinima, setMagnitudMinima] = useState(5);
   const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
   useEffect(() => {
@@ -108,7 +114,7 @@ export default function PanelHistorial({
           </div>
           <button
             type="button"
-            onClick={() => setSoloChile((v) => !v)}
+            onClick={() => onSoloChileChange(!soloChile)}
             aria-pressed={soloChile}
             className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
               soloChile
@@ -133,7 +139,7 @@ export default function PanelHistorial({
             max={7}
             step={1}
             value={magnitudMinima}
-            onChange={(e) => setMagnitudMinima(Number(e.target.value))}
+            onChange={(e) => onMagnitudMinimaChange(Number(e.target.value))}
             className="flex-1 accent-sky-500"
           />
         </div>

@@ -14,6 +14,8 @@ export default function MapaConHistorial({
 }: MapaConHistorialProps) {
   const [sismoSeleccionado, setSismoSeleccionado] =
     useState<SismoSeleccionado | null>(null);
+  const [soloChile, setSoloChile] = useState(false);
+  const [magnitudMinima, setMagnitudMinima] = useState(5);
 
   return (
     <>
@@ -22,11 +24,17 @@ export default function MapaConHistorial({
           sismosIniciales={sismosIniciales}
           sismoSeleccionado={sismoSeleccionado}
           onSeleccionarDesdeMapa={setSismoSeleccionado}
+          soloChile={soloChile}
+          magnitudMinima={magnitudMinima}
         />
       </div>
       <PanelHistorial
         sismoSeleccionado={sismoSeleccionado}
         onSeleccionar={setSismoSeleccionado}
+        soloChile={soloChile}
+        onSoloChileChange={setSoloChile}
+        magnitudMinima={magnitudMinima}
+        onMagnitudMinimaChange={setMagnitudMinima}
       />
     </>
   );
