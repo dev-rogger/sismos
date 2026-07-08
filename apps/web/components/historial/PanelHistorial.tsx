@@ -36,6 +36,7 @@ export default function PanelHistorial({
   const [eventos, setEventos] = useState<ItemHistorial[]>([]);
   const [expandido, setExpandido] = useState(false);
   const [soloChile, setSoloChile] = useState(false);
+  const [magnitudMinima, setMagnitudMinima] = useState(5);
   const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
   useEffect(() => {
@@ -62,9 +63,11 @@ export default function PanelHistorial({
     el?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [sismoSeleccionado, eventos]);
 
-  const eventosFiltrados = soloChile
-    ? eventos.filter((evento) => evento.bandera === "🇨🇱")
-    : eventos;
+  const eventosFiltrados = eventos.filter((evento) => {
+    if (soloChile && evento.bandera !== "🇨🇱") return false;
+    if (evento.magnitud < magnitudMinima) return false;
+    return true;
+  });
 
   return (
     <div
@@ -114,6 +117,24 @@ export default function PanelHistorial({
           >
             🇨🇱 Solo Chile
           </button>
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <label
+            htmlFor="magnitud-minima"
+            className="shrink-0 text-xs text-neutral-400"
+          >
+            M{magnitudMinima}+
+          </label>
+          <input
+            id="magnitud-minima"
+            type="range"
+            min={2}
+            max={7}
+            step={1}
+            value={magnitudMinima}
+            onChange={(e) => setMagnitudMinima(Number(e.target.value))}
+            className="flex-1 accent-sky-500"
+          />
         </div>
       </div>
 
