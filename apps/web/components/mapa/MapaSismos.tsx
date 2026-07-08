@@ -140,5 +140,22 @@ export default function MapaSismos({
     };
   }, [sismoSeleccionado]);
 
-  return <div ref={mapContainerRef} className="h-full w-full" />;
+  return (
+    <div className="relative h-full w-full">
+      <div ref={mapContainerRef} className="h-full w-full" />
+      <button
+        type="button"
+        onClick={() =>
+          mapRef.current?.flyTo({
+            center: CHILE_CENTER,
+            zoom: CHILE_ZOOM,
+            speed: 1.2,
+          })
+        }
+        className="absolute top-3 right-3 z-10 rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 py-1.5 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
+      >
+        Ver todo Chile
+      </button>
+    </div>
+  );
 }
