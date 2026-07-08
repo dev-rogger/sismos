@@ -28,3 +28,7 @@ export async function upsertSismoHistorico(
   }
   return result;
 }
+
+export async function findTopHistoricos(): Promise<SismoHistorico[]> {
+  return SismoHistoricoModel.find({}).sort({ magnitud: -1 }).lean();
+}

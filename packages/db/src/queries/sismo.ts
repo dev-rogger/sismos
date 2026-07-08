@@ -47,3 +47,25 @@ export async function replaceWithCsn(
     { new: true },
   ).lean();
 }
+
+export async function findUltimos10Dias(): Promise<Sismo[]> {
+  const since = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+  return SismoModel.find({ fecha: { $gte: since } })
+    .sort({ fecha: -1 })
+    .lean();
+}
+
+export async function findSismosSince(since: Date): Promise<Sismo[]> {
+  return SismoModel.find({ fecha: { $gt: since } })
+    .sort({ fecha: 1 })
+    .lean();
+}
+
+export async function findTop10UltimosAnios(anios: number): Promise<Sismo[]> {
+  const since = new Date();
+  since.setFullYear(since.getFullYear() - anios);
+  return SismoModel.find({ fecha: { $gte: since } })
+    .sort({ magnitud: -1 })
+    .limit(10)
+    .lean();
+}
