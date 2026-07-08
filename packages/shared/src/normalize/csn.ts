@@ -23,5 +23,6 @@ export function normalizeCsnSismo(raw: CsnSismoRaw): SismoNormalizado {
     latitud: raw.latitude,
     longitud: raw.longitude,
     lugar: raw.geo_reference,
+    bandera: "🇨🇱",
   };
 }

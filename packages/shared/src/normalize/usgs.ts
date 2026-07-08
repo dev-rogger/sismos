@@ -1,3 +1,4 @@
+import { emojiFlag } from "@rapideditor/country-coder";
 import type { SismoNormalizado } from "../types";
 
 export interface UsgsFeatureRaw {
@@ -23,5 +24,6 @@ export function normalizeUsgsFeature(raw: UsgsFeatureRaw): SismoNormalizado {
     latitud,
     longitud,
     lugar: raw.properties.place,
+    bandera: emojiFlag([longitud, latitud]) ?? null,
   };
 }

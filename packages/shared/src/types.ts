@@ -9,4 +9,5 @@ export interface SismoNormalizado {
   latitud: number;
   longitud: number;
   lugar: string;
+  bandera: string | null;
 }
