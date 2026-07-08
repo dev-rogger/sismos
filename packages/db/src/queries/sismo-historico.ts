@@ -20,7 +20,7 @@ export async function upsertSismoHistorico(
   const result = await SismoHistoricoModel.findOneAndUpdate(
     { externalId: evento.externalId },
     { $set: evento },
-    { upsert: true, new: true },
+    { upsert: true, returnDocument: "after" },
   ).lean();
   if (!result) {
     throw new Error(

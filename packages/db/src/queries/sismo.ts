@@ -12,7 +12,7 @@ export async function upsertSismo(evento: SismoNormalizado): Promise<Sismo> {
   const result = await SismoModel.findOneAndUpdate(
     { fuente: evento.fuente, externalId: evento.externalId },
     { $set: evento },
-    { upsert: true, new: true },
+    { upsert: true, returnDocument: "after" },
   ).lean();
   if (!result) {
     throw new Error("upsertSismo: findOneAndUpdate returned null unexpectedly");
@@ -28,7 +28,7 @@ export async function setRefCruzada(
   return SismoModel.findOneAndUpdate(
     { fuente, externalId },
     { $set: { refCruzada } },
-    { new: true },
+    { returnDocument: "after" },
   ).lean();
 }
 
@@ -44,7 +44,7 @@ export async function replaceWithCsn(
         refCruzada: { fuente: "usgs", externalId: usgsExternalId },
       },
     },
-    { new: true },
+    { returnDocument: "after" },
   ).lean();
 }
 
