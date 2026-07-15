@@ -24,7 +24,9 @@ No hay datos reales en producción (Mongo nunca estuvo configurado ahí), así q
 
 ## Arquitectura y flujo de datos
 
-`packages/db` deja de exportar una función de conexión explícita. Internamente, un módulo crea una sola vez un cliente Drizzle usando el driver HTTP de `@neondatabase/serverless` (`drizzle(neon(process.env.DATABASE_URL))`) — sin pool de conexiones persistente, apropiado para funciones serverless con cold starts frecuentes. Las funciones de query lo usan directamente como singleton de módulo.
+`packages/db` deja de exportar una función de conexión explícita. Internamente, un módulo crea una sola vez un cliente Drizzle usando el driver estándar de Postgres (`drizzle-orm/node-postgres` + `pg`), con un `Pool` de tamaño chico (`max: 1`, apropiado para funciones serverless con cold starts frecuentes). Las funciones de query lo usan directamente como singleton de módulo.
+
+**Nota de corrección (post-aprobación del spec):** la primera versión de este diseño proponía `drizzle-orm/neon-http` + `@neondatabase/serverless`. Ese driver solo funciona contra la infraestructura HTTP propia de Neon, no contra un Postgres genérico — habría roto la decisión de usar Postgres local en Docker Compose para desarrollo. `node-postgres` (`pg`) funciona igual contra ambos: el Postgres local de Docker Compose y Neon en producción (usando el connection string "pooler" de Neon, pensado para este patrón de conexión desde funciones serverless).
 
 Las firmas públicas de todas las funciones de query se mantienen idénticas (mismo nombre, mismos parámetros, misma forma de retorno) para que `apps/ingestor/lib/ingest.ts` no necesite cambios de lógica de negocio. Los call-sites que hoy hacen `await getMongooseConnection()` antes de leer/escribir (`route.ts`, `fetch-sismos.ts`, `backfill-historicos.ts`) eliminan esa línea — ya no existe un paso de conexión separado.
 
@@ -36,8 +38,8 @@ Elegido sobre Prisma (más pesado, requiere paso `prisma generate` en build — 
 
 Dependencias en `packages/db`:
 - Se elimina `mongoose`.
-- Se agregan `drizzle-orm` y `@neondatabase/serverless` (dependencies).
-- Se agrega `drizzle-kit` (devDependency) para generar y correr migraciones.
+- Se agregan `drizzle-orm` y `pg` (dependencies).
+- Se agrega `drizzle-kit` y `@types/pg` (devDependencies) para generar/correr migraciones y tipar el driver.
 
 ## Schema (`packages/db/src/schema.ts`)
 
@@ -97,7 +99,7 @@ Los tipos `Sismo`/`SismoNormalizado` en `@sismos/shared` que usan `refCruzada: {
 
 ## Manejo de errores
 
-- Con el driver HTTP de Neon no hay un paso de "conectar" separado que pueda fallar antes de la query (a diferencia de `getMongooseConnection()`). El `try/catch` en `apps/ingestor/app/api/ingest/route.ts` pasa a envolver la llamada real a `runIngest()`, y el mensaje de error de fallo pasa a describir un fallo de query, no de conexión.
+- Con `node-postgres`, el `Pool` se crea de forma perezosa (singleton a nivel de módulo) pero no valida la conexión hasta la primera query — ya no hay un paso explícito de "conectar" antes de cada request como con `getMongooseConnection()`. El `try/catch` en `apps/ingestor/app/api/ingest/route.ts` pasa a envolver la llamada real a `runIngest()`, y el mensaje de error de fallo pasa a describir un fallo de query, no de conexión.
 - Drizzle no auto-actualiza `updated_at` en cada `UPDATE` (a diferencia de `{ timestamps: true }` de Mongoose) — las funciones de upsert (`upsertSismo`, `upsertSismoHistorico`, `setRefCruzada`, `replaceWithCsn`) setean `updated_at: new Date()` explícitamente en cada `$set`/`SET`.
 - Fallos de red/parseo por fuente (CSN/USGS) en `ingest.ts` no cambian — ese manejo ya es correcto y no depende de la capa de datos.
 
