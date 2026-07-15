@@ -1,10 +1,14 @@
 services:
-  mongo:
-    image: mongo:8
+  postgres:
+    image: postgres:16
     ports:
-      - "27017:27017"
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sismos
     volumes:
-      - mongo-data:/data/db
+      - postgres-data:/var/lib/postgresql/data
 
   web:
     build:
@@ -14,9 +18,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      MONGODB_URI: mongodb://mongo:27017/sismos
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/sismos
     depends_on:
-      - mongo
+      - postgres
     volumes:
       - .:/app
       - /app/node_modules
@@ -35,9 +39,9 @@ services:
     ports:
       - "3001:3001"
     environment:
-      MONGODB_URI: mongodb://mongo:27017/sismos
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/sismos
     depends_on:
-      - mongo
+      - postgres
     volumes:
       - .:/app
       - /app/node_modules
@@ -59,4 +63,4 @@ services:
     entrypoint: ["sh", "-c", "apk add --no-cache curl bash >/dev/null && exec bash /scripts/poll.sh"]
 
 volumes:
-  mongo-data:
+  postgres-data:
