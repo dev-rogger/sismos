@@ -4,10 +4,12 @@ export const config: VercelConfig = {
   crons: [
     {
       path: "/api/ingest",
-      // Vercel Cron: mínimo 1x/minuto, y en plan Hobby (gratis) máximo
-      // 1x/día. La cadencia real de 30-60s pedida en el spec no es
-      // alcanzable así en el plan gratuito — ver spec, "Riesgos conocidos".
-      schedule: "*/1 * * * *",
+      // Plan Hobby permite máximo 1x/día de cron nativo de Vercel. La
+      // cadencia real (cada 1 min) la da un cron externo (cron-job.org)
+      // que pega a /api/ingest con el header x-cron-secret — ver
+      // docs/superpowers/specs/2026-07-07-sismos-monorepo-design.md.
+      // Este cron diario queda solo como red de seguridad.
+      schedule: "0 0 * * *",
     },
   ],
 };
