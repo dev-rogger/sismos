@@ -78,6 +78,7 @@ export default function PanelHistorial({
 
   return (
     <div
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       className={`fixed inset-x-0 bottom-0 z-10 flex max-h-[80vh] flex-col rounded-t-2xl bg-neutral-900 shadow-lg transition-transform duration-300 lg:static lg:h-full lg:max-h-none lg:w-[360px] lg:translate-y-0 lg:rounded-none lg:border-l lg:border-neutral-800 lg:shadow-none lg:transition-none ${
         expandido ? "translate-y-0" : "translate-y-[calc(100%-3.5rem)]"
       }`}
@@ -116,7 +117,7 @@ export default function PanelHistorial({
             type="button"
             onClick={() => onSoloChileChange(!soloChile)}
             aria-pressed={soloChile}
-            className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors ${
+            className={`flex min-h-11 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-medium whitespace-nowrap transition-colors ${
               soloChile
                 ? "border-sky-500 bg-sky-500/10 text-sky-400"
                 : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
