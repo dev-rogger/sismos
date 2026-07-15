@@ -9,6 +9,7 @@ Decisiones de scope (de la conversación de brainstorming):
 - Umbral: **configurable por suscripción**, rango 4–7, default M4 — el piso global es M4 (no se puede bajar de ahí).
 - Ubicación del botón: junto a "Ver todo Chile" en `MapaSismos.tsx`.
 - VAPID keys: generadas ahora, guardadas en `.env.local` (gitignored) de ambas apps, más un archivo `vercel-env-push.txt` en la raíz (gitignored) listo para copiar a Vercel.
+- Al tocar la notificación, la app debe abrir/enfocar la página y mostrar en vivo dónde y qué sismo la disparó, priorizando velocidad de carga (agregado durante la implementación, ver sección "Deep link al tocar la notificación").
 
 ## Modelo de datos
 
@@ -57,7 +58,12 @@ export async function enviarPushParaSismo(evento: SismoNormalizado): Promise<voi
   // 4. si un resultado falla con statusCode 410, deletePushSubscription(endpoint) de esa suscripción
 }
 ```
-Se llama de forma fire-and-forget (no debe bloquear ni fallar el ingest si el envío de push falla) — errores se loguean con `console.error`, igual que el resto de `ingest.ts`.
+Se llama con `await` dentro de un `try/catch` (no fire-and-forget real: en Vercel serverless el proceso puede cortarse apenas se responde el request, así que hay que esperar el envío antes de que `runIngest` termine) — un fallo de push nunca hace fallar el ingest, solo se loguea con `console.error`, igual que el resto de `ingest.ts`.
+
+El `url` del payload incluye los datos del sismo como query params, para que el deep-link (ver sección más abajo) no dependa de una consulta adicional a la API al abrir la app:
+```
+url: `/?sismo=${evento.externalId}&lat=${evento.latitud}&lon=${evento.longitud}&mag=${evento.magnitud}&lugar=${encodeURIComponent(evento.lugar)}`
+```
 
 `apps/ingestor` agrega dependencias: `web-push` (runtime), `@types/web-push` (dev).
 
@@ -80,11 +86,24 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow(event.notification.data.url));
+  const url = event.notification.data.url;
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if ("focus" in client) {
+            client.navigate(url);
+            return client.focus();
+          }
+        }
+        return clients.openWindow(url);
+      }),
+  );
 });
 ```
 
-Reutiliza los íconos PWA ya generados (`icon-192.png`) — sin assets nuevos.
+Si ya hay una ventana/tab abierta (PWA en foreground), navega esa en vez de abrir una nueva — evita el arranque en frío completo, más rápido. Reutiliza los íconos PWA ya generados (`icon-192.png`) — sin assets nuevos.
 
 ## Frontend — hook de suscripción
 
@@ -116,6 +135,18 @@ Reutiliza los íconos PWA ya generados (`icon-192.png`) — sin assets nuevos.
 - Si `permission === "denied"`: mensaje indicando que debe habilitar notificaciones desde la configuración del navegador/sistema (no se puede volver a pedir el permiso desde JS).
 - Si `permission === "unsupported"`: mensaje indicando que el navegador/dispositivo no soporta push (ej. Safari de escritorio en macOS viejo, o iOS sin la PWA instalada en pantalla de inicio).
 
+## Deep link al tocar la notificación
+
+Al tocar la notificación, la app debe abrir mostrando en vivo dónde y qué sismo la disparó, priorizando velocidad — sin esperar ningún fetch adicional, ya que los datos (`externalId`, `lat`, `lon`, `mag`, `lugar`) ya viajan en la URL del payload de push (ver sección de disparo, más arriba).
+
+Se reutiliza casi por completo el mecanismo de selección de sismo que ya existe (`sismoSeleccionado` en `MapaConHistorial.tsx`, que dispara `flyTo` + marcador de selección en `MapaSismos.tsx`) — no se agrega infraestructura nueva de selección, solo una forma adicional de poblar el estado inicial:
+
+1. **`apps/web/app/page.tsx`** (Server Component) — recibe `searchParams`, parsea `sismo`/`lat`/`lon`/`mag`/`lugar` y arma un `SismoSeleccionado` inicial (o `null` si faltan/son inválidos). Esto pasa antes del primer render, sin esperar ningún fetch de historial.
+2. **`apps/web/components/MapaConHistorial.tsx`** — recibe un nuevo prop `sismoInicial: SismoSeleccionado | null`, usado como valor inicial de `useState(sismoInicial)` en vez de `useState(null)`.
+3. **`apps/web/components/mapa/MapaSismos.tsx`** — sin cambios en la lógica de `flyTo` (ya reacciona a `sismoSeleccionado` en un `useEffect`, y como ambos `useEffect` corren en el mismo commit inicial, el mapa ya existe cuando este se dispara). Se le agrega un `.setPopup(...)` + `.togglePopup()` al marcador de selección (`crearElementoSeleccion`) para mostrar lugar y magnitud inmediatamente, sin que el usuario tenga que tocar nada — hoy ese marcador no mostraba popup (solo los marcadores normales lo tienen). Esto aplica a toda selección (deep-link, click en mapa, click en historial), no solo al caso de push.
+
+No se agrega ningún fetch, loading state, ni componente nuevo para esto — es composición de piezas que ya existen.
+
 ## VAPID keys
 
 Generadas con `npx web-push generate-vapid-keys`. Se guardan en:
@@ -135,3 +166,5 @@ Validación manual (no hay tests automatizados de UI/push en el proyecto):
 - Un sismo CSN por debajo del umbral de la suscripción no dispara notificación
 - Un sismo USGS (no-Chile) nunca dispara notificación, sin importar magnitud
 - Simular un 410 de `web-push` (endpoint inválido) confirma que la suscripción se borra de MongoDB
+- Abrir manualmente `http://localhost:3000/?sismo=test123&lat=-33.45&lon=-70.6&mag=5.2&lugar=Santiago` hace que el mapa vuele directo a esas coordenadas y muestre el popup con lugar+magnitud, sin esperar el fetch del historial
+- Tocar la notificación con la PWA ya abierta en una pestaña reutiliza esa pestaña (navega) en vez de abrir una nueva
