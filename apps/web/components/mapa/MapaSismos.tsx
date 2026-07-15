@@ -199,7 +199,8 @@ export default function MapaSismos({
             speed: 1.2,
           })
         }
-        className="absolute top-3 right-3 z-10 rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 py-1.5 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
+        style={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
+        className="absolute right-3 z-10 flex min-h-11 items-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
       >
         Ver todo Chile
       </button>
