@@ -6,5 +6,57 @@ services:
     volumes:
       - mongo-data:/data/db
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: pnpm --filter web dev
+    ports:
+      - "3000:3000"
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/sismos
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/ingestor/node_modules
+      - /app/packages/db/node_modules
+      - /app/packages/shared/node_modules
+      - /app/packages/eslint-config/node_modules
+      - /app/packages/typescript-config/node_modules
+
+  ingestor:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: pnpm --filter ingestor dev
+    ports:
+      - "3001:3001"
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/sismos
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/ingestor/node_modules
+      - /app/packages/db/node_modules
+      - /app/packages/shared/node_modules
+      - /app/packages/eslint-config/node_modules
+      - /app/packages/typescript-config/node_modules
+
+  poller:
+    image: alpine:3.20
+    depends_on:
+      - ingestor
+    environment:
+      INGEST_URL: http://ingestor:3001/api/ingest
+    volumes:
+      - ./apps/ingestor/scripts:/scripts:ro
+    entrypoint: ["sh", "-c", "apk add --no-cache curl bash >/dev/null && exec bash /scripts/poll.sh"]
+
 volumes:
   mongo-data:
