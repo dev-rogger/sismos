@@ -56,6 +56,8 @@ services:
     image: alpine:3.20
     depends_on:
       - ingestor
+    env_file:
+      - apps/ingestor/.env.local
     environment:
       INGEST_URL: http://ingestor:3001/api/ingest
     volumes:
