@@ -6,7 +6,6 @@ import {
   type UsgsFeatureRaw,
 } from "@sismos/shared";
 import {
-  getMongooseConnection,
   upsertSismoHistorico,
   type SismoHistoricoInput,
 } from "@sismos/db";
@@ -75,8 +74,6 @@ async function main() {
   const overrides = loadOverrides();
   console.log(`Fetching top ${TOP_N} historical Chilean earthquakes from USGS...`);
   const eventos = await fetchTopHistoricos(overrides);
-
-  await getMongooseConnection();
 
   let count = 0;
   for (const evento of eventos) {
