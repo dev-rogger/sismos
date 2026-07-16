@@ -4,9 +4,11 @@
 
 **Goal:** Push notifications for Chilean (CSN) earthquakes M4+, with a settings button/modal to opt in and choose a magnitude threshold (4-7), and a deep link so tapping the notification flies the map straight to that earthquake with details visible, as fast as possible (no extra fetch on open).
 
-**Architecture:** A `PushSubscription` Mongoose model (anonymous, keyed by `endpoint`, no user accounts) lives in `packages/db`. `apps/web` exposes a `POST`/`DELETE /api/push/subscribe` route, a `usePushNotifications` client hook, and a settings button/modal built on top of it. `apps/web/app/sw.ts` (Serwist) gets manual `push`/`notificationclick` listeners added alongside Serwist's own. `apps/ingestor`, after inserting a new CSN earthquake with `magnitud >= 4`, calls `web-push` directly against matching subscriptions. The push payload embeds the earthquake's full details in the notification's target URL, so opening the app on tap requires zero extra network round-trip — it reuses the existing `sismoSeleccionado` map-selection state/flyTo mechanism already in `MapaConHistorial`/`MapaSismos`.
+**Architecture:** A `pushSubscriptions` Drizzle table (anonymous, keyed by `endpoint`, no user accounts) lives in `packages/db`. `apps/web` exposes a `POST`/`DELETE /api/push/subscribe` route, a `usePushNotifications` client hook, and a settings button/modal built on top of it. `apps/web/app/sw.ts` (Serwist) gets manual `push`/`notificationclick` listeners added alongside Serwist's own. `apps/ingestor`, after inserting a new CSN earthquake with `magnitud >= 4`, calls `web-push` directly against matching subscriptions. The push payload embeds the earthquake's full details in the notification's target URL, so opening the app on tap requires zero extra network round-trip — it reuses the existing `sismoSeleccionado` map-selection state/flyTo mechanism already in `MapaConHistorial`/`MapaSismos`.
 
-**Tech Stack:** Next.js 16 App Router (both apps), Mongoose, `web-push` (apps/ingestor only), Serwist (apps/web service worker), maplibre-gl.
+**Note (2026-07-16):** this plan was originally written against Mongoose/MongoDB. `packages/db` has since migrated to Drizzle ORM over Postgres (Neon in production, Docker Compose Postgres for local dev) — see `docs/superpowers/specs/2026-07-15-sismos-postgres-migration-design.md`. Every task below has been rewritten to match the current Drizzle-based codebase; there is no Mongoose left to mirror.
+
+**Tech Stack:** Next.js 16 App Router (both apps), Drizzle ORM (`drizzle-orm/node-postgres`) + `pg`, `web-push` (apps/ingestor only), Serwist (apps/web service worker), maplibre-gl.
 
 ## Global Constraints
 
@@ -16,7 +18,7 @@
 - The repo has only one shared `.env.example` at the root (no per-app example files exist) — add new env var placeholders there, not new per-app example files.
 - `apps/web/lint` and `apps/ingestor/lint` both run `eslint --max-warnings 0` with the `turbo/no-undeclared-env-vars` rule active — every new env var (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) MUST be added to `turbo.json`'s `globalEnv` array or lint will fail.
 - Push sending in `apps/ingestor` must be `await`-ed (not truly fire-and-forget) inside a `try/catch` — on Vercel serverless the process can be frozen right after the HTTP response is sent, so unawaited async work can be silently dropped. A failed push send must never fail the ingest itself.
-- Follow existing code patterns exactly: Mongoose models/queries mirror `packages/db/src/models/sismo.ts` + `packages/db/src/queries/sismo.ts`; API routes mirror `apps/web/app/api/sismos/route.ts` (validate input, `try/catch` around DB calls, `console.error` + 500 on failure); DB-calling lib wrappers in `apps/web/lib/` call `getMongooseConnection()` before the query, mirroring `apps/web/lib/fetch-sismos.ts`.
+- Follow existing code patterns exactly: the Drizzle table mirrors `packages/db/src/schema.ts` (`pgTable`, snake_case column names, flatten nested objects into separate columns); queries mirror `packages/db/src/queries/sismo.ts` (a `toX` row-mapper function, `getDb()` from `../connection`, `onConflictDoUpdate` for upserts); API routes mirror `apps/web/app/api/sismos/route.ts` (validate input, `try/catch` around DB calls, `console.error` + 500 on failure). DB-calling lib wrappers in `apps/web/lib/` call the query functions directly — no explicit connect step needed (Drizzle's `getDb()` is an internal lazy singleton in `packages/db`, not called from app code), mirroring `apps/web/lib/fetch-sismos.ts`.
 - Every edited/created file in `apps/web` and `apps/ingestor` must pass that app's `lint` and `check-types` scripts, and `packages/db`'s `check-types`.
 - Do not add a new UI toggle/switch component library — reuse the existing `aria-pressed` + conditional-class button pattern already used for the "Solo Chile" toggle.
 - Do not add an icon library — the settings gear icon is a hand-written inline SVG.
@@ -43,14 +45,14 @@ Expected: prints a `Public Key:` and `Private Key:` line. Copy both values for t
 
 - [ ] **Step 2: Add the public key to apps/web/.env.local**
 
-Append to `apps/web/.env.local` (currently just `MONGODB_URI=mongodb://localhost:27017/sismos`):
+Append to `apps/web/.env.local` (currently just `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sismos`):
 ```
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=<the public key from step 1>
 ```
 
 - [ ] **Step 3: Add all three VAPID vars to apps/ingestor/.env.local**
 
-Append to `apps/ingestor/.env.local` (currently just `MONGODB_URI=mongodb://localhost:27017/sismos`):
+Append to `apps/ingestor/.env.local` (currently `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sismos` and `CRON_SECRET=<...>`):
 ```
 VAPID_PUBLIC_KEY=<the public key from step 1>
 VAPID_PRIVATE_KEY=<the private key from step 1>
@@ -61,11 +63,13 @@ VAPID_SUBJECT=mailto:roguerrero.go@gmail.com
 
 Change `.env.example` from:
 ```
-MONGODB_URI=
+DATABASE_URL=
+CRON_SECRET=
 ```
 to:
 ```
-MONGODB_URI=
+DATABASE_URL=
+CRON_SECRET=
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
@@ -76,12 +80,13 @@ VAPID_SUBJECT=
 
 Change `turbo.json`'s top-level `"globalEnv"` from:
 ```json
-  "globalEnv": ["MONGODB_URI"],
+  "globalEnv": ["DATABASE_URL", "CRON_SECRET"],
 ```
 to:
 ```json
   "globalEnv": [
-    "MONGODB_URI",
+    "DATABASE_URL",
+    "CRON_SECRET",
     "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
     "VAPID_PUBLIC_KEY",
     "VAPID_PRIVATE_KEY",
@@ -123,104 +128,137 @@ git commit -m "chore: add VAPID env var placeholders for push notifications"
 
 ---
 
-### Task 2: PushSubscription model and queries in packages/db
+### Task 2: pushSubscriptions table and queries in packages/db
 
 **Files:**
-- Create: `packages/db/src/models/push-subscription.ts`
+- Modify: `packages/db/src/schema.ts`
+- Create: `packages/db/drizzle/<generated>.sql` (via `drizzle-kit generate`, not written by hand)
 - Create: `packages/db/src/queries/push-subscription.ts`
 - Modify: `packages/db/src/index.ts`
 
 **Interfaces:**
-- Produces: `PushSubscriptionModel`, `PushSubscriptionDoc` type, `upsertPushSubscription(input)`, `deletePushSubscription(endpoint)`, `findSubscripcionesParaMagnitud(magnitud)` — all exported from `@sismos/db`, consumed by Task 3 (API route) and Task 8 (`send-push.ts`).
+- Consumes: `getDb` from `../connection` (already exists, added by the Postgres migration).
+- Produces: `pushSubscriptions` table (from `./schema`), `PushSubscription` type, `upsertPushSubscription(input)`, `deletePushSubscription(endpoint)`, `findSubscripcionesParaMagnitud(magnitud)` — all exported from `@sismos/db`, consumed by Task 3 (API route) and Task 8 (`send-push.ts`).
 
-- [ ] **Step 1: Create the Mongoose model**
+- [ ] **Step 1: Add the table to the Drizzle schema**
 
-Create `packages/db/src/models/push-subscription.ts`:
+In `packages/db/src/schema.ts`, add `real` stays imported (already used by `sismos`); the file's import line already includes everything needed. Append at the end of the file:
 
 ```ts
-import mongoose, {
-  Schema,
-  model,
-  type InferSchemaType,
-  type Model,
-} from "mongoose";
-
-const pushSubscriptionSchema = new Schema(
-  {
-    endpoint: { type: String, required: true, unique: true },
-    keys: {
-      p256dh: { type: String, required: true },
-      auth: { type: String, required: true },
-    },
-    magnitudMinima: { type: Number, required: true, default: 4 },
-  },
-  { timestamps: true },
-);
-
-export type PushSubscriptionDoc = InferSchemaType<typeof pushSubscriptionSchema>;
-
-export const PushSubscriptionModel: Model<PushSubscriptionDoc> =
-  (mongoose.models.PushSubscription as Model<PushSubscriptionDoc>) ??
-  model<PushSubscriptionDoc>(
-    "PushSubscription",
-    pushSubscriptionSchema,
-    "pushsubscriptions",
-  );
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  magnitudMinima: real("magnitud_minima").notNull().default(4),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 ```
 
-- [ ] **Step 2: Create the queries**
+- [ ] **Step 2: Generate and apply the migration**
 
-Create `packages/db/src/queries/push-subscription.ts`:
+Run: `docker compose up -d postgres` (if not already running)
+Run: `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sismos pnpm --filter @sismos/db db:generate`
+Expected: a new file appears under `packages/db/drizzle/` containing `CREATE TABLE "push_subscriptions" (...)` with a unique constraint on `endpoint`.
+
+Run: `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sismos pnpm --filter @sismos/db db:migrate`
+Expected: exits 0, `[✓] migrations applied successfully!`.
+
+Run: `docker compose exec -T postgres psql -U postgres -d sismos -c '\d push_subscriptions'`
+Expected: shows all 7 columns (`id`, `endpoint`, `p256dh`, `auth`, `magnitud_minima`, `created_at`, `updated_at`) and the unique constraint on `endpoint`.
+
+- [ ] **Step 3: Create the queries**
+
+Create `packages/db/src/queries/push-subscription.ts` (same shape as `packages/db/src/queries/sismo.ts`: a `toX` row-mapper, `getDb()` for every query, `onConflictDoUpdate` for the upsert):
 
 ```ts
-import {
-  PushSubscriptionModel,
-  type PushSubscriptionDoc,
-} from "../models/push-subscription";
+import { eq, lte } from "drizzle-orm";
+import { getDb } from "../connection";
+import { pushSubscriptions } from "../schema";
 
-interface SuscripcionInput {
+export interface PushSubscription {
+  id: number;
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+  magnitudMinima: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface SuscripcionInput {
   endpoint: string;
   keys: { p256dh: string; auth: string };
   magnitudMinima: number;
 }
 
+function toPushSubscription(
+  row: typeof pushSubscriptions.$inferSelect,
+): PushSubscription {
+  return {
+    id: row.id,
+    endpoint: row.endpoint,
+    keys: { p256dh: row.p256dh, auth: row.auth },
+    magnitudMinima: row.magnitudMinima,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
 export async function upsertPushSubscription(
   input: SuscripcionInput,
-): Promise<PushSubscriptionDoc> {
-  const result = await PushSubscriptionModel.findOneAndUpdate(
-    { endpoint: input.endpoint },
-    { $set: input },
-    { upsert: true, returnDocument: "after" },
-  ).lean();
-  if (!result) {
+): Promise<PushSubscription> {
+  const now = new Date();
+  const [row] = await getDb()
+    .insert(pushSubscriptions)
+    .values({
+      endpoint: input.endpoint,
+      p256dh: input.keys.p256dh,
+      auth: input.keys.auth,
+      magnitudMinima: input.magnitudMinima,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: pushSubscriptions.endpoint,
+      set: {
+        p256dh: input.keys.p256dh,
+        auth: input.keys.auth,
+        magnitudMinima: input.magnitudMinima,
+        updatedAt: now,
+      },
+    })
+    .returning();
+  if (!row) {
     throw new Error(
-      "upsertPushSubscription: findOneAndUpdate returned null unexpectedly",
+      "upsertPushSubscription: insert...onConflictDoUpdate returned no row unexpectedly",
     );
   }
-  return result;
+  return toPushSubscription(row);
 }
 
 export async function deletePushSubscription(endpoint: string): Promise<void> {
-  await PushSubscriptionModel.deleteOne({ endpoint });
+  await getDb()
+    .delete(pushSubscriptions)
+    .where(eq(pushSubscriptions.endpoint, endpoint));
 }
 
 export async function findSubscripcionesParaMagnitud(
   magnitud: number,
-): Promise<PushSubscriptionDoc[]> {
-  return PushSubscriptionModel.find({
-    magnitudMinima: { $lte: magnitud },
-  }).lean();
+): Promise<PushSubscription[]> {
+  const rows = await getDb()
+    .select()
+    .from(pushSubscriptions)
+    .where(lte(pushSubscriptions.magnitudMinima, magnitud));
+  return rows.map(toPushSubscription);
 }
 ```
 
-- [ ] **Step 3: Export from the package index**
+- [ ] **Step 4: Export from the package index**
 
 In `packages/db/src/index.ts`, change:
 
 ```ts
-export * from "./connection";
-export * from "./models/sismo";
-export * from "./models/sismo-historico";
+export * from "./schema";
 export * from "./queries/sismo";
 export * from "./queries/sismo-historico";
 ```
@@ -228,25 +266,22 @@ export * from "./queries/sismo-historico";
 to:
 
 ```ts
-export * from "./connection";
-export * from "./models/sismo";
-export * from "./models/sismo-historico";
-export * from "./models/push-subscription";
+export * from "./schema";
 export * from "./queries/sismo";
 export * from "./queries/sismo-historico";
 export * from "./queries/push-subscription";
 ```
 
-- [ ] **Step 4: Verify types**
+- [ ] **Step 5: Verify types**
 
 Run: `pnpm --filter @sismos/db check-types`
 Expected: exits 0.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add packages/db/src/models/push-subscription.ts packages/db/src/queries/push-subscription.ts packages/db/src/index.ts
-git commit -m "feat: add PushSubscription model and queries"
+git add packages/db/src/schema.ts packages/db/drizzle packages/db/src/queries/push-subscription.ts packages/db/src/index.ts
+git commit -m "feat: add pushSubscriptions table and queries"
 ```
 
 ---
@@ -258,19 +293,18 @@ git commit -m "feat: add PushSubscription model and queries"
 - Create: `apps/web/app/api/push/subscribe/route.ts`
 
 **Interfaces:**
-- Consumes: `upsertPushSubscription`, `deletePushSubscription`, `getMongooseConnection` from `@sismos/db` (Task 2).
+- Consumes: `upsertPushSubscription`, `deletePushSubscription`, `type PushSubscription` from `@sismos/db` (Task 2).
 - Produces: `POST /api/push/subscribe` and `DELETE /api/push/subscribe`, consumed by Task 5's hook.
 
 - [ ] **Step 1: Create the lib wrapper**
 
-Create `apps/web/lib/push-subscriptions.ts` (mirrors the `getMongooseConnection()`-then-query pattern in `apps/web/lib/fetch-sismos.ts`):
+Create `apps/web/lib/push-subscriptions.ts` (mirrors `apps/web/lib/fetch-sismos.ts` — no explicit connect step, `getDb()` is an internal singleton inside `packages/db`):
 
 ```ts
 import {
-  getMongooseConnection,
   upsertPushSubscription,
   deletePushSubscription,
-  type PushSubscriptionDoc,
+  type PushSubscription,
 } from "@sismos/db";
 
 interface GuardarSuscripcionInput {
@@ -281,13 +315,11 @@ interface GuardarSuscripcionInput {
 
 export async function guardarSuscripcion(
   input: GuardarSuscripcionInput,
-): Promise<PushSubscriptionDoc> {
-  await getMongooseConnection();
+): Promise<PushSubscription> {
   return upsertPushSubscription(input);
 }
 
 export async function eliminarSuscripcion(endpoint: string): Promise<void> {
-  await getMongooseConnection();
   return deletePushSubscription(endpoint);
 }
 ```
@@ -1280,9 +1312,9 @@ Expected: all exit 0.
 Run: `grep -c VAPID apps/web/.env.local apps/ingestor/.env.local`
 Expected: `apps/web/.env.local:1` and `apps/ingestor/.env.local:3`.
 
-- [ ] **Step 3: Start mongo, web, and ingestor**
+- [ ] **Step 3: Start postgres, web, and ingestor**
 
-Run: `pnpm docker:dev` (background), or if mongo is already running via Docker from earlier, run `pnpm --filter web dev` and `pnpm --filter ingestor dev` directly against it.
+Run: `docker compose up -d postgres` (if not already running), then `pnpm --filter web dev` and `pnpm --filter ingestor dev` (each against `apps/*/.env.local`, which points at `postgresql://postgres:postgres@localhost:5432/sismos`).
 Expected: web on `:3000`, ingestor on `:3001`.
 
 - [ ] **Step 4: Subscribe via the UI**
@@ -1290,10 +1322,10 @@ Expected: web on `:3000`, ingestor on `:3001`.
 Using the claude-in-chrome browser tool: open `http://localhost:3000`, click the new gear icon button next to "Ver todo Chile", click "Activar notificaciones", grant the browser permission prompt.
 Expected: modal shows "Desactivar notificaciones" (now in the active/sky-blue state) and a magnitude slider defaulting to M4.
 
-- [ ] **Step 5: Confirm the subscription landed in MongoDB**
+- [ ] **Step 5: Confirm the subscription landed in Postgres**
 
-Run: `docker exec -i sismos-mongo-1 mongosh sismos --quiet --eval "db.pushsubscriptions.find().toArray()"` (adjust container name if not using the docker-compose setup)
-Expected: one document with a non-empty `endpoint`, `keys.p256dh`, `keys.auth`, and `magnitudMinima: 4`.
+Run: `docker compose exec -T postgres psql -U postgres -d sismos -c 'SELECT endpoint, p256dh, auth, magnitud_minima FROM push_subscriptions;'`
+Expected: one row with a non-empty `endpoint`, `p256dh`, `auth`, and `magnitud_minima = 4`.
 
 - [ ] **Step 6: Trigger a manual ingest and confirm a push is attempted**
 
@@ -1335,7 +1367,7 @@ Expected: the browser tab (if already open) navigates in place (not a new tab) t
 
 - [ ] **Step 10: Clean up the test subscription**
 
-Run: `docker exec -i sismos-mongo-1 mongosh sismos --quiet --eval "db.pushsubscriptions.deleteMany({})"`
+Run: `docker compose exec -T postgres psql -U postgres -d sismos -c 'DELETE FROM push_subscriptions;'`
 Expected: test subscriptions removed so they don't linger in the dev database.
 
 - [ ] **Step 11: Stop dev servers and final status check**
