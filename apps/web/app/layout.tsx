@@ -5,6 +5,11 @@ export const metadata: Metadata = {
   title: "Sismos",
   description: "Sismos de Chile y el mundo en tiempo real",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Sismos",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
