@@ -1,0 +1,22 @@
+name: Ingest cron
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call ingest endpoint
+        run: |
+          status=$(curl -s -o /tmp/ingest-response.json -w "%{http_code}" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            https://sismos-realtime.vercel.app/api/ingest)
+          cat /tmp/ingest-response.json
+          echo
+          if [ "$status" != "200" ]; then
+            echo "Ingest endpoint returned status $status"
+            exit 1
+          fi
