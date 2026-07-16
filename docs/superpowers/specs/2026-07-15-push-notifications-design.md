@@ -13,27 +13,32 @@ Decisiones de scope (de la conversación de brainstorming):
 
 ## Modelo de datos
 
-Nuevo modelo en `packages/db`, mismo patrón que `models/sismo.ts` + `queries/sismo.ts`:
+**Nota (2026-07-16):** este spec se escribió originalmente sobre Mongoose/MongoDB. `packages/db` migró a Drizzle ORM sobre Postgres (Neon en producción) — ver `docs/superpowers/specs/2026-07-15-sismos-postgres-migration-design.md`. Esta sección ya refleja el modelo actualizado a Drizzle.
 
-**`packages/db/src/models/push-subscription.ts`**:
+Nueva tabla en `packages/db/src/schema.ts`, mismo patrón que `sismos`/`sismosHistoricos` (columnas planas, sin objetos anidados):
+
 ```ts
-{
-  endpoint: string;        // unique, identifica la suscripción del navegador
-  keys: {
-    p256dh: string;
-    auth: string;
-  };
-  magnitudMinima: number;  // 4-7, default 4
-}
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  magnitudMinima: real("magnitud_minima").notNull().default(4),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 ```
+
+El objeto anidado `keys: { p256dh, auth }` del payload de `PushSubscriptionJSON` del navegador se aplana a dos columnas (`p256dh`, `auth`), igual que se hizo con `refCruzada` en la tabla `sismos`. Las funciones de query reconstruyen el objeto `keys` al leer, para que el resto del código (que llama `web-push` con `{ endpoint, keys: { p256dh, auth } }`) no cambie.
+
 Sin `userId` — la app no tiene autenticación, las suscripciones son anónimas por dispositivo/navegador.
 
 **`packages/db/src/queries/push-subscription.ts`**:
-- `upsertPushSubscription({ endpoint, keys, magnitudMinima })` — upsert por `endpoint`
+- `upsertPushSubscription({ endpoint, keys, magnitudMinima })` — upsert por `endpoint` (`onConflictDoUpdate`, mismo patrón que `upsertSismo`)
 - `deletePushSubscription(endpoint)` — elimina por `endpoint`
 - `findSubscripcionesParaMagnitud(magnitud)` — devuelve suscripciones con `magnitudMinima <= magnitud`
 
-Exportado desde `packages/db/src/index.ts` igual que los módulos existentes.
+Exportado desde `packages/db/src/index.ts` igual que los módulos existentes (`export * from "./queries/push-subscription"`).
 
 ## Backend — API de suscripción
 
@@ -159,12 +164,12 @@ Generadas con `npx web-push generate-vapid-keys`. Se guardan en:
 
 Validación manual (no hay tests automatizados de UI/push en el proyecto):
 - El modal abre/cierra correctamente y refleja el estado real de `Notification.permission`
-- Activar notificaciones registra una suscripción en MongoDB (`db.pushsubscriptions.find()`)
-- Cambiar el slider de umbral actualiza `magnitudMinima` en el documento existente (mismo `endpoint`, no crea uno nuevo)
-- Desactivar elimina el documento de MongoDB
+- Activar notificaciones registra una fila en Postgres (`SELECT * FROM push_subscriptions;`)
+- Cambiar el slider de umbral actualiza `magnitud_minima` en la fila existente (mismo `endpoint`, no crea una nueva)
+- Desactivar elimina la fila de Postgres
 - Con una suscripción activa en M4, insertar manualmente (o esperar) un sismo CSN de M4+ dispara una notificación visible del sistema operativo
 - Un sismo CSN por debajo del umbral de la suscripción no dispara notificación
 - Un sismo USGS (no-Chile) nunca dispara notificación, sin importar magnitud
-- Simular un 410 de `web-push` (endpoint inválido) confirma que la suscripción se borra de MongoDB
+- Simular un 410 de `web-push` (endpoint inválido) confirma que la suscripción se borra de Postgres
 - Abrir manualmente `http://localhost:3000/?sismo=test123&lat=-33.45&lon=-70.6&mag=5.2&lugar=Santiago` hace que el mapa vuele directo a esas coordenadas y muestre el popup con lugar+magnitud, sin esperar el fetch del historial
 - Tocar la notificación con la PWA ya abierta en una pestaña reutiliza esa pestaña (navega) en vez de abrir una nueva
