@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getMongooseConnection } from "@sismos/db";
 import { runIngest } from "../../../lib/ingest";
 
 export async function GET(request: NextRequest) {
@@ -14,15 +13,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await getMongooseConnection();
+    const summary = await runIngest();
+    return NextResponse.json(summary);
   } catch (error) {
-    console.error("[ingest] Mongo connection failed:", error);
-    return NextResponse.json(
-      { error: "Database connection failed" },
-      { status: 500 },
-    );
+    console.error("[ingest] Ingest failed:", error);
+    return NextResponse.json({ error: "Ingest failed" }, { status: 500 });
   }
-
-  const summary = await runIngest();
-  return NextResponse.json(summary);
 }
