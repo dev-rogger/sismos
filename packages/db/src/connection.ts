@@ -1,16 +1,16 @@
-import mongoose from "mongoose";
+import { Pool } from "pg";
+import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 
-let cached: Promise<typeof mongoose> | null = null;
+let cached: NodePgDatabase | null = null;
 
-// TODO: agregar manejo de reintentos/estado de conexión una vez que
-// se implemente la lógica real de lectura/escritura.
-export function getMongooseConnection(): Promise<typeof mongoose> {
+export function getDb(): NodePgDatabase {
   if (!cached) {
-    const uri = process.env.MONGODB_URI;
-    if (!uri) {
-      throw new Error("MONGODB_URI is not set");
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error("DATABASE_URL is not set");
     }
-    cached = mongoose.connect(uri);
+    const pool = new Pool({ connectionString, max: 1 });
+    cached = drizzle(pool);
   }
   return cached;
 }
