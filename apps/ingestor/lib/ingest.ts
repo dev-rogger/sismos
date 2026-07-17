@@ -12,6 +12,7 @@ import {
 } from "@sismos/db";
 import { fetchCsnRecent } from "./fetch-csn";
 import { fetchUsgsRecent } from "./fetch-usgs";
+import { enviarPushParaSismo } from "./send-push";
 
 interface SourceResult {
   fetched: number;
@@ -65,6 +66,13 @@ export async function runIngest(): Promise<IngestSummary> {
     } else {
       await upsertSismo(evento);
       summary.csn.inserted += 1;
+      if (evento.magnitud >= 4) {
+        try {
+          await enviarPushParaSismo(evento);
+        } catch (error) {
+          console.error("[ingest] push notification failed:", error);
+        }
+      }
     }
   }
 
