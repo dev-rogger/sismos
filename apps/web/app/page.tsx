@@ -1,10 +1,38 @@
 import { getUltimos10Dias } from "../lib/fetch-sismos";
-import type { SismoMapa } from "../lib/tipos-sismo";
+import type { SismoMapa, SismoSeleccionado } from "../lib/tipos-sismo";
 import MapaConHistorial from "../components/MapaConHistorial";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
+interface HomeProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+function parseSismoDesdeQuery(params: {
+  [key: string]: string | string[] | undefined;
+}): SismoSeleccionado | null {
+  const externalId = typeof params.sismo === "string" ? params.sismo : null;
+  const lugar = typeof params.lugar === "string" ? params.lugar : null;
+  const lat = typeof params.lat === "string" ? Number(params.lat) : NaN;
+  const lon = typeof params.lon === "string" ? Number(params.lon) : NaN;
+  const mag = typeof params.mag === "string" ? Number(params.mag) : NaN;
+
+  if (
+    !externalId ||
+    !lugar ||
+    Number.isNaN(lat) ||
+    Number.isNaN(lon) ||
+    Number.isNaN(mag)
+  ) {
+    return null;
+  }
+  return { externalId, latitud: lat, longitud: lon, magnitud: mag, lugar };
+}
+
+export default async function Home({ searchParams }: HomeProps) {
+  const params = await searchParams;
+  const sismoInicial = parseSismoDesdeQuery(params);
+
   let sismosIniciales: SismoMapa[] = [];
   try {
     const sismos = await getUltimos10Dias();
@@ -23,7 +51,10 @@ export default async function Home() {
 
   return (
     <main className="flex h-screen w-screen flex-col lg:flex-row">
-      <MapaConHistorial sismosIniciales={sismosIniciales} />
+      <MapaConHistorial
+        sismosIniciales={sismosIniciales}
+        sismoInicial={sismoInicial}
+      />
     </main>
   );
 }

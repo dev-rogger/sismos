@@ -181,7 +181,13 @@ export default function MapaSismos({
     const el = crearElementoSeleccion();
     const marker = new maplibregl.Marker({ element: el })
       .setLngLat([sismoSeleccionado.longitud, sismoSeleccionado.latitud])
+      .setPopup(
+        new maplibregl.Popup({ offset: 12, className: "popup-sismo" }).setHTML(
+          `<strong>${sismoSeleccionado.lugar}</strong><br/>M${sismoSeleccionado.magnitud}`,
+        ),
+      )
       .addTo(map);
+    marker.togglePopup();
 
     return () => {
       marker.remove();

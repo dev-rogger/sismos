@@ -7,13 +7,15 @@ import type { SismoMapa, SismoSeleccionado } from "../lib/tipos-sismo";
 
 interface MapaConHistorialProps {
   sismosIniciales: SismoMapa[];
+  sismoInicial: SismoSeleccionado | null;
 }
 
 export default function MapaConHistorial({
   sismosIniciales,
+  sismoInicial,
 }: MapaConHistorialProps) {
   const [sismoSeleccionado, setSismoSeleccionado] =
-    useState<SismoSeleccionado | null>(null);
+    useState<SismoSeleccionado | null>(sismoInicial);
   const [soloChile, setSoloChile] = useState(false);
   const [magnitudMinima, setMagnitudMinima] = useState(5);
 
