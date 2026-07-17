@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { crearElementoMarcador, crearElementoSeleccion } from "./marcador";
+import BotonConfiguracion from "../configuracion/BotonConfiguracion";
 import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
 
 export type { SismoMapa, SismoSeleccionado };
@@ -190,20 +191,25 @@ export default function MapaSismos({
   return (
     <div className="relative h-full w-full">
       <div ref={mapContainerRef} className="h-full w-full" />
-      <button
-        type="button"
-        onClick={() =>
-          mapRef.current?.flyTo({
-            center: CHILE_CENTER,
-            zoom: CHILE_ZOOM,
-            speed: 1.2,
-          })
-        }
+      <div
         style={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
-        className="absolute right-3 z-10 flex min-h-11 items-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
+        className="absolute right-3 z-10 flex items-center gap-2"
       >
-        Ver todo Chile
-      </button>
+        <BotonConfiguracion />
+        <button
+          type="button"
+          onClick={() =>
+            mapRef.current?.flyTo({
+              center: CHILE_CENTER,
+              zoom: CHILE_ZOOM,
+              speed: 1.2,
+            })
+          }
+          className="flex min-h-11 items-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
+        >
+          Ver todo Chile
+        </button>
+      </div>
     </div>
   );
 }
