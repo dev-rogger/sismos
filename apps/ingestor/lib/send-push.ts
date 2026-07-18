@@ -3,7 +3,21 @@ import {
   findSubscripcionesParaMagnitud,
   deletePushSubscription,
 } from "@sismos/db";
-import type { SismoNormalizado } from "@sismos/shared";
+import { regionChilePorLatitud, type SismoNormalizado } from "@sismos/shared";
+
+const UMBRAL_TERREMOTO = 8;
+
+const REGIONES_CON_DEL = new Set([
+  "Biobío",
+  "Maule",
+  "Libertador General Bernardo O'Higgins",
+]);
+
+function formatearRegion(nombreRegion: string): string {
+  if (nombreRegion.startsWith("Metropolitana")) return `Región ${nombreRegion}`;
+  if (REGIONES_CON_DEL.has(nombreRegion)) return `Región del ${nombreRegion}`;
+  return `Región de ${nombreRegion}`;
+}
 
 let vapidConfigurado = false;
 
@@ -41,8 +55,11 @@ export async function enviarPushParaSismo(
   if (suscripciones.length === 0) return;
 
   const url = `/?sismo=${evento.externalId}&lat=${evento.latitud}&lon=${evento.longitud}&mag=${evento.magnitud}&lugar=${encodeURIComponent(evento.lugar)}`;
+  const nombreRegion = regionChilePorLatitud(evento.latitud);
+  const region = nombreRegion ? formatearRegion(nombreRegion) : evento.lugar;
+  const tipoEvento = evento.magnitud >= UMBRAL_TERREMOTO ? "terremoto" : "sismo";
   const payload = JSON.stringify({
-    title: `Sismo M${evento.magnitud} en ${evento.lugar}`,
+    title: `Nuevo ${tipoEvento} de ${evento.magnitud} en ${region}`,
     body: evento.fecha.toLocaleString("es-CL"),
     url,
   });

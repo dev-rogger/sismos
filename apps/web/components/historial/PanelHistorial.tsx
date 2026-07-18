@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { formatearCoordenadas } from "../../lib/coordenadas";
 import { colorPorMagnitud } from "../../lib/magnitud";
-import { regionChilePorLatitud } from "../../lib/region-chile";
+import { regionChilePorLatitud } from "@sismos/shared";
 import type { SismoSeleccionado } from "../../lib/tipos-sismo";
 
 type TipoHistorial = "historico" | "top10anios" | "ultimos10dias";
