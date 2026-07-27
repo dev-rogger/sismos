@@ -33,6 +33,16 @@ const OPCIONES: { valor: TipoHistorial; etiqueta: string }[] = [
   { valor: "historico", etiqueta: "Histórico" },
 ];
 
+const ALTURA_COLAPSADA_PX = 56; // 3.5rem, la franja del handle que queda visible cuando está cerrado
+const ARRASTRE_UMBRAL_PX = 40; // distancia mínima para que el arrastre decida abrir/cerrar
+
+interface InfoArrastre {
+  startY: number;
+  expandidoInicial: boolean;
+  openY: number;
+  closedY: number;
+}
+
 export default function PanelHistorial({
   sismoSeleccionado,
   onSeleccionar,
@@ -44,7 +54,13 @@ export default function PanelHistorial({
   const [tipo, setTipo] = useState<TipoHistorial>("ultimos10dias");
   const [eventos, setEventos] = useState<ItemHistorial[]>([]);
   const [expandido, setExpandido] = useState(false);
+  const [arrastreTranslateY, setArrastreTranslateY] = useState<number | null>(
+    null,
+  );
   const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
+  const panelRef = useRef<HTMLDivElement>(null);
+  const infoArrastreRef = useRef<InfoArrastre | null>(null);
+  const suprimirClickRef = useRef(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -76,17 +92,69 @@ export default function PanelHistorial({
     return true;
   });
 
+  const manejarPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const closedY = Math.max(panel.offsetHeight - ALTURA_COLAPSADA_PX, 0);
+    infoArrastreRef.current = {
+      startY: e.clientY,
+      expandidoInicial: expandido,
+      openY: 0,
+      closedY,
+    };
+  };
+
+  const manejarPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const info = infoArrastreRef.current;
+    if (!info) return;
+    const base = info.expandidoInicial ? info.openY : info.closedY;
+    const delta = e.clientY - info.startY;
+    const nuevo = Math.min(info.closedY, Math.max(info.openY, base + delta));
+    setArrastreTranslateY(nuevo);
+  };
+
+  const finalizarArrastre = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const info = infoArrastreRef.current;
+    infoArrastreRef.current = null;
+    setArrastreTranslateY(null);
+    if (!info) return;
+    const delta = e.clientY - info.startY;
+    if (Math.abs(delta) >= ARRASTRE_UMBRAL_PX) {
+      setExpandido(delta < 0);
+      suprimirClickRef.current = true;
+    }
+  };
+
+  const manejarClickHandle = () => {
+    if (suprimirClickRef.current) {
+      suprimirClickRef.current = false;
+      return;
+    }
+    setExpandido((v) => !v);
+  };
+
   return (
     <div
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      ref={panelRef}
+      style={{
+        paddingBottom: "env(safe-area-inset-bottom)",
+        ...(arrastreTranslateY !== null
+          ? { transform: `translateY(${arrastreTranslateY}px)`, transition: "none" }
+          : {}),
+      }}
       className={`fixed inset-x-0 bottom-0 z-10 flex max-h-[80vh] flex-col rounded-t-2xl bg-neutral-900 shadow-lg transition-transform duration-300 lg:static lg:h-full lg:max-h-none lg:w-[360px] lg:translate-y-0 lg:rounded-none lg:border-l lg:border-neutral-800 lg:shadow-none lg:transition-none ${
         expandido ? "translate-y-0" : "translate-y-[calc(100%-3.5rem)]"
       }`}
     >
       <button
         type="button"
-        onClick={() => setExpandido((v) => !v)}
-        className="flex w-full shrink-0 items-center justify-center py-3 lg:hidden"
+        onClick={manejarClickHandle}
+        onPointerDown={manejarPointerDown}
+        onPointerMove={manejarPointerMove}
+        onPointerUp={finalizarArrastre}
+        onPointerCancel={finalizarArrastre}
+        className="flex w-full shrink-0 touch-none cursor-grab items-center justify-center py-3 active:cursor-grabbing lg:hidden"
         aria-expanded={expandido}
       >
         <span className="h-1.5 w-10 rounded-full bg-neutral-600" />
