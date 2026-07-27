@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { crearElementoMarcador, crearElementoSeleccion } from "./marcador";
-import BotonConfiguracion from "../configuracion/BotonConfiguracion";
 import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
 
 export type { SismoMapa, SismoSeleccionado };
@@ -201,7 +200,6 @@ export default function MapaSismos({
         style={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
         className="absolute right-3 z-10 flex items-center gap-2"
       >
-        <BotonConfiguracion />
         <button
           type="button"
           onClick={() =>

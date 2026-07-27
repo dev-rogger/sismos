@@ -22,9 +22,9 @@ interface PanelHistorialProps {
   sismoSeleccionado: SismoSeleccionado | null;
   onSeleccionar: (sismo: SismoSeleccionado | null) => void;
   soloChile: boolean;
-  onSoloChileChange: (soloChile: boolean) => void;
   magnitudMinima: number;
-  onMagnitudMinimaChange: (magnitudMinima: number) => void;
+  expandido: boolean;
+  onExpandidoChange: (expandido: boolean) => void;
 }
 
 const OPCIONES: { valor: TipoHistorial; etiqueta: string }[] = [
@@ -47,13 +47,12 @@ export default function PanelHistorial({
   sismoSeleccionado,
   onSeleccionar,
   soloChile,
-  onSoloChileChange,
   magnitudMinima,
-  onMagnitudMinimaChange,
+  expandido,
+  onExpandidoChange,
 }: PanelHistorialProps) {
   const [tipo, setTipo] = useState<TipoHistorial>("ultimos10dias");
   const [eventos, setEventos] = useState<ItemHistorial[]>([]);
-  const [expandido, setExpandido] = useState(false);
   const [arrastreTranslateY, setArrastreTranslateY] = useState<number | null>(
     null,
   );
@@ -134,7 +133,7 @@ export default function PanelHistorial({
     if (!info) return;
     const delta = e.clientY - info.startY;
     if (Math.abs(delta) >= ARRASTRE_UMBRAL_PX) {
-      setExpandido(delta < 0);
+      onExpandidoChange(delta < 0);
       suprimirClickRef.current = true;
     }
   };
@@ -144,7 +143,7 @@ export default function PanelHistorial({
       suprimirClickRef.current = false;
       return;
     }
-    setExpandido((v) => !v);
+    onExpandidoChange(!expandido);
   };
 
   return (
@@ -179,53 +178,21 @@ export default function PanelHistorial({
         <h2 className="mb-2 text-base font-semibold text-neutral-100">
           Historial de sismos
         </h2>
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <select
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value as TipoHistorial)}
-              className="w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
-            >
-              {OPCIONES.map((opcion) => (
-                <option key={opcion.valor} value={opcion.valor}>
-                  {opcion.etiqueta}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400">
-              ▾
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => onSoloChileChange(!soloChile)}
-            aria-pressed={soloChile}
-            className={`flex min-h-11 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-medium whitespace-nowrap transition-colors ${
-              soloChile
-                ? "border-sky-500 bg-sky-500/10 text-sky-400"
-                : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
-            }`}
+        <div className="relative">
+          <select
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value as TipoHistorial)}
+            className="w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
           >
-            🇨🇱 Solo Chile
-          </button>
-        </div>
-        <div className="mt-3 flex items-center gap-2">
-          <label
-            htmlFor="magnitud-minima"
-            className="shrink-0 text-xs text-neutral-400"
-          >
-            M{magnitudMinima}+
-          </label>
-          <input
-            id="magnitud-minima"
-            type="range"
-            min={2}
-            max={7}
-            step={1}
-            value={magnitudMinima}
-            onChange={(e) => onMagnitudMinimaChange(Number(e.target.value))}
-            className="flex-1 accent-sky-500"
-          />
+            {OPCIONES.map((opcion) => (
+              <option key={opcion.valor} value={opcion.valor}>
+                {opcion.etiqueta}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400">
+            ▾
+          </span>
         </div>
       </div>
 
