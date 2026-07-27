@@ -96,7 +96,12 @@ export default function PanelHistorial({
     const panel = panelRef.current;
     if (!panel) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    const closedY = Math.max(panel.offsetHeight - ALTURA_COLAPSADA_PX, 0);
+    const areaSeguraInferior =
+      parseFloat(getComputedStyle(panel).paddingBottom) || 0;
+    const closedY = Math.max(
+      panel.offsetHeight - (ALTURA_COLAPSADA_PX + areaSeguraInferior),
+      0,
+    );
     infoArrastreRef.current = {
       startY: e.clientY,
       expandidoInicial: expandido,
@@ -144,7 +149,9 @@ export default function PanelHistorial({
           : {}),
       }}
       className={`fixed inset-x-0 bottom-0 z-10 flex max-h-[80vh] flex-col rounded-t-2xl bg-neutral-900 shadow-lg transition-transform duration-300 lg:static lg:h-full lg:max-h-none lg:w-[360px] lg:translate-y-0 lg:rounded-none lg:border-l lg:border-neutral-800 lg:shadow-none lg:transition-none ${
-        expandido ? "translate-y-0" : "translate-y-[calc(100%-3.5rem)]"
+        expandido
+          ? "translate-y-0"
+          : "translate-y-[calc(100%_-_3.5rem_-_env(safe-area-inset-bottom))]"
       }`}
     >
       <button
@@ -154,7 +161,7 @@ export default function PanelHistorial({
         onPointerMove={manejarPointerMove}
         onPointerUp={finalizarArrastre}
         onPointerCancel={finalizarArrastre}
-        className="flex w-full shrink-0 touch-none cursor-grab items-center justify-center py-3 active:cursor-grabbing lg:hidden"
+        className="flex w-full shrink-0 touch-none cursor-grab items-center justify-center pt-3 pb-[calc(0.75rem_+_env(safe-area-inset-bottom))] active:cursor-grabbing lg:hidden"
         aria-expanded={expandido}
       >
         <span className="h-1.5 w-10 rounded-full bg-neutral-600" />
