@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, asc } from "drizzle-orm";
+import { and, desc, eq, gt, gte, asc, sql, getTableColumns } from "drizzle-orm";
 import type { SismoFuente, SismoNormalizado } from "@sismos/shared";
 import { getDb } from "../connection";
 import { sismos } from "../schema";
@@ -54,7 +54,14 @@ export async function findRecentByFuente(
   return rows.map(toSismo);
 }
 
-export async function upsertSismo(evento: SismoNormalizado): Promise<Sismo> {
+export interface ResultadoUpsertSismo {
+  sismo: Sismo;
+  esNuevo: boolean;
+}
+
+export async function upsertSismo(
+  evento: SismoNormalizado,
+): Promise<ResultadoUpsertSismo> {
   const now = new Date();
   const [row] = await getDb()
     .insert(sismos)
@@ -83,13 +90,22 @@ export async function upsertSismo(evento: SismoNormalizado): Promise<Sismo> {
         updatedAt: now,
       },
     })
-    .returning();
+    // xmax = 0 solo es cierto para la fila recién insertada en esta misma
+    // transacción; si el conflicto disparó el UPDATE, xmax queda distinto
+    // de 0. Es el truco estándar de Postgres para distinguir insert/update
+    // en un upsert, necesario porque CSN devuelve una lista "recent" que
+    // reincluye sismos ya guardados en cada corrida del ingestor.
+    .returning({
+      ...getTableColumns(sismos),
+      esNuevo: sql<boolean>`(xmax = 0)`,
+    });
   if (!row) {
     throw new Error(
       "upsertSismo: insert...onConflictDoUpdate returned no row unexpectedly",
     );
   }
-  return toSismo(row);
+  const { esNuevo, ...columnas } = row;
+  return { sismo: toSismo(columnas), esNuevo };
 }
 
 export async function setRefCruzada(

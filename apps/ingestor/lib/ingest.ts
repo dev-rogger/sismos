@@ -64,9 +64,9 @@ export async function runIngest(): Promise<IngestSummary> {
       await replaceWithCsn(match.externalId, evento);
       summary.deduped += 1;
     } else {
-      await upsertSismo(evento);
+      const { esNuevo } = await upsertSismo(evento);
       summary.csn.inserted += 1;
-      if (evento.magnitud >= 4) {
+      if (esNuevo && evento.magnitud >= 4) {
         try {
           await enviarPushParaSismo(evento);
         } catch (error) {
