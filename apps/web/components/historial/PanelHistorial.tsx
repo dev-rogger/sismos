@@ -38,7 +38,7 @@ const ARRASTRE_UMBRAL_PX = 40; // distancia mínima para que el arrastre decida 
 
 interface InfoArrastre {
   startY: number;
-  expandidoInicial: boolean;
+  baseY: number;
   openY: number;
   closedY: number;
 }
@@ -102,9 +102,15 @@ export default function PanelHistorial({
       panel.offsetHeight - (ALTURA_COLAPSADA_PX + areaSeguraInferior),
       0,
     );
+    // Medimos la posición real en pantalla (en vez de asumir 0 o closedY)
+    // para que el arrastre continúe exactamente donde el CSS lo está
+    // pintando, sin saltos por redondeos o por el viewport dinámico de iOS.
+    const topEnPantalla = panel.getBoundingClientRect().top;
+    const topCuandoAbierto = window.innerHeight - panel.offsetHeight;
+    const baseY = topEnPantalla - topCuandoAbierto;
     infoArrastreRef.current = {
       startY: e.clientY,
-      expandidoInicial: expandido,
+      baseY,
       openY: 0,
       closedY,
     };
@@ -113,9 +119,11 @@ export default function PanelHistorial({
   const manejarPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
     const info = infoArrastreRef.current;
     if (!info) return;
-    const base = info.expandidoInicial ? info.openY : info.closedY;
     const delta = e.clientY - info.startY;
-    const nuevo = Math.min(info.closedY, Math.max(info.openY, base + delta));
+    const nuevo = Math.min(
+      info.closedY,
+      Math.max(info.openY, info.baseY + delta),
+    );
     setArrastreTranslateY(nuevo);
   };
 
@@ -145,7 +153,7 @@ export default function PanelHistorial({
       style={{
         paddingBottom: "env(safe-area-inset-bottom)",
         ...(arrastreTranslateY !== null
-          ? { transform: `translateY(${arrastreTranslateY}px)`, transition: "none" }
+          ? { translate: `0px ${arrastreTranslateY}px`, transition: "none" }
           : {}),
       }}
       className={`fixed inset-x-0 bottom-0 z-10 flex max-h-[80vh] flex-col rounded-t-2xl bg-neutral-900 shadow-lg transition-transform duration-300 lg:static lg:h-full lg:max-h-none lg:w-[360px] lg:translate-y-0 lg:rounded-none lg:border-l lg:border-neutral-800 lg:shadow-none lg:transition-none ${
