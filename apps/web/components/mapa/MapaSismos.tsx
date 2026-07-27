@@ -4,6 +4,9 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { crearElementoMarcador, crearElementoSeleccion } from "./marcador";
+import BotonFiltroMapa from "./BotonFiltroMapa";
+import { magnitudPasaRangos, fechaPasaVentana } from "../../lib/filtro-tipos";
+import type { FiltroMapa } from "../../lib/filtro-tipos";
 import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
 
 export type { SismoMapa, SismoSeleccionado };
@@ -12,8 +15,8 @@ interface MapaSismosProps {
   sismosIniciales: SismoMapa[];
   sismoSeleccionado: SismoSeleccionado | null;
   onSeleccionarDesdeMapa: (sismo: SismoSeleccionado | null) => void;
-  soloChile: boolean;
-  magnitudMinima: number;
+  filtro: FiltroMapa;
+  onFiltroChange: (filtro: FiltroMapa) => void;
 }
 
 const CHILE_CENTER: [number, number] = [-71.5, -35.5];
@@ -21,13 +24,10 @@ const CHILE_ZOOM = 4;
 const POLL_INTERVAL_MS = 30 * 1000;
 const ESTILO_URL = "https://tiles.openfreemap.org/styles/liberty";
 
-function pasaFiltro(
-  sismo: SismoMapa,
-  soloChile: boolean,
-  magnitudMinima: number,
-): boolean {
-  if (soloChile && sismo.bandera !== "🇨🇱") return false;
-  if (sismo.magnitud < magnitudMinima) return false;
+function pasaFiltro(sismo: SismoMapa, filtro: FiltroMapa): boolean {
+  if (filtro.soloChile && sismo.bandera !== "🇨🇱") return false;
+  if (!magnitudPasaRangos(sismo.magnitud, filtro.rangos)) return false;
+  if (!fechaPasaVentana(sismo.fecha, filtro.ventana)) return false;
   return true;
 }
 
@@ -35,8 +35,8 @@ export default function MapaSismos({
   sismosIniciales,
   sismoSeleccionado,
   onSeleccionarDesdeMapa,
-  soloChile,
-  magnitudMinima,
+  filtro,
+  onFiltroChange,
 }: MapaSismosProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -53,10 +53,8 @@ export default function MapaSismos({
   onSeleccionarDesdeMapaRef.current = onSeleccionarDesdeMapa;
   const sismoSeleccionadoRef = useRef(sismoSeleccionado);
   sismoSeleccionadoRef.current = sismoSeleccionado;
-  const soloChileRef = useRef(soloChile);
-  soloChileRef.current = soloChile;
-  const magnitudMinimaRef = useRef(magnitudMinima);
-  magnitudMinimaRef.current = magnitudMinima;
+  const filtroRef = useRef(filtro);
+  filtroRef.current = filtro;
 
   function crearMarcador(
     map: maplibregl.Map,
@@ -91,15 +89,10 @@ export default function MapaSismos({
   }
 
   function sincronizarMarcadores(map: maplibregl.Map) {
-    const soloChileActual = soloChileRef.current;
-    const magnitudMinimaActual = magnitudMinimaRef.current;
+    const filtroActual = filtroRef.current;
 
     for (const sismo of todosSismosRef.current.values()) {
-      const debeMostrarse = pasaFiltro(
-        sismo,
-        soloChileActual,
-        magnitudMinimaActual,
-      );
+      const debeMostrarse = pasaFiltro(sismo, filtroActual);
       const yaExiste = marcadoresRef.current.has(sismo.externalId);
 
       if (debeMostrarse && !yaExiste) {
@@ -165,7 +158,7 @@ export default function MapaSismos({
     if (!map) return;
     sincronizarMarcadores(map);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [soloChile, magnitudMinima]);
+  }, [filtro]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -200,6 +193,7 @@ export default function MapaSismos({
         style={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
         className="absolute right-3 z-10 flex items-center gap-2"
       >
+        <BotonFiltroMapa filtro={filtro} onFiltroChange={onFiltroChange} />
         <button
           type="button"
           onClick={() =>

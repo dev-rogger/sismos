@@ -3,9 +3,10 @@
 import { useState } from "react";
 import MapaSismos from "./mapa/MapaSismos";
 import PanelHistorial from "./historial/PanelHistorial";
+import PantallaHistorial from "./historial/PantallaHistorial";
 import MenuLateral from "./menu/MenuLateral";
 import ModalConfiguracion from "./configuracion/ModalConfiguracion";
-import ModalFiltros from "./configuracion/ModalFiltros";
+import { useFiltroMapa } from "../lib/use-filtro-mapa";
 import type { SismoMapa, SismoSeleccionado } from "../lib/tipos-sismo";
 
 interface MapaConHistorialProps {
@@ -19,11 +20,9 @@ export default function MapaConHistorial({
 }: MapaConHistorialProps) {
   const [sismoSeleccionado, setSismoSeleccionado] =
     useState<SismoSeleccionado | null>(sismoInicial);
-  const [soloChile, setSoloChile] = useState(false);
-  const [magnitudMinima, setMagnitudMinima] = useState(5);
-  const [historialExpandido, setHistorialExpandido] = useState(false);
+  const { filtro, setFiltro } = useFiltroMapa();
+  const [historialAbierto, setHistorialAbierto] = useState(false);
   const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
-  const [configuracionAbierta, setConfiguracionAbierta] = useState(false);
 
   return (
     <>
@@ -32,34 +31,28 @@ export default function MapaConHistorial({
           sismosIniciales={sismosIniciales}
           sismoSeleccionado={sismoSeleccionado}
           onSeleccionarDesdeMapa={setSismoSeleccionado}
-          soloChile={soloChile}
-          magnitudMinima={magnitudMinima}
+          filtro={filtro}
+          onFiltroChange={setFiltro}
         />
       </div>
       <PanelHistorial
         sismoSeleccionado={sismoSeleccionado}
         onSeleccionar={setSismoSeleccionado}
-        soloChile={soloChile}
-        magnitudMinima={magnitudMinima}
-        expandido={historialExpandido}
-        onExpandidoChange={setHistorialExpandido}
       />
+      {historialAbierto && (
+        <PantallaHistorial
+          sismoSeleccionado={sismoSeleccionado}
+          onSeleccionar={setSismoSeleccionado}
+          onCerrar={() => setHistorialAbierto(false)}
+        />
+      )}
       <MenuLateral
-        onAbrirHistorial={() => setHistorialExpandido(true)}
+        onAbrirHistorial={() => setHistorialAbierto(true)}
         onAbrirNotificaciones={() => setNotificacionesAbiertas(true)}
-        onAbrirConfiguracion={() => setConfiguracionAbierta(true)}
       />
       <ModalConfiguracion
         abierto={notificacionesAbiertas}
         onCerrar={() => setNotificacionesAbiertas(false)}
-      />
-      <ModalFiltros
-        abierto={configuracionAbierta}
-        onCerrar={() => setConfiguracionAbierta(false)}
-        soloChile={soloChile}
-        onSoloChileChange={setSoloChile}
-        magnitudMinima={magnitudMinima}
-        onMagnitudMinimaChange={setMagnitudMinima}
       />
     </>
   );
