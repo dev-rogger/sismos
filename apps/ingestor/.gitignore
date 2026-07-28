@@ -1,0 +1,7 @@
+.vercel
+.env*
+
+# Claude Code local skill tooling (not committed, matches root .claude convention)
+.claude/
+.agents/
+skills-lock.json
