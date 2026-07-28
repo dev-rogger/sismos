@@ -41,6 +41,7 @@ pnpm-debug.log*
 
 # Claude Code worktrees
 .claude/worktrees/
+.worktrees/
 
 # TypeScript
 *.tsbuildinfo
