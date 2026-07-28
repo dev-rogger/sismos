@@ -24,13 +24,22 @@ export default function MapaConHistorial({
   const [historialAbierto, setHistorialAbierto] = useState(false);
   const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
 
+  // Una selección que viene del mapa (clic manual o foco automático por un
+  // sismo nuevo) solo puede ocurrir cuando el historial fullscreen no está
+  // tapando el mapa, o es justamente el caso en que queremos interrumpirlo
+  // para mostrarlo — en ambos casos, cerrarlo es lo correcto.
+  const seleccionarDesdeMapa = (sismo: SismoSeleccionado | null) => {
+    setSismoSeleccionado(sismo);
+    setHistorialAbierto(false);
+  };
+
   return (
     <>
       <div className="relative flex-1">
         <MapaSismos
           sismosIniciales={sismosIniciales}
           sismoSeleccionado={sismoSeleccionado}
-          onSeleccionarDesdeMapa={setSismoSeleccionado}
+          onSeleccionarDesdeMapa={seleccionarDesdeMapa}
           filtro={filtro}
           onFiltroChange={setFiltro}
         />

@@ -29,7 +29,7 @@ const CHILE_BOUNDS: [[number, number], [number, number]] = [
   [-66, -17.3],
 ];
 const CHILE_BOUNDS_PADDING = 24;
-const POLL_INTERVAL_MS = 30 * 1000;
+const POLL_INTERVAL_MS = 15 * 1000;
 const ESTILO_URL = "https://tiles.openfreemap.org/styles/liberty";
 
 function pasaFiltro(sismo: SismoMapa, filtro: FiltroMapa): boolean {
@@ -162,6 +162,28 @@ export default function MapaSismos({
             }
           }
           sincronizarMarcadores(map);
+
+          // Foco automático: si algo de lo nuevo pasa el filtro actual,
+          // lo seleccionamos solos (mismo flujo que un clic manual: vuela
+          // el mapa, abre el popup, ya trae la animación de pulso). Con
+          // varios a la vez, priorizamos el de mayor magnitud.
+          const nuevosQuePasanFiltro = data.sismos.filter((s) =>
+            pasaFiltro(s, filtroRef.current),
+          );
+          if (nuevosQuePasanFiltro.length > 0) {
+            const masSignificativo = nuevosQuePasanFiltro.reduce((a, b) =>
+              b.magnitud > a.magnitud ? b : a,
+            );
+            onSeleccionarDesdeMapaRef.current({
+              externalId: masSignificativo.externalId,
+              latitud: masSignificativo.latitud,
+              longitud: masSignificativo.longitud,
+              magnitud: masSignificativo.magnitud,
+              lugar: masSignificativo.lugar,
+              fecha: masSignificativo.fecha,
+              bandera: masSignificativo.bandera,
+            });
+          }
         })
         .catch((error) => {
           console.error("[MapaSismos] poll error:", error);
