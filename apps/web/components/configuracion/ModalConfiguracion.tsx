@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePushNotifications } from "../../lib/use-push-notifications";
 import SelectorRadioMapa from "./SelectorRadioMapa";
 import {
@@ -8,46 +8,61 @@ import {
   RADIO_KM_MAX,
   RADIO_KM_DEFAULT,
 } from "../../lib/radio-notificacion";
+import type { UbicacionUsuario } from "../../lib/use-ubicacion-usuario";
 
 interface ModalConfiguracionProps {
   abierto: boolean;
   onCerrar: () => void;
+  ubicacion: UbicacionUsuario;
+  onPedirUbicacion: () => Promise<{ lat: number; lon: number } | null>;
+  onSetRadioKm: (radioKm: number | null) => void;
 }
 
 export default function ModalConfiguracion({
   abierto,
   onCerrar,
+  ubicacion,
+  onPedirUbicacion,
+  onSetRadioKm,
 }: ModalConfiguracionProps) {
   const {
     permission,
     suscrito,
     loading,
     magnitudMinima,
-    radioKm,
-    centro,
     activar,
     desactivar,
     actualizarUmbral,
   } = usePushNotifications();
   const [umbralLocal, setUmbralLocal] = useState(magnitudMinima);
-  const [mundialLocal, setMundialLocal] = useState(radioKm === null);
+  const [mundialLocal, setMundialLocal] = useState(ubicacion.radioKm === null);
   const [radioKmLocal, setRadioKmLocal] = useState(
-    radioKm ?? RADIO_KM_DEFAULT,
+    ubicacion.radioKm ?? RADIO_KM_DEFAULT,
   );
-  const [centroLocal, setCentroLocal] = useState(centro);
-  const [ubicacionFallo, setUbicacionFallo] = useState(false);
+  const [pidiendoUbicacion, setPidiendoUbicacion] = useState(false);
+
+  // Pide geolocalización solo si el modal está abierto y el usuario
+  // desactivó "Mundial" — nunca de forma automática al montar la app
+  // (ModalConfiguracion siempre está montado, solo oculto vía `abierto`).
+  useEffect(() => {
+    if (!abierto || mundialLocal || ubicacion.centro || pidiendoUbicacion) {
+      return;
+    }
+    setPidiendoUbicacion(true);
+    onPedirUbicacion().then(() => setPidiendoUbicacion(false));
+  }, [abierto, mundialLocal, ubicacion.centro, pidiendoUbicacion, onPedirUbicacion]);
 
   if (!abierto) return null;
 
   const preferenciaRadio = () =>
-    mundialLocal || ubicacionFallo
+    mundialLocal || !ubicacion.centro
       ? { centro: null, radioKm: null }
-      : { centro: centroLocal, radioKm: radioKmLocal };
+      : { centro: ubicacion.centro, radioKm: radioKmLocal };
 
   const hayFormaCambios =
     umbralLocal !== magnitudMinima ||
-    mundialLocal !== (radioKm === null) ||
-    (!mundialLocal && radioKmLocal !== radioKm);
+    mundialLocal !== (ubicacion.radioKm === null) ||
+    (!mundialLocal && radioKmLocal !== ubicacion.radioKm);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -86,9 +101,15 @@ export default function ModalConfiguracion({
             <button
               type="button"
               disabled={loading}
-              onClick={() =>
-                suscrito ? desactivar() : activar(umbralLocal, preferenciaRadio())
-              }
+              onClick={() => {
+                if (suscrito) {
+                  desactivar();
+                  return;
+                }
+                const preferencia = preferenciaRadio();
+                onSetRadioKm(preferencia.radioKm);
+                activar(umbralLocal, preferencia);
+              }}
               aria-pressed={suscrito}
               className={`flex min-h-11 w-full items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50 ${
                 suscrito
@@ -141,21 +162,18 @@ export default function ModalConfiguracion({
 
                   {!mundialLocal && (
                     <div className="mt-3">
-                      <SelectorRadioMapa
-                        radioKm={radioKmLocal}
-                        onUbicacionLista={(nuevoCentro) => {
-                          setCentroLocal(nuevoCentro);
-                          setUbicacionFallo(nuevoCentro === null);
-                        }}
-                      />
+                      {pidiendoUbicacion && (
+                        <div className="flex h-40 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-800/50 text-xs text-neutral-400">
+                          Buscando tu ubicación…
+                        </div>
+                      )}
 
-                      {ubicacionFallo ? (
-                        <p className="mt-3 text-xs text-neutral-400">
-                          No pudimos acceder a tu ubicación, así que las
-                          notificaciones quedan sin límite de distancia.
-                        </p>
-                      ) : (
+                      {!pidiendoUbicacion && ubicacion.centro && (
                         <>
+                          <SelectorRadioMapa
+                            centro={ubicacion.centro}
+                            radioKm={radioKmLocal}
+                          />
                           <p className="mt-3 text-xs text-neutral-400">
                             Avisar hasta a {radioKmLocal} km de tu ubicación
                           </p>
@@ -172,6 +190,13 @@ export default function ModalConfiguracion({
                           />
                         </>
                       )}
+
+                      {!pidiendoUbicacion && !ubicacion.centro && (
+                        <p className="mt-3 text-xs text-neutral-400">
+                          No pudimos acceder a tu ubicación, así que las
+                          notificaciones quedan sin límite de distancia.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -179,9 +204,11 @@ export default function ModalConfiguracion({
                 <button
                   type="button"
                   disabled={loading || !hayFormaCambios}
-                  onClick={() =>
-                    actualizarUmbral(umbralLocal, preferenciaRadio())
-                  }
+                  onClick={() => {
+                    const preferencia = preferenciaRadio();
+                    onSetRadioKm(preferencia.radioKm);
+                    actualizarUmbral(umbralLocal, preferencia);
+                  }}
                   className="mt-4 flex min-h-11 w-full items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition-colors hover:border-neutral-600 disabled:opacity-50"
                 >
                   Guardar

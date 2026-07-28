@@ -7,6 +7,7 @@ import PantallaHistorial from "./historial/PantallaHistorial";
 import MenuLateral from "./menu/MenuLateral";
 import ModalConfiguracion from "./configuracion/ModalConfiguracion";
 import { useFiltroMapa } from "../lib/use-filtro-mapa";
+import { useUbicacionUsuario } from "../lib/use-ubicacion-usuario";
 import type { SismoMapa, SismoSeleccionado } from "../lib/tipos-sismo";
 
 interface MapaConHistorialProps {
@@ -21,6 +22,7 @@ export default function MapaConHistorial({
   const [sismoSeleccionado, setSismoSeleccionado] =
     useState<SismoSeleccionado | null>(sismoInicial);
   const { filtro, setFiltro } = useFiltroMapa();
+  const { ubicacion, pedirUbicacion, setRadioKm } = useUbicacionUsuario();
   const [historialAbierto, setHistorialAbierto] = useState(false);
   const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
 
@@ -62,6 +64,9 @@ export default function MapaConHistorial({
       <ModalConfiguracion
         abierto={notificacionesAbiertas}
         onCerrar={() => setNotificacionesAbiertas(false)}
+        ubicacion={ubicacion}
+        onPedirUbicacion={pedirUbicacion}
+        onSetRadioKm={setRadioKm}
       />
     </>
   );

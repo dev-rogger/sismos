@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { generarCirculoGeografico } from "../../lib/circulo-geografico";
@@ -9,25 +9,20 @@ const ESTILO_URL = "https://tiles.openfreemap.org/styles/liberty";
 const FUENTE_CIRCULO = "circulo-radio";
 
 interface SelectorRadioMapaProps {
+  centro: { lat: number; lon: number };
   radioKm: number;
-  onUbicacionLista: (centro: { lat: number; lon: number } | null) => void;
 }
 
 export default function SelectorRadioMapa({
+  centro,
   radioKm,
-  onUbicacionLista,
 }: SelectorRadioMapaProps) {
   const contenedorRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const centroRef = useRef<{ lat: number; lon: number } | null>(null);
-  const [estado, setEstado] = useState<"cargando" | "listo" | "error">(
-    "cargando",
-  );
 
   const actualizarCirculo = (radio: number) => {
     const map = mapRef.current;
-    const centro = centroRef.current;
-    if (!map || !centro) return;
+    if (!map) return;
     const circulo = generarCirculoGeografico(centro, radio);
     const fuente = map.getSource(FUENTE_CIRCULO) as
       | maplibregl.GeoJSONSource
@@ -46,35 +41,7 @@ export default function SelectorRadioMapa({
   };
 
   useEffect(() => {
-    if (!("geolocation" in navigator)) {
-      setEstado("error");
-      onUbicacionLista(null);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (posicion) => {
-        const centro = {
-          lat: posicion.coords.latitude,
-          lon: posicion.coords.longitude,
-        };
-        centroRef.current = centro;
-        setEstado("listo");
-        onUbicacionLista(centro);
-      },
-      () => {
-        setEstado("error");
-        onUbicacionLista(null);
-      },
-      { enableHighAccuracy: false, timeout: 8000 },
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (estado !== "listo" || !contenedorRef.current || !centroRef.current) {
-      return;
-    }
-    const centro = centroRef.current;
+    if (!contenedorRef.current) return;
 
     const map = new maplibregl.Map({
       container: contenedorRef.current,
@@ -118,23 +85,12 @@ export default function SelectorRadioMapa({
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [estado]);
+  }, []);
 
   useEffect(() => {
     actualizarCirculo(radioKm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [radioKm]);
-
-  if (estado === "cargando") {
-    return (
-      <div className="flex h-40 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-800/50 text-xs text-neutral-400">
-        Buscando tu ubicación…
-      </div>
-    );
-  }
-
-  if (estado === "error") {
-    return null;
-  }
 
   return (
     <div
