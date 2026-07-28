@@ -75,6 +75,15 @@ body {
   }
 }
 
+.marcador-ubicacion {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: #38bdf8;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
+}
+
 .popup-sismo .maplibregl-popup-content {
   background: linear-gradient(175deg, #1e1e20, #151516);
   color: #ededed;

@@ -36,3 +36,9 @@ export function crearElementoSeleccion(): HTMLDivElement {
   el.className = "marcador-seleccion";
   return el;
 }
+
+export function crearElementoUbicacion(): HTMLDivElement {
+  const el = document.createElement("div");
+  el.className = "marcador-ubicacion";
+  return el;
+}
