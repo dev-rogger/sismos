@@ -14,4 +14,6 @@ export interface SismoSeleccionado {
   longitud: number;
   magnitud: number;
   lugar: string;
+  fecha?: string;
+  bandera?: string | null;
 }

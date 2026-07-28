@@ -7,6 +7,8 @@ import { crearElementoMarcador, crearElementoSeleccion } from "./marcador";
 import BotonFiltroMapa from "./BotonFiltroMapa";
 import { magnitudPasaRangos, fechaPasaVentana } from "../../lib/filtro-tipos";
 import type { FiltroMapa } from "../../lib/filtro-tipos";
+import { colorPorMagnitud } from "../../lib/magnitud";
+import { regionChilePorLatitud } from "@sismos/shared";
 import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
 
 export type { SismoMapa, SismoSeleccionado };
@@ -19,8 +21,14 @@ interface MapaSismosProps {
   onFiltroChange: (filtro: FiltroMapa) => void;
 }
 
-const CHILE_CENTER: [number, number] = [-71.5, -35.5];
-const CHILE_ZOOM = 4;
+// Chile es muy largo y angosto (~4300 km de norte a sur): un center+zoom
+// fijo no lo encuadra bien en pantallas de distinto aspecto. Con un
+// bounding box, MapLibre calcula el zoom óptimo según el viewport actual.
+const CHILE_BOUNDS: [[number, number], [number, number]] = [
+  [-76, -56],
+  [-66, -17.3],
+];
+const CHILE_BOUNDS_PADDING = 24;
 const POLL_INTERVAL_MS = 30 * 1000;
 const ESTILO_URL = "https://tiles.openfreemap.org/styles/liberty";
 
@@ -29,6 +37,26 @@ function pasaFiltro(sismo: SismoMapa, filtro: FiltroMapa): boolean {
   if (!magnitudPasaRangos(sismo.magnitud, filtro.rangos)) return false;
   if (!fechaPasaVentana(sismo.fecha, filtro.ventana)) return false;
   return true;
+}
+
+function construirHtmlPopup(sismo: SismoSeleccionado): string {
+  const region =
+    sismo.bandera === "🇨🇱" ? regionChilePorLatitud(sismo.latitud) : null;
+  const fechaTexto = sismo.fecha
+    ? new Date(sismo.fecha).toLocaleString("es-CL")
+    : null;
+
+  return `
+    <div class="popup-sismo-cabecera">
+      <span>${sismo.bandera ?? "🌎"}</span>
+      <span class="popup-sismo-lugar">${sismo.lugar}</span>
+    </div>
+    ${region ? `<div class="popup-sismo-region">${region}</div>` : ""}
+    <div class="popup-sismo-magnitud" style="color: ${colorPorMagnitud(sismo.magnitud)}">
+      M${sismo.magnitud}
+    </div>
+    ${fechaTexto ? `<div class="popup-sismo-fecha">${fechaTexto}</div>` : ""}
+  `;
 }
 
 export default function MapaSismos({
@@ -73,18 +101,13 @@ export default function MapaSismos({
         longitud: sismo.longitud,
         magnitud: sismo.magnitud,
         lugar: sismo.lugar,
+        fecha: sismo.fecha,
+        bandera: sismo.bandera,
       });
     });
 
     return new maplibregl.Marker({ element: el })
       .setLngLat([sismo.longitud, sismo.latitud])
-      .setPopup(
-        new maplibregl.Popup({ offset: 12, className: "popup-sismo" }).setHTML(
-          `<strong>${sismo.lugar}</strong><br/>M${sismo.magnitud} — ${new Date(
-            sismo.fecha,
-          ).toLocaleString("es-CL")}`,
-        ),
-      )
       .addTo(map);
   }
 
@@ -113,8 +136,8 @@ export default function MapaSismos({
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: ESTILO_URL,
-      center: CHILE_CENTER,
-      zoom: CHILE_ZOOM,
+      bounds: CHILE_BOUNDS,
+      fitBoundsOptions: { padding: CHILE_BOUNDS_PADDING },
     });
     mapRef.current = map;
 
@@ -174,9 +197,11 @@ export default function MapaSismos({
     const marker = new maplibregl.Marker({ element: el })
       .setLngLat([sismoSeleccionado.longitud, sismoSeleccionado.latitud])
       .setPopup(
-        new maplibregl.Popup({ offset: 12, className: "popup-sismo" }).setHTML(
-          `<strong>${sismoSeleccionado.lugar}</strong><br/>M${sismoSeleccionado.magnitud}`,
-        ),
+        new maplibregl.Popup({
+          offset: 12,
+          className: "popup-sismo",
+          closeOnClick: false,
+        }).setHTML(construirHtmlPopup(sismoSeleccionado)),
       )
       .addTo(map);
     marker.togglePopup();
@@ -197,9 +222,8 @@ export default function MapaSismos({
         <button
           type="button"
           onClick={() =>
-            mapRef.current?.flyTo({
-              center: CHILE_CENTER,
-              zoom: CHILE_ZOOM,
+            mapRef.current?.fitBounds(CHILE_BOUNDS, {
+              padding: CHILE_BOUNDS_PADDING,
               speed: 1.2,
             })
           }

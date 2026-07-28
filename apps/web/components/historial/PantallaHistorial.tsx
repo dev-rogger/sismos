@@ -134,6 +134,8 @@ export default function PantallaHistorial({
                     longitud: evento.longitud,
                     magnitud: evento.magnitud,
                     lugar: evento.lugar,
+                    fecha: evento.fecha,
+                    bandera: evento.bandera,
                   });
                   onCerrar();
                 }}

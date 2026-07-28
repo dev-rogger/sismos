@@ -87,4 +87,52 @@ body {
 
 .popup-sismo .maplibregl-popup-close-button {
   color: #ededed;
+  font-size: 1rem;
+}
+
+.popup-sismo-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-weight: 600;
+  color: #ededed;
+}
+
+.popup-sismo-region {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: #a3a3a3;
+}
+
+.popup-sismo-magnitud {
+  margin-top: 0.375rem;
+  font-weight: 700;
+}
+
+.popup-sismo-fecha {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: #a3a3a3;
+}
+
+/* El "tip" (triangulito) de maplibre viene con #fff fijo por defecto,
+   lo que se ve como una cuña blanca sobre nuestro popup oscuro. */
+.popup-sismo.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.popup-sismo.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.popup-sismo.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: #171717;
+}
+
+.popup-sismo.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.popup-sismo.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.popup-sismo.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: #171717;
+}
+
+.popup-sismo.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: #171717;
+}
+
+.popup-sismo.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: #171717;
 }

@@ -108,6 +108,8 @@ export default function PanelHistorial({
                           longitud: evento.longitud,
                           magnitud: evento.magnitud,
                           lugar: evento.lugar,
+                          fecha: evento.fecha,
+                          bandera: evento.bandera,
                         },
                   )
                 }
