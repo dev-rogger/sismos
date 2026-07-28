@@ -40,17 +40,48 @@ export default function ModalConfiguracion({
     ubicacion.radioKm ?? RADIO_KM_DEFAULT,
   );
   const [pidiendoUbicacion, setPidiendoUbicacion] = useState(false);
+  const [ubicacionFallo, setUbicacionFallo] = useState(false);
+
+  // ModalConfiguracion siempre está montado (solo oculto vía `abierto`), así
+  // que los useState de arriba se inicializan en el primer render de toda la
+  // app — antes de que useUbicacionUsuario termine de hidratar desde
+  // localStorage. Este efecto resincroniza el borrador local con el valor
+  // persistido cada vez que el modal se abre (o si `ubicacion` cambia
+  // mientras está abierto), para no pisar el radio guardado con el default.
+  useEffect(() => {
+    if (!abierto) return;
+    setMundialLocal(ubicacion.radioKm === null);
+    setRadioKmLocal(ubicacion.radioKm ?? RADIO_KM_DEFAULT);
+    setUbicacionFallo(false);
+  }, [abierto, ubicacion.radioKm]);
 
   // Pide geolocalización solo si el modal está abierto y el usuario
-  // desactivó "Mundial" — nunca de forma automática al montar la app
-  // (ModalConfiguracion siempre está montado, solo oculto vía `abierto`).
+  // desactivó "Mundial" — nunca de forma automática al montar la app.
+  // `ubicacionFallo` evita reintentar en loop cuando el usuario ya rechazó
+  // el permiso o el navegador no soporta geolocalización.
   useEffect(() => {
-    if (!abierto || mundialLocal || ubicacion.centro || pidiendoUbicacion) {
+    if (
+      !abierto ||
+      mundialLocal ||
+      ubicacion.centro ||
+      pidiendoUbicacion ||
+      ubicacionFallo
+    ) {
       return;
     }
     setPidiendoUbicacion(true);
-    onPedirUbicacion().then(() => setPidiendoUbicacion(false));
-  }, [abierto, mundialLocal, ubicacion.centro, pidiendoUbicacion, onPedirUbicacion]);
+    onPedirUbicacion().then((centro) => {
+      setPidiendoUbicacion(false);
+      setUbicacionFallo(centro === null);
+    });
+  }, [
+    abierto,
+    mundialLocal,
+    ubicacion.centro,
+    pidiendoUbicacion,
+    ubicacionFallo,
+    onPedirUbicacion,
+  ]);
 
   if (!abierto) return null;
 
@@ -148,7 +179,10 @@ export default function ModalConfiguracion({
                     <span className="text-xs text-neutral-400">Alcance</span>
                     <button
                       type="button"
-                      onClick={() => setMundialLocal((v) => !v)}
+                      onClick={() => {
+                        setMundialLocal((v) => !v);
+                        setUbicacionFallo(false);
+                      }}
                       aria-pressed={mundialLocal}
                       className={`flex min-h-9 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-colors ${
                         mundialLocal
@@ -191,7 +225,7 @@ export default function ModalConfiguracion({
                         </>
                       )}
 
-                      {!pidiendoUbicacion && !ubicacion.centro && (
+                      {!pidiendoUbicacion && ubicacionFallo && (
                         <p className="mt-3 text-xs text-neutral-400">
                           No pudimos acceder a tu ubicación, así que las
                           notificaciones quedan sin límite de distancia.
