@@ -8,6 +8,8 @@ interface GuardarSuscripcionInput {
   endpoint: string;
   keys: { p256dh: string; auth: string };
   magnitudMinima: number;
+  centro?: { lat: number; lon: number } | null;
+  radioKm?: number | null;
 }
 
 export async function guardarSuscripcion(

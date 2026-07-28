@@ -6,6 +6,11 @@ type PermisoNotificacion = "granted" | "denied" | "default" | "unsupported";
 
 const MAGNITUD_DEFAULT = 4;
 
+interface PreferenciaRadio {
+  centro: { lat: number; lon: number } | null;
+  radioKm: number | null;
+}
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
@@ -22,6 +27,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 async function enviarSuscripcion(
   subscription: PushSubscription,
   magnitudMinima: number,
+  preferenciaRadio: PreferenciaRadio,
 ): Promise<void> {
   const res = await fetch("/api/push/subscribe", {
     method: "POST",
@@ -29,6 +35,8 @@ async function enviarSuscripcion(
     body: JSON.stringify({
       subscription: subscription.toJSON(),
       magnitudMinima,
+      centro: preferenciaRadio.centro,
+      radioKm: preferenciaRadio.radioKm,
     }),
   });
   if (!res.ok) throw new Error(`subscribe failed: ${res.status}`);
@@ -40,6 +48,10 @@ export function usePushNotifications() {
   const [suscrito, setSuscrito] = useState(false);
   const [loading, setLoading] = useState(true);
   const [magnitudMinima, setMagnitudMinima] = useState(MAGNITUD_DEFAULT);
+  const [radioKm, setRadioKm] = useState<number | null>(null);
+  const [centro, setCentro] = useState<{ lat: number; lon: number } | null>(
+    null,
+  );
 
   useEffect(() => {
     let cancelado = false;
@@ -73,35 +85,44 @@ export function usePushNotifications() {
     };
   }, []);
 
-  const activar = useCallback(async (nuevaMagnitudMinima: number) => {
-    setLoading(true);
-    try {
-      const permisoActual = await Notification.requestPermission();
-      setPermission(permisoActual as PermisoNotificacion);
-      if (permisoActual !== "granted") return;
+  const activar = useCallback(
+    async (nuevaMagnitudMinima: number, preferenciaRadio: PreferenciaRadio) => {
+      setLoading(true);
+      try {
+        const permisoActual = await Notification.requestPermission();
+        setPermission(permisoActual as PermisoNotificacion);
+        if (permisoActual !== "granted") return;
 
-      const registration = await navigator.serviceWorker.ready;
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidPublicKey) {
-        throw new Error("NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set");
-      }
+        const registration = await navigator.serviceWorker.ready;
+        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        if (!vapidPublicKey) {
+          throw new Error("NEXT_PUBLIC_VAPID_PUBLIC_KEY is not set");
+        }
 
-      let subscription = await registration.pushManager.getSubscription();
-      if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(
-            vapidPublicKey,
-          ) as BufferSource,
-        });
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(
+              vapidPublicKey,
+            ) as BufferSource,
+          });
+        }
+        await enviarSuscripcion(
+          subscription,
+          nuevaMagnitudMinima,
+          preferenciaRadio,
+        );
+        setMagnitudMinima(nuevaMagnitudMinima);
+        setRadioKm(preferenciaRadio.radioKm);
+        setCentro(preferenciaRadio.centro);
+        setSuscrito(true);
+      } finally {
+        setLoading(false);
       }
-      await enviarSuscripcion(subscription, nuevaMagnitudMinima);
-      setMagnitudMinima(nuevaMagnitudMinima);
-      setSuscrito(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   const desactivar = useCallback(async () => {
     setLoading(true);
@@ -123,24 +144,35 @@ export function usePushNotifications() {
     }
   }, []);
 
-  const actualizarUmbral = useCallback(async (nuevaMagnitudMinima: number) => {
-    setLoading(true);
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      if (!subscription) throw new Error("No active subscription to update");
-      await enviarSuscripcion(subscription, nuevaMagnitudMinima);
-      setMagnitudMinima(nuevaMagnitudMinima);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const actualizarUmbral = useCallback(
+    async (nuevaMagnitudMinima: number, preferenciaRadio: PreferenciaRadio) => {
+      setLoading(true);
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (!subscription) throw new Error("No active subscription to update");
+        await enviarSuscripcion(
+          subscription,
+          nuevaMagnitudMinima,
+          preferenciaRadio,
+        );
+        setMagnitudMinima(nuevaMagnitudMinima);
+        setRadioKm(preferenciaRadio.radioKm);
+        setCentro(preferenciaRadio.centro);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   return {
     permission,
     suscrito,
     loading,
     magnitudMinima,
+    radioKm,
+    centro,
     activar,
     desactivar,
     actualizarUmbral,

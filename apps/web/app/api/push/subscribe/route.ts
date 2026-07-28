@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { guardarSuscripcion, eliminarSuscripcion } from "../../../../lib/push-subscriptions";
+import { esRadioKmValido, esCentroValido } from "../../../../lib/radio-notificacion";
 
 interface SubscribeBody {
   subscription?: {
@@ -7,6 +8,8 @@ interface SubscribeBody {
     keys?: { p256dh?: string; auth?: string };
   };
   magnitudMinima?: number;
+  centro?: { lat: number; lon: number } | null;
+  radioKm?: number | null;
 }
 
 function esMagnitudValida(valor: unknown): valor is number {
@@ -30,12 +33,26 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  if (body.radioKm != null && !esRadioKmValido(body.radioKm)) {
+    return NextResponse.json(
+      { error: "radioKm must be null or a number between 25 and 1000" },
+      { status: 400 },
+    );
+  }
+  if (body.centro != null && !esCentroValido(body.centro)) {
+    return NextResponse.json(
+      { error: "centro must be null or { lat, lon }" },
+      { status: 400 },
+    );
+  }
 
   try {
     await guardarSuscripcion({
       endpoint,
       keys: { p256dh: keys.p256dh, auth: keys.auth },
       magnitudMinima: body.magnitudMinima,
+      centro: body.centro ?? null,
+      radioKm: body.radioKm ?? null,
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

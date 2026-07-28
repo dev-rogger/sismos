@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { usePushNotifications } from "../../lib/use-push-notifications";
+import SelectorRadioMapa from "./SelectorRadioMapa";
+import {
+  RADIO_KM_MIN,
+  RADIO_KM_MAX,
+  RADIO_KM_DEFAULT,
+} from "../../lib/radio-notificacion";
 
 interface ModalConfiguracionProps {
   abierto: boolean;
@@ -17,13 +23,31 @@ export default function ModalConfiguracion({
     suscrito,
     loading,
     magnitudMinima,
+    radioKm,
+    centro,
     activar,
     desactivar,
     actualizarUmbral,
   } = usePushNotifications();
   const [umbralLocal, setUmbralLocal] = useState(magnitudMinima);
+  const [mundialLocal, setMundialLocal] = useState(radioKm === null);
+  const [radioKmLocal, setRadioKmLocal] = useState(
+    radioKm ?? RADIO_KM_DEFAULT,
+  );
+  const [centroLocal, setCentroLocal] = useState(centro);
+  const [ubicacionFallo, setUbicacionFallo] = useState(false);
 
   if (!abierto) return null;
+
+  const preferenciaRadio = () =>
+    mundialLocal || ubicacionFallo
+      ? { centro: null, radioKm: null }
+      : { centro: centroLocal, radioKm: radioKmLocal };
+
+  const hayFormaCambios =
+    umbralLocal !== magnitudMinima ||
+    mundialLocal !== (radioKm === null) ||
+    (!mundialLocal && radioKmLocal !== radioKm);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -62,7 +86,9 @@ export default function ModalConfiguracion({
             <button
               type="button"
               disabled={loading}
-              onClick={() => (suscrito ? desactivar() : activar(umbralLocal))}
+              onClick={() =>
+                suscrito ? desactivar() : activar(umbralLocal, preferenciaRadio())
+              }
               aria-pressed={suscrito}
               className={`flex min-h-11 w-full items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50 ${
                 suscrito
@@ -95,11 +121,68 @@ export default function ModalConfiguracion({
                   onChange={(e) => setUmbralLocal(Number(e.target.value))}
                   className="w-full accent-sky-500"
                 />
+
+                <div className="mt-4 border-t border-neutral-800 pt-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs text-neutral-400">Alcance</span>
+                    <button
+                      type="button"
+                      onClick={() => setMundialLocal((v) => !v)}
+                      aria-pressed={mundialLocal}
+                      className={`flex min-h-9 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-colors ${
+                        mundialLocal
+                          ? "border-sky-500 bg-sky-500/10 text-sky-400"
+                          : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
+                      }`}
+                    >
+                      🌎 Mundial, sin rango
+                    </button>
+                  </div>
+
+                  {!mundialLocal && (
+                    <div className="mt-3">
+                      <SelectorRadioMapa
+                        radioKm={radioKmLocal}
+                        onUbicacionLista={(nuevoCentro) => {
+                          setCentroLocal(nuevoCentro);
+                          setUbicacionFallo(nuevoCentro === null);
+                        }}
+                      />
+
+                      {ubicacionFallo ? (
+                        <p className="mt-3 text-xs text-neutral-400">
+                          No pudimos acceder a tu ubicación, así que las
+                          notificaciones quedan sin límite de distancia.
+                        </p>
+                      ) : (
+                        <>
+                          <p className="mt-3 text-xs text-neutral-400">
+                            Avisar hasta a {radioKmLocal} km de tu ubicación
+                          </p>
+                          <input
+                            type="range"
+                            min={RADIO_KM_MIN}
+                            max={RADIO_KM_MAX}
+                            step={25}
+                            value={radioKmLocal}
+                            onChange={(e) =>
+                              setRadioKmLocal(Number(e.target.value))
+                            }
+                            className="mt-2 w-full accent-sky-500"
+                          />
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <button
                   type="button"
-                  disabled={loading || umbralLocal === magnitudMinima}
-                  onClick={() => actualizarUmbral(umbralLocal)}
-                  className="mt-3 flex min-h-11 w-full items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition-colors hover:border-neutral-600 disabled:opacity-50"
+                  disabled={loading || !hayFormaCambios}
+                  onClick={() =>
+                    actualizarUmbral(umbralLocal, preferenciaRadio())
+                  }
+                  className="mt-4 flex min-h-11 w-full items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition-colors hover:border-neutral-600 disabled:opacity-50"
                 >
                   Guardar
                 </button>

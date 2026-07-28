@@ -1,6 +1,6 @@
 import webpush from "web-push";
 import {
-  findSubscripcionesParaMagnitud,
+  findSubscripcionesParaSismo,
   deletePushSubscription,
 } from "@sismos/db";
 import { regionChilePorLatitud, type SismoNormalizado } from "@sismos/shared";
@@ -51,7 +51,11 @@ export async function enviarPushParaSismo(
 ): Promise<void> {
   configurarVapid();
 
-  const suscripciones = await findSubscripcionesParaMagnitud(evento.magnitud);
+  const suscripciones = await findSubscripcionesParaSismo({
+    magnitud: evento.magnitud,
+    latitud: evento.latitud,
+    longitud: evento.longitud,
+  });
   if (suscripciones.length === 0) return;
 
   const url = `/?sismo=${evento.externalId}&lat=${evento.latitud}&lon=${evento.longitud}&mag=${evento.magnitud}&lugar=${encodeURIComponent(evento.lugar)}`;

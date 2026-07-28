@@ -9,6 +9,8 @@ import { magnitudPasaRangos, fechaPasaVentana } from "../../lib/filtro-tipos";
 import type { FiltroMapa } from "../../lib/filtro-tipos";
 import { colorPorMagnitud } from "../../lib/magnitud";
 import { regionChilePorLatitud } from "@sismos/shared";
+import { generarCirculoGeografico } from "../../lib/circulo-geografico";
+import { radioPercepcionKm } from "../../lib/radio-percepcion";
 import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
 
 export type { SismoMapa, SismoSeleccionado };
@@ -31,6 +33,8 @@ const CHILE_BOUNDS: [[number, number], [number, number]] = [
 const CHILE_BOUNDS_PADDING = 24;
 const POLL_INTERVAL_MS = 15 * 1000;
 const ESTILO_URL = "https://tiles.openfreemap.org/styles/liberty";
+const FUENTE_ONDA = "onda-percepcion";
+const DURACION_ONDA_MS = 1800;
 
 function pasaFiltro(sismo: SismoMapa, filtro: FiltroMapa): boolean {
   if (filtro.soloChile && sismo.bandera !== "🇨🇱") return false;
@@ -216,20 +220,76 @@ export default function MapaSismos({
     });
 
     const el = crearElementoSeleccion();
+    const popup = new maplibregl.Popup({
+      offset: 12,
+      className: "popup-sismo",
+      closeOnClick: false,
+    }).setHTML(construirHtmlPopup(sismoSeleccionado));
     const marker = new maplibregl.Marker({ element: el })
       .setLngLat([sismoSeleccionado.longitud, sismoSeleccionado.latitud])
-      .setPopup(
-        new maplibregl.Popup({
-          offset: 12,
-          className: "popup-sismo",
-          closeOnClick: false,
-        }).setHTML(construirHtmlPopup(sismoSeleccionado)),
-      )
+      .setPopup(popup)
       .addTo(map);
     marker.togglePopup();
 
+    // Si el usuario cierra el popup con el botón × (no nuestro propio
+    // cleanup, que saca este listener antes de remover el marker),
+    // limpiamos la selección para que el puntito azul no quede huérfano.
+    const manejarCierre = () => {
+      onSeleccionarDesdeMapaRef.current(null);
+    };
+    popup.on("close", manejarCierre);
+
+    // Onda expansiva geográfica: crece desde el epicentro hasta el radio
+    // estimado de percepción (aprox., no un modelo sismológico real), y
+    // queda un círculo tenue marcando esa área mientras siga seleccionado.
+    const centro = {
+      lat: sismoSeleccionado.latitud,
+      lon: sismoSeleccionado.longitud,
+    };
+    const radioFinalKm = radioPercepcionKm(sismoSeleccionado.magnitud);
+    const color = colorPorMagnitud(sismoSeleccionado.magnitud);
+    map.addSource(FUENTE_ONDA, {
+      type: "geojson",
+      data: generarCirculoGeografico(centro, 0.01),
+    });
+    map.addLayer({
+      id: `${FUENTE_ONDA}-relleno`,
+      type: "fill",
+      source: FUENTE_ONDA,
+      paint: { "fill-color": color, "fill-opacity": 0.1 },
+    });
+    map.addLayer({
+      id: `${FUENTE_ONDA}-borde`,
+      type: "line",
+      source: FUENTE_ONDA,
+      paint: { "line-color": color, "line-width": 2, "line-opacity": 0.55 },
+    });
+
+    let animacionId: number;
+    const inicioMs = performance.now();
+    const animar = (ahoraMs: number) => {
+      const t = Math.min(1, (ahoraMs - inicioMs) / DURACION_ONDA_MS);
+      const facilitado = 1 - (1 - t) ** 3; // ease-out cúbico
+      const radioActual = Math.max(0.01, radioFinalKm * facilitado);
+      const fuente = map.getSource(FUENTE_ONDA) as
+        | maplibregl.GeoJSONSource
+        | undefined;
+      fuente?.setData(generarCirculoGeografico(centro, radioActual));
+      if (t < 1) animacionId = requestAnimationFrame(animar);
+    };
+    animacionId = requestAnimationFrame(animar);
+
     return () => {
+      cancelAnimationFrame(animacionId);
+      popup.off("close", manejarCierre);
       marker.remove();
+      if (map.getLayer(`${FUENTE_ONDA}-borde`)) {
+        map.removeLayer(`${FUENTE_ONDA}-borde`);
+      }
+      if (map.getLayer(`${FUENTE_ONDA}-relleno`)) {
+        map.removeLayer(`${FUENTE_ONDA}-relleno`);
+      }
+      if (map.getSource(FUENTE_ONDA)) map.removeSource(FUENTE_ONDA);
     };
   }, [sismoSeleccionado]);
 

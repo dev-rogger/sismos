@@ -54,6 +54,9 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   p256dh: text("p256dh").notNull(),
   auth: text("auth").notNull(),
   magnitudMinima: real("magnitud_minima").notNull().default(4),
+  centroLat: doublePrecision("centro_lat"),
+  centroLon: doublePrecision("centro_lon"),
+  radioKm: real("radio_km"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
