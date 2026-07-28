@@ -136,6 +136,7 @@ export default function PantallaHistorial({
                     lugar: evento.lugar,
                     fecha: evento.fecha,
                     bandera: evento.bandera,
+                    profundidadKm: evento.profundidadKm,
                   });
                   onCerrar();
                 }}
@@ -158,6 +159,9 @@ export default function PantallaHistorial({
                 <div className="text-neutral-400">
                   M{evento.magnitud} —{" "}
                   {new Date(evento.fecha).toLocaleString("es-CL")}
+                </div>
+                <div className="text-xs text-neutral-500">
+                  {Math.round(evento.profundidadKm)} km de profundidad
                 </div>
               </button>
             </li>

@@ -6,6 +6,7 @@ export interface SismoMapa {
   longitud: number;
   lugar: string;
   bandera: string | null;
+  profundidadKm: number;
 }
 
 export interface SismoSeleccionado {
@@ -16,4 +17,5 @@ export interface SismoSeleccionado {
   lugar: string;
   fecha?: string;
   bandera?: string | null;
+  profundidadKm?: number;
 }

@@ -47,19 +47,38 @@ function construirHtmlPopup(sismo: SismoSeleccionado): string {
   const region =
     sismo.bandera === "🇨🇱" ? regionChilePorLatitud(sismo.latitud) : null;
   const fechaTexto = sismo.fecha
-    ? new Date(sismo.fecha).toLocaleString("es-CL")
+    ? new Date(sismo.fecha).toLocaleString("es-CL", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
     : null;
 
   return `
-    <div class="popup-sismo-cabecera">
-      <span>${sismo.bandera ?? "🌎"}</span>
-      <span class="popup-sismo-lugar">${sismo.lugar}</span>
+    <div class="popup-sismo-fila">
+      <div class="popup-sismo-badge" style="background: ${colorPorMagnitud(sismo.magnitud)}">
+        M${sismo.magnitud}
+      </div>
+      <div class="popup-sismo-info">
+        <div class="popup-sismo-titulo">
+          <span>${sismo.bandera ?? "🌎"}</span> ${sismo.lugar}
+        </div>
+        ${region ? `<div class="popup-sismo-region">${region}</div>` : ""}
+        ${
+          fechaTexto || sismo.profundidadKm != null
+            ? `<div class="popup-sismo-fecha">${[
+                fechaTexto,
+                sismo.profundidadKm != null
+                  ? `${Math.round(sismo.profundidadKm)} km de profundidad`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}</div>`
+            : ""
+        }
+      </div>
     </div>
-    ${region ? `<div class="popup-sismo-region">${region}</div>` : ""}
-    <div class="popup-sismo-magnitud" style="color: ${colorPorMagnitud(sismo.magnitud)}">
-      M${sismo.magnitud}
-    </div>
-    ${fechaTexto ? `<div class="popup-sismo-fecha">${fechaTexto}</div>` : ""}
   `;
 }
 
@@ -107,6 +126,7 @@ export default function MapaSismos({
         lugar: sismo.lugar,
         fecha: sismo.fecha,
         bandera: sismo.bandera,
+        profundidadKm: sismo.profundidadKm,
       });
     });
 

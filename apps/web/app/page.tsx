@@ -44,6 +44,7 @@ export default async function Home({ searchParams }: HomeProps) {
       longitud: s.longitud,
       lugar: s.lugar,
       bandera: s.bandera ?? null,
+      profundidadKm: s.profundidadKm,
     }));
   } catch (error) {
     console.error("[page] failed to load initial sismos:", error);
