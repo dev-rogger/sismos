@@ -10,11 +10,17 @@ import {
   type SismoHistoricoInput,
 } from "@sismos/db";
 
+// minmagnitude=8 is required, not just an optimization: querying the full
+// global catalog since 1900 sorted by magnitude with no magnitude floor
+// makes USGS's API sort millions of rows and fail with a 503 (their temp
+// table fills up). The biggest earthquakes ever recorded are all well
+// above 8.0 anyway, so this doesn't affect which events end up in the
+// top 10.
 const USGS_HISTORICAL_URL =
   "https://earthquake.usgs.gov/fdsnws/event/1/query" +
   "?format=geojson" +
   "&starttime=1900-01-01" +
-  "&minlatitude=-56&maxlatitude=-17&minlongitude=-76&maxlongitude=-66" +
+  "&minmagnitude=8" +
   "&orderby=magnitude" +
   "&limit=15";
 
@@ -65,14 +71,14 @@ async function fetchTopHistoricos(
       latitud: override.latitud ?? normalizado.latitud,
       longitud: override.longitud ?? normalizado.longitud,
       lugar: override.lugar ?? normalizado.lugar,
-      bandera: "🇨🇱",
+      bandera: normalizado.bandera,
     };
   });
 }
 
 async function main() {
   const overrides = loadOverrides();
-  console.log(`Fetching top ${TOP_N} historical Chilean earthquakes from USGS...`);
+  console.log(`Fetching top ${TOP_N} historical earthquakes worldwide from USGS...`);
   const eventos = await fetchTopHistoricos(overrides);
 
   let count = 0;
