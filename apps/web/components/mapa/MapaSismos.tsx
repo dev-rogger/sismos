@@ -12,7 +12,7 @@ import BotonFiltroMapa from "./BotonFiltroMapa";
 import { magnitudPasaRangos, fechaPasaVentana } from "../../lib/filtro-tipos";
 import type { FiltroMapa } from "../../lib/filtro-tipos";
 import { colorPorMagnitud } from "../../lib/magnitud";
-import { regionChilePorLatitud } from "@sismos/shared";
+import { regionChilePorLatitud, distanciaKm } from "@sismos/shared";
 import { generarCirculoGeografico } from "../../lib/circulo-geografico";
 import { radioPercepcionKm } from "../../lib/radio-percepcion";
 import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
@@ -115,6 +115,8 @@ export default function MapaSismos({
   sismoSeleccionadoRef.current = sismoSeleccionado;
   const filtroRef = useRef(filtro);
   filtroRef.current = filtro;
+  const ubicacionRef = useRef(ubicacion);
+  ubicacionRef.current = ubicacion;
   const marcadorUbicacionRef = useRef<maplibregl.Marker | null>(null);
 
   function crearMarcador(
@@ -201,9 +203,12 @@ export default function MapaSismos({
           // lo seleccionamos solos (mismo flujo que un clic manual: vuela
           // el mapa, abre el popup, ya trae la animación de pulso). Con
           // varios a la vez, priorizamos el de mayor magnitud.
-          const nuevosQuePasanFiltro = data.sismos.filter((s) =>
-            pasaFiltro(s, filtroRef.current),
-          );
+          const nuevosQuePasanFiltro = data.sismos.filter((s) => {
+            if (!pasaFiltro(s, filtroRef.current)) return false;
+            const { centro, radioKm } = ubicacionRef.current;
+            if (radioKm === null || centro === null) return true; // mundial
+            return distanciaKm(centro.lat, centro.lon, s.latitud, s.longitud) <= radioKm;
+          });
           if (nuevosQuePasanFiltro.length > 0) {
             const masSignificativo = nuevosQuePasanFiltro.reduce((a, b) =>
               b.magnitud > a.magnitud ? b : a,
