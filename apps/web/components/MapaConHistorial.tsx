@@ -44,6 +44,8 @@ export default function MapaConHistorial({
           onSeleccionarDesdeMapa={seleccionarDesdeMapa}
           filtro={filtro}
           onFiltroChange={setFiltro}
+          ubicacion={ubicacion}
+          onPedirUbicacion={pedirUbicacion}
         />
       </div>
       <PanelHistorial

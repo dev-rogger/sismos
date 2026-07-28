@@ -3,7 +3,11 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { crearElementoMarcador, crearElementoSeleccion } from "./marcador";
+import {
+  crearElementoMarcador,
+  crearElementoSeleccion,
+  crearElementoUbicacion,
+} from "./marcador";
 import BotonFiltroMapa from "./BotonFiltroMapa";
 import { magnitudPasaRangos, fechaPasaVentana } from "../../lib/filtro-tipos";
 import type { FiltroMapa } from "../../lib/filtro-tipos";
@@ -12,6 +16,7 @@ import { regionChilePorLatitud } from "@sismos/shared";
 import { generarCirculoGeografico } from "../../lib/circulo-geografico";
 import { radioPercepcionKm } from "../../lib/radio-percepcion";
 import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
+import type { UbicacionUsuario } from "../../lib/use-ubicacion-usuario";
 
 export type { SismoMapa, SismoSeleccionado };
 
@@ -21,6 +26,8 @@ interface MapaSismosProps {
   onSeleccionarDesdeMapa: (sismo: SismoSeleccionado | null) => void;
   filtro: FiltroMapa;
   onFiltroChange: (filtro: FiltroMapa) => void;
+  ubicacion: UbicacionUsuario;
+  onPedirUbicacion: () => Promise<{ lat: number; lon: number } | null>;
 }
 
 // Chile es muy largo y angosto (~4300 km de norte a sur): un center+zoom
@@ -88,6 +95,8 @@ export default function MapaSismos({
   onSeleccionarDesdeMapa,
   filtro,
   onFiltroChange,
+  ubicacion,
+  onPedirUbicacion,
 }: MapaSismosProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -106,6 +115,7 @@ export default function MapaSismos({
   sismoSeleccionadoRef.current = sismoSeleccionado;
   const filtroRef = useRef(filtro);
   filtroRef.current = filtro;
+  const marcadorUbicacionRef = useRef<maplibregl.Marker | null>(null);
 
   function crearMarcador(
     map: maplibregl.Map,
@@ -231,6 +241,25 @@ export default function MapaSismos({
 
   useEffect(() => {
     const map = mapRef.current;
+    if (!map || !ubicacion.centro) return;
+
+    if (marcadorUbicacionRef.current) {
+      marcadorUbicacionRef.current.setLngLat([
+        ubicacion.centro.lon,
+        ubicacion.centro.lat,
+      ]);
+      return;
+    }
+
+    marcadorUbicacionRef.current = new maplibregl.Marker({
+      element: crearElementoUbicacion(),
+    })
+      .setLngLat([ubicacion.centro.lon, ubicacion.centro.lat])
+      .addTo(map);
+  }, [ubicacion.centro]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     if (!map || !sismoSeleccionado) return;
 
     map.flyTo({
@@ -332,6 +361,33 @@ export default function MapaSismos({
           className="flex min-h-11 items-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
         >
           Ver todo Chile
+        </button>
+        <button
+          type="button"
+          onClick={async () => {
+            const map = mapRef.current;
+            if (!map) return;
+            if (ubicacion.centro) {
+              map.flyTo({
+                center: [ubicacion.centro.lon, ubicacion.centro.lat],
+                zoom: Math.max(map.getZoom(), 10),
+                speed: 1.2,
+              });
+              return;
+            }
+            const centro = await onPedirUbicacion();
+            if (centro) {
+              map.flyTo({
+                center: [centro.lon, centro.lat],
+                zoom: Math.max(map.getZoom(), 10),
+                speed: 1.2,
+              });
+            }
+          }}
+          aria-label="Mi ubicación"
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
+        >
+          📍
         </button>
       </div>
     </div>
