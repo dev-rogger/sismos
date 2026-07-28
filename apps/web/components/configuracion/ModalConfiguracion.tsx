@@ -135,11 +135,13 @@ export default function ModalConfiguracion({
               onClick={() => {
                 if (suscrito) {
                   desactivar();
+                  onSetRadioKm(null);
                   return;
                 }
                 const preferencia = preferenciaRadio();
-                onSetRadioKm(preferencia.radioKm);
-                activar(umbralLocal, preferencia);
+                activar(umbralLocal, preferencia).then((exito) => {
+                  if (exito) onSetRadioKm(preferencia.radioKm);
+                });
               }}
               aria-pressed={suscrito}
               className={`flex min-h-11 w-full items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50 ${
@@ -240,8 +242,9 @@ export default function ModalConfiguracion({
                   disabled={loading || !hayFormaCambios}
                   onClick={() => {
                     const preferencia = preferenciaRadio();
-                    onSetRadioKm(preferencia.radioKm);
-                    actualizarUmbral(umbralLocal, preferencia);
+                    actualizarUmbral(umbralLocal, preferencia).then(() => {
+                      onSetRadioKm(preferencia.radioKm);
+                    });
                   }}
                   className="mt-4 flex min-h-11 w-full items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition-colors hover:border-neutral-600 disabled:opacity-50"
                 >

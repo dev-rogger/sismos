@@ -79,9 +79,10 @@ body {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background-color: #38bdf8;
-  border: 2px solid rgba(255, 255, 255, 0.9);
+  background-color: #ffffff;
+  border: 3px solid #38bdf8;
   box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
+  pointer-events: none;
 }
 
 .popup-sismo .maplibregl-popup-content {

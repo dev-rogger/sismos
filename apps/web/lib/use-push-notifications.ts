@@ -91,7 +91,7 @@ export function usePushNotifications() {
       try {
         const permisoActual = await Notification.requestPermission();
         setPermission(permisoActual as PermisoNotificacion);
-        if (permisoActual !== "granted") return;
+        if (permisoActual !== "granted") return false;
 
         const registration = await navigator.serviceWorker.ready;
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -117,6 +117,7 @@ export function usePushNotifications() {
         setRadioKm(preferenciaRadio.radioKm);
         setCentro(preferenciaRadio.centro);
         setSuscrito(true);
+        return true;
       } finally {
         setLoading(false);
       }
