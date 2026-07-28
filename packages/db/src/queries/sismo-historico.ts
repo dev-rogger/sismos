@@ -88,6 +88,7 @@ export async function findTopHistoricos(): Promise<SismoHistorico[]> {
   const rows = await getDb()
     .select()
     .from(sismosHistoricos)
-    .orderBy(desc(sismosHistoricos.magnitud));
+    .orderBy(desc(sismosHistoricos.magnitud))
+    .limit(10);
   return rows.map(toSismoHistorico);
 }
