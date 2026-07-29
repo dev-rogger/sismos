@@ -19,7 +19,7 @@ export interface ItemHistorial {
 export const OPCIONES_TIPO: { valor: TipoHistorial; etiqueta: string }[] = [
   { valor: "ultimos10dias", etiqueta: "Últimos 10 días" },
   { valor: "top10anios", etiqueta: "Top 10 últimos 10 años" },
-  { valor: "historico", etiqueta: "Histórico" },
+  { valor: "historico", etiqueta: "Los más poderosos de la historia" },
 ];
 
 interface UseHistorialParams {
@@ -33,7 +33,12 @@ export function useHistorial({ soloChile, rangos }: UseHistorialParams) {
 
   useEffect(() => {
     let cancelado = false;
-    fetch(`/api/historial?tipo=${tipo}`)
+    const params = new URLSearchParams({ tipo });
+    // Solo importa para tipo=historico (el servidor trae un top 10 propio
+    // por alcance, en vez de que el cliente filtre un top 10 ya chico).
+    // Para los otros tipos el servidor lo ignora — igual se filtra abajo.
+    params.set("soloChile", String(soloChile));
+    fetch(`/api/historial?${params}`)
       .then((res) => {
         if (!res.ok) throw new Error(`historial fetch failed: ${res.status}`);
         return res.json();
@@ -47,7 +52,7 @@ export function useHistorial({ soloChile, rangos }: UseHistorialParams) {
     return () => {
       cancelado = true;
     };
-  }, [tipo]);
+  }, [tipo, soloChile]);
 
   const eventosFiltrados = eventos.filter((evento) => {
     if (soloChile && evento.bandera !== "🇨🇱") return false;

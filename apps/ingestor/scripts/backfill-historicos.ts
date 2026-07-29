@@ -7,24 +7,41 @@ import {
 } from "@sismos/shared";
 import {
   upsertSismoHistorico,
+  type AlcanceHistorico,
   type SismoHistoricoInput,
 } from "@sismos/db";
 
-// minmagnitude=8 is required, not just an optimization: querying the full
-// global catalog since 1900 sorted by magnitude with no magnitude floor
-// makes USGS's API sort millions of rows and fail with a 503 (their temp
-// table fills up). The biggest earthquakes ever recorded are all well
-// above 8.0 anyway, so this doesn't affect which events end up in the
-// top 10.
-const USGS_HISTORICAL_URL =
-  "https://earthquake.usgs.gov/fdsnws/event/1/query" +
-  "?format=geojson" +
-  "&starttime=1900-01-01" +
-  "&minmagnitude=8" +
-  "&orderby=magnitude" +
-  "&limit=15";
-
 const TOP_N = 10;
+
+// minmagnitude=8 on the worldwide query is required, not just an
+// optimization: querying the full global catalog since 1900 sorted by
+// magnitude with no magnitude floor makes USGS's API sort millions of rows
+// and fail with a 503 (their temp table fills up). The biggest earthquakes
+// ever recorded are all well above 8.0 anyway, so this doesn't affect which
+// events end up in the top 10. The Chile query stays bounding-box-scoped
+// instead, since that already keeps the result set small.
+const FUENTES: { alcance: AlcanceHistorico; url: string }[] = [
+  {
+    alcance: "mundial",
+    url:
+      "https://earthquake.usgs.gov/fdsnws/event/1/query" +
+      "?format=geojson" +
+      "&starttime=1900-01-01" +
+      "&minmagnitude=8" +
+      "&orderby=magnitude" +
+      "&limit=15",
+  },
+  {
+    alcance: "chile",
+    url:
+      "https://earthquake.usgs.gov/fdsnws/event/1/query" +
+      "?format=geojson" +
+      "&starttime=1900-01-01" +
+      "&minlatitude=-56&maxlatitude=-17&minlongitude=-76&maxlongitude=-66" +
+      "&orderby=magnitude" +
+      "&limit=15",
+  },
+];
 
 interface UsgsQueryResponse {
   features: UsgsFeatureRaw[];
@@ -48,10 +65,12 @@ function loadOverrides(): Record<string, Override> {
   return JSON.parse(raw) as Record<string, Override>;
 }
 
-async function fetchTopHistoricos(
+async function fetchTop(
+  alcance: AlcanceHistorico,
+  url: string,
   overrides: Record<string, Override>,
 ): Promise<SismoHistoricoInput[]> {
-  const res = await fetch(USGS_HISTORICAL_URL);
+  const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`USGS fetch failed: ${res.status} ${res.statusText}`);
   }
@@ -65,6 +84,7 @@ async function fetchTopHistoricos(
     }
     return {
       externalId: normalizado.externalId,
+      alcance,
       fecha: override.fecha ? new Date(override.fecha) : normalizado.fecha,
       magnitud: override.magnitud ?? normalizado.magnitud,
       profundidadKm: normalizado.profundidadKm,
@@ -78,16 +98,18 @@ async function fetchTopHistoricos(
 
 async function main() {
   const overrides = loadOverrides();
-  console.log(`Fetching top ${TOP_N} historical earthquakes worldwide from USGS...`);
-  const eventos = await fetchTopHistoricos(overrides);
-
   let count = 0;
-  for (const evento of eventos) {
-    await upsertSismoHistorico(evento);
-    count += 1;
-    console.log(
-      `Upserted ${evento.externalId} — ${evento.lugar} (M${evento.magnitud}, ${evento.fecha.toISOString()})`,
-    );
+
+  for (const { alcance, url } of FUENTES) {
+    console.log(`Fetching top ${TOP_N} historical earthquakes (${alcance}) from USGS...`);
+    const eventos = await fetchTop(alcance, url, overrides);
+    for (const evento of eventos) {
+      await upsertSismoHistorico(evento);
+      count += 1;
+      console.log(
+        `Upserted [${alcance}] ${evento.externalId} — ${evento.lugar} (M${evento.magnitud}, ${evento.fecha.toISOString()})`,
+      );
+    }
   }
 
   console.log(`Done. Upserted ${count} historical events.`);

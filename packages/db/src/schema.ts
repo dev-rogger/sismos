@@ -34,19 +34,31 @@ export const sismos = pgTable(
   ],
 );
 
-export const sismosHistoricos = pgTable("sismos_historicos", {
-  id: serial("id").primaryKey(),
-  externalId: text("external_id").notNull().unique(),
-  fecha: timestamp("fecha").notNull(),
-  magnitud: real("magnitud").notNull(),
-  profundidadKm: real("profundidad_km").notNull(),
-  latitud: doublePrecision("latitud").notNull(),
-  longitud: doublePrecision("longitud").notNull(),
-  lugar: text("lugar").notNull(),
-  bandera: text("bandera"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const sismosHistoricos = pgTable(
+  "sismos_historicos",
+  {
+    id: serial("id").primaryKey(),
+    externalId: text("external_id").notNull(),
+    // "mundial" | "chile" — the same event can legitimately appear once per
+    // scope (e.g. Valdivia 1960 is top-10 both worldwide and in Chile).
+    alcance: text("alcance").notNull().default("mundial"),
+    fecha: timestamp("fecha").notNull(),
+    magnitud: real("magnitud").notNull(),
+    profundidadKm: real("profundidad_km").notNull(),
+    latitud: doublePrecision("latitud").notNull(),
+    longitud: doublePrecision("longitud").notNull(),
+    lugar: text("lugar").notNull(),
+    bandera: text("bandera"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    unique("sismos_historicos_external_id_alcance_unique").on(
+      table.externalId,
+      table.alcance,
+    ),
+  ],
+);
 
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: serial("id").primaryKey(),

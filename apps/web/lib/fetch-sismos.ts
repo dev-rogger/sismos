@@ -19,6 +19,8 @@ export async function getTop10UltimosAnios(): Promise<Sismo[]> {
   return findTop10UltimosAnios(10);
 }
 
-export async function getTopHistoricos(): Promise<SismoHistorico[]> {
-  return findTopHistoricos();
+export async function getTopHistoricos(
+  soloChile: boolean,
+): Promise<SismoHistorico[]> {
+  return findTopHistoricos(soloChile ? "chile" : "mundial");
 }

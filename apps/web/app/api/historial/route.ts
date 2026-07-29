@@ -18,6 +18,7 @@ function esTipoValido(valor: string | null): valor is TipoHistorial {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const tipo = searchParams.get("tipo");
+  const soloChile = searchParams.get("soloChile") === "true";
 
   if (!esTipoValido(tipo)) {
     return NextResponse.json(
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
 
   try {
     if (tipo === "historico") {
-      const eventos = await getTopHistoricos();
+      const eventos = await getTopHistoricos(soloChile);
       return NextResponse.json({ eventos });
     }
     if (tipo === "top10anios") {

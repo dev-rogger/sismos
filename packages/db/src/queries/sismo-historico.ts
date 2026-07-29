@@ -1,10 +1,13 @@
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb } from "../connection";
 import { sismosHistoricos } from "../schema";
+
+export type AlcanceHistorico = "mundial" | "chile";
 
 export interface SismoHistorico {
   id: number;
   externalId: string;
+  alcance: AlcanceHistorico;
   fecha: Date;
   magnitud: number;
   profundidadKm: number;
@@ -18,6 +21,7 @@ export interface SismoHistorico {
 
 export interface SismoHistoricoInput {
   externalId: string;
+  alcance: AlcanceHistorico;
   fecha: Date;
   magnitud: number;
   profundidadKm: number;
@@ -33,6 +37,7 @@ function toSismoHistorico(
   return {
     id: row.id,
     externalId: row.externalId,
+    alcance: row.alcance as AlcanceHistorico,
     fecha: row.fecha,
     magnitud: row.magnitud,
     profundidadKm: row.profundidadKm,
@@ -53,6 +58,7 @@ export async function upsertSismoHistorico(
     .insert(sismosHistoricos)
     .values({
       externalId: evento.externalId,
+      alcance: evento.alcance,
       fecha: evento.fecha,
       magnitud: evento.magnitud,
       profundidadKm: evento.profundidadKm,
@@ -63,7 +69,7 @@ export async function upsertSismoHistorico(
       updatedAt: now,
     })
     .onConflictDoUpdate({
-      target: sismosHistoricos.externalId,
+      target: [sismosHistoricos.externalId, sismosHistoricos.alcance],
       set: {
         fecha: evento.fecha,
         magnitud: evento.magnitud,
@@ -84,10 +90,13 @@ export async function upsertSismoHistorico(
   return toSismoHistorico(row);
 }
 
-export async function findTopHistoricos(): Promise<SismoHistorico[]> {
+export async function findTopHistoricos(
+  alcance: AlcanceHistorico = "mundial",
+): Promise<SismoHistorico[]> {
   const rows = await getDb()
     .select()
     .from(sismosHistoricos)
+    .where(eq(sismosHistoricos.alcance, alcance))
     .orderBy(desc(sismosHistoricos.magnitud))
     .limit(10);
   return rows.map(toSismoHistorico);
