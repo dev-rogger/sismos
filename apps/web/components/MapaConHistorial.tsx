@@ -8,6 +8,7 @@ import MenuLateral from "./menu/MenuLateral";
 import ModalConfiguracion from "./configuracion/ModalConfiguracion";
 import { useFiltroMapa } from "../lib/use-filtro-mapa";
 import { useUbicacionUsuario } from "../lib/use-ubicacion-usuario";
+import { useCapaFallas } from "../lib/use-capa-fallas";
 import type { SismoMapa, SismoSeleccionado } from "../lib/tipos-sismo";
 
 interface MapaConHistorialProps {
@@ -29,6 +30,7 @@ export default function MapaConHistorial({
     useState(false);
   const { filtro, setFiltro } = useFiltroMapa();
   const { ubicacion, pedirUbicacion, setRadioKm } = useUbicacionUsuario();
+  const { fallasVisibles, setFallasVisibles } = useCapaFallas();
   const [historialAbierto, setHistorialAbierto] = useState(false);
   const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
 
@@ -65,6 +67,8 @@ export default function MapaConHistorial({
           onFiltroChange={setFiltro}
           ubicacion={ubicacion}
           onPedirUbicacion={pedirUbicacion}
+          fallasVisibles={fallasVisibles}
+          onFallasVisiblesChange={setFallasVisibles}
         />
       </div>
       <PanelHistorial
