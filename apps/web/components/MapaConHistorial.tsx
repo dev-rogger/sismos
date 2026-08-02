@@ -21,6 +21,12 @@ export default function MapaConHistorial({
 }: MapaConHistorialProps) {
   const [sismoSeleccionado, setSismoSeleccionado] =
     useState<SismoSeleccionado | null>(sismoInicial);
+  // Si la selección actual vino de la pantalla de historial fullscreen
+  // (mobile), cerrar su popup en el mapa debería devolver al usuario a esa
+  // lista en vez de dejarlo mirando el mapa pelado — ahí es donde estaba
+  // antes de tocar el sismo.
+  const [seleccionDesdeHistorial, setSeleccionDesdeHistorial] =
+    useState(false);
   const { filtro, setFiltro } = useFiltroMapa();
   const { ubicacion, pedirUbicacion, setRadioKm } = useUbicacionUsuario();
   const [historialAbierto, setHistorialAbierto] = useState(false);
@@ -31,7 +37,19 @@ export default function MapaConHistorial({
   // tapando el mapa, o es justamente el caso en que queremos interrumpirlo
   // para mostrarlo — en ambos casos, cerrarlo es lo correcto.
   const seleccionarDesdeMapa = (sismo: SismoSeleccionado | null) => {
+    if (sismo === null && seleccionDesdeHistorial) {
+      setSeleccionDesdeHistorial(false);
+      setHistorialAbierto(true);
+      return;
+    }
     setSismoSeleccionado(sismo);
+    setSeleccionDesdeHistorial(false);
+    setHistorialAbierto(false);
+  };
+
+  const seleccionarDesdeHistorial = (sismo: SismoSeleccionado | null) => {
+    setSismoSeleccionado(sismo);
+    setSeleccionDesdeHistorial(sismo !== null);
     setHistorialAbierto(false);
   };
 
@@ -56,7 +74,7 @@ export default function MapaConHistorial({
       <PantallaHistorial
         abierto={historialAbierto}
         sismoSeleccionado={sismoSeleccionado}
-        onSeleccionar={setSismoSeleccionado}
+        onSeleccionar={seleccionarDesdeHistorial}
         onCerrar={() => setHistorialAbierto(false)}
       />
       <MenuLateral
