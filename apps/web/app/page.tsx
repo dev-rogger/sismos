@@ -39,6 +39,7 @@ export default async function Home({ searchParams }: HomeProps) {
     sismosIniciales = sismos.map((s) => ({
       externalId: s.externalId,
       fecha: s.fecha.toISOString(),
+      updatedAt: s.updatedAt.toISOString(),
       magnitud: s.magnitud,
       latitud: s.latitud,
       longitud: s.longitud,

@@ -1,6 +1,7 @@
 export interface SismoMapa {
   externalId: string;
   fecha: string;
+  updatedAt: string;
   magnitud: number;
   latitud: number;
   longitud: number;

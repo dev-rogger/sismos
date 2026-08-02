@@ -42,6 +42,7 @@ export default function MapaConHistorial({
           sismosIniciales={sismosIniciales}
           sismoSeleccionado={sismoSeleccionado}
           onSeleccionarDesdeMapa={seleccionarDesdeMapa}
+          onActualizarSismoSeleccionado={setSismoSeleccionado}
           filtro={filtro}
           onFiltroChange={setFiltro}
           ubicacion={ubicacion}

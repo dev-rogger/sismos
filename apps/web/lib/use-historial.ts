@@ -27,32 +27,66 @@ interface UseHistorialParams {
   rangos: RangoMagnitud[];
 }
 
+// Más espaciado que el polling del mapa (15s): acá no hay una animación de
+// "sismo nuevo" que proteger, solo evitar que la lista quede con magnitud/
+// profundidad viejas si CSN/USGS revisan un evento mientras el panel sigue
+// montado (que en desktop es casi siempre, por el `lg:flex` de PanelHistorial).
+const POLL_INTERVAL_MS = 60 * 1000;
+
 export function useHistorial({ soloChile, rangos }: UseHistorialParams) {
   const [tipo, setTipo] = useState<TipoHistorial>("ultimos10dias");
   const [eventos, setEventos] = useState<ItemHistorial[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [reintentos, setReintentos] = useState(0);
 
   useEffect(() => {
     let cancelado = false;
+    setLoading(true);
+    setError(false);
     const params = new URLSearchParams({ tipo });
     // Solo importa para tipo=historico (el servidor trae un top 10 propio
     // por alcance, en vez de que el cliente filtre un top 10 ya chico).
     // Para los otros tipos el servidor lo ignora — igual se filtra abajo.
     params.set("soloChile", String(soloChile));
-    fetch(`/api/historial?${params}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`historial fetch failed: ${res.status}`);
-        return res.json();
-      })
-      .then((data: { eventos: ItemHistorial[] }) => {
-        if (!cancelado) setEventos(data.eventos ?? []);
+
+    function cargar(): Promise<void> {
+      return fetch(`/api/historial?${params}`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`historial fetch failed: ${res.status}`);
+          return res.json();
+        })
+        .then((data: { eventos: ItemHistorial[] }) => {
+          if (cancelado) return;
+          setEventos(data.eventos ?? []);
+        });
+    }
+
+    cargar()
+      .then(() => {
+        if (!cancelado) setLoading(false);
       })
       .catch((error) => {
         console.error("[useHistorial] fetch failed:", error);
+        if (cancelado) return;
+        setError(true);
+        setLoading(false);
       });
+
+    // Refresco en segundo plano: no toca loading/error para no hacer
+    // parpadear la lista ya cargada. Si un refresco puntual falla, se
+    // ignora y se reintenta solo en el próximo ciclo.
+    const intervalId = setInterval(() => {
+      cargar().catch((error) => {
+        console.error("[useHistorial] background refresh failed:", error);
+      });
+    }, POLL_INTERVAL_MS);
+
     return () => {
       cancelado = true;
+      clearInterval(intervalId);
     };
-  }, [tipo, soloChile]);
+  }, [tipo, soloChile, reintentos]);
 
   const eventosFiltrados = eventos.filter((evento) => {
     if (soloChile && evento.bandera !== "🇨🇱") return false;
@@ -60,5 +94,12 @@ export function useHistorial({ soloChile, rangos }: UseHistorialParams) {
     return true;
   });
 
-  return { tipo, setTipo, eventosFiltrados };
+  return {
+    tipo,
+    setTipo,
+    eventosFiltrados,
+    loading,
+    error,
+    reintentar: () => setReintentos((n) => n + 1),
+  };
 }

@@ -162,12 +162,16 @@ export async function findUltimos10Dias(): Promise<Sismo[]> {
   return rows.map(toSismo);
 }
 
+// Filtra por updatedAt, no por fecha: upsertSismo() actualiza updatedAt tanto
+// en inserts como en updates, así que esto también trae sismos ya vistos
+// cuyos magnitud/profundidadKm/etc. fueron revisados por CSN/USGS después
+// del evento (su `fecha` original no cambia, pero updatedAt sí avanza).
 export async function findSismosSince(since: Date): Promise<Sismo[]> {
   const rows = await getDb()
     .select()
     .from(sismos)
-    .where(gt(sismos.fecha, since))
-    .orderBy(asc(sismos.fecha));
+    .where(gt(sismos.updatedAt, since))
+    .orderBy(asc(sismos.updatedAt));
   return rows.map(toSismo);
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -11,7 +11,7 @@ import {
 import BotonFiltroMapa from "./BotonFiltroMapa";
 import { magnitudPasaRangos, fechaPasaVentana } from "../../lib/filtro-tipos";
 import type { FiltroMapa } from "../../lib/filtro-tipos";
-import { colorPorMagnitud } from "../../lib/magnitud";
+import { colorPorMagnitud, colorTextoPorMagnitud } from "../../lib/magnitud";
 import { regionChilePorLatitud, distanciaKm } from "@sismos/shared";
 import { generarCirculoGeografico } from "../../lib/circulo-geografico";
 import { radioPercepcionKm } from "../../lib/radio-percepcion";
@@ -24,6 +24,7 @@ interface MapaSismosProps {
   sismosIniciales: SismoMapa[];
   sismoSeleccionado: SismoSeleccionado | null;
   onSeleccionarDesdeMapa: (sismo: SismoSeleccionado | null) => void;
+  onActualizarSismoSeleccionado: (sismo: SismoSeleccionado) => void;
   filtro: FiltroMapa;
   onFiltroChange: (filtro: FiltroMapa) => void;
   ubicacion: UbicacionUsuario;
@@ -64,7 +65,7 @@ function construirHtmlPopup(sismo: SismoSeleccionado): string {
 
   return `
     <div class="popup-sismo-fila">
-      <div class="popup-sismo-badge" style="background: ${colorPorMagnitud(sismo.magnitud)}">
+      <div class="popup-sismo-badge" style="background: ${colorPorMagnitud(sismo.magnitud)}; color: ${colorTextoPorMagnitud(sismo.magnitud)}">
         M${sismo.magnitud}
       </div>
       <div class="popup-sismo-info">
@@ -93,6 +94,7 @@ export default function MapaSismos({
   sismosIniciales,
   sismoSeleccionado,
   onSeleccionarDesdeMapa,
+  onActualizarSismoSeleccionado,
   filtro,
   onFiltroChange,
   ubicacion,
@@ -103,14 +105,18 @@ export default function MapaSismos({
   const todosSismosRef = useRef<Map<string, SismoMapa>>(new Map());
   const marcadoresRef = useRef<Map<string, maplibregl.Marker>>(new Map());
   const nuevosRef = useRef<Set<string>>(new Set());
-  const ultimaFechaRef = useRef<string>(
+  const ultimaActualizacionRef = useRef<string>(
     sismosIniciales.reduce(
-      (max, s) => (s.fecha > max ? s.fecha : max),
-      sismosIniciales[0]?.fecha ?? new Date(0).toISOString(),
+      (max, s) => (s.updatedAt > max ? s.updatedAt : max),
+      sismosIniciales[0]?.updatedAt ?? new Date(0).toISOString(),
     ),
   );
   const onSeleccionarDesdeMapaRef = useRef(onSeleccionarDesdeMapa);
   onSeleccionarDesdeMapaRef.current = onSeleccionarDesdeMapa;
+  const onActualizarSismoSeleccionadoRef = useRef(
+    onActualizarSismoSeleccionado,
+  );
+  onActualizarSismoSeleccionadoRef.current = onActualizarSismoSeleccionado;
   const sismoSeleccionadoRef = useRef(sismoSeleccionado);
   sismoSeleccionadoRef.current = sismoSeleccionado;
   const filtroRef = useRef(filtro);
@@ -118,13 +124,18 @@ export default function MapaSismos({
   const ubicacionRef = useRef(ubicacion);
   ubicacionRef.current = ubicacion;
   const marcadorUbicacionRef = useRef<maplibregl.Marker | null>(null);
+  const [errorConexion, setErrorConexion] = useState(false);
 
   function crearMarcador(
     map: maplibregl.Map,
     sismo: SismoMapa,
     pulsando: boolean,
   ): maplibregl.Marker {
-    const el = crearElementoMarcador(sismo.magnitud, { pulsando });
+    const el = crearElementoMarcador(sismo.magnitud, {
+      pulsando,
+      lugar: sismo.lugar,
+      fecha: sismo.fecha,
+    });
     el.addEventListener("click", () => {
       if (sismoSeleccionadoRef.current?.externalId === sismo.externalId) {
         onSeleccionarDesdeMapaRef.current(null);
@@ -183,31 +194,76 @@ export default function MapaSismos({
     sincronizarMarcadores(map);
 
     const intervalId = setInterval(() => {
-      const desde = ultimaFechaRef.current;
+      const desde = ultimaActualizacionRef.current;
       fetch(`/api/sismos?since=${encodeURIComponent(desde)}`)
         .then((res) => {
           if (!res.ok) throw new Error(`poll failed: ${res.status}`);
           return res.json();
         })
         .then((data: { sismos: SismoMapa[] }) => {
+          setErrorConexion(false);
+          // El endpoint trae tanto sismos nuevos como sismos ya vistos cuya
+          // magnitud/profundidad fue revisada por CSN/USGS (filtra por
+          // updatedAt, no por fecha). Hay que distinguir ambos casos antes
+          // de tocar el Map, porque reciben tratamiento distinto: un nuevo
+          // sismo pulsa y puede robar el foco; una revisión solo debe
+          // refrescar los datos que ya está mostrando.
+          const nuevos: SismoMapa[] = [];
           for (const sismo of data.sismos) {
+            const esNuevo = !todosSismosRef.current.has(sismo.externalId);
             todosSismosRef.current.set(sismo.externalId, sismo);
-            nuevosRef.current.add(sismo.externalId);
-            if (sismo.fecha > ultimaFechaRef.current) {
-              ultimaFechaRef.current = sismo.fecha;
+            if (sismo.updatedAt > ultimaActualizacionRef.current) {
+              ultimaActualizacionRef.current = sismo.updatedAt;
+            }
+
+            if (esNuevo) {
+              nuevos.push(sismo);
+              nuevosRef.current.add(sismo.externalId);
+              continue;
+            }
+
+            // Revisión de un sismo ya visto: el pin existente quedó creado
+            // con la magnitud vieja (color y tamaño no se recalculan solos),
+            // así que lo sacamos para que sincronizarMarcadores lo recree.
+            const marcadorViejo = marcadoresRef.current.get(sismo.externalId);
+            if (marcadorViejo) {
+              marcadorViejo.remove();
+              marcadoresRef.current.delete(sismo.externalId);
+            }
+
+            // Si es el sismo actualmente seleccionado, refrescamos en
+            // silencio (sin robar foco ni cerrar el historial) para que el
+            // radio de percepción y el popup usen la magnitud/profundidad
+            // recién revisadas.
+            if (sismoSeleccionadoRef.current?.externalId === sismo.externalId) {
+              onActualizarSismoSeleccionadoRef.current({
+                externalId: sismo.externalId,
+                latitud: sismo.latitud,
+                longitud: sismo.longitud,
+                magnitud: sismo.magnitud,
+                lugar: sismo.lugar,
+                fecha: sismo.fecha,
+                bandera: sismo.bandera,
+                profundidadKm: sismo.profundidadKm,
+              });
             }
           }
           sincronizarMarcadores(map);
 
-          // Foco automático: si algo de lo nuevo pasa el filtro actual,
-          // lo seleccionamos solos (mismo flujo que un clic manual: vuela
-          // el mapa, abre el popup, ya trae la animación de pulso). Con
-          // varios a la vez, priorizamos el de mayor magnitud.
-          const nuevosQuePasanFiltro = data.sismos.filter((s) => {
+          // Foco automático: si algo genuinamente nuevo pasa el filtro
+          // actual, lo seleccionamos solos (mismo flujo que un clic manual:
+          // vuela el mapa, abre el popup, ya trae la animación de pulso).
+          // Las revisiones de sismos ya vistos no deben volver a robar el
+          // foco. Con varios nuevos a la vez, priorizamos el de mayor
+          // magnitud.
+          const nuevosQuePasanFiltro = nuevos.filter((s) => {
             if (!pasaFiltro(s, filtroRef.current)) return false;
             const { centro, radioKm } = ubicacionRef.current;
             if (radioKm === null || centro === null) return true; // mundial
-            return distanciaKm(centro.lat, centro.lon, s.latitud, s.longitud) <= radioKm;
+            return (
+              distanciaKm(centro.lat, centro.lon, s.latitud, s.longitud) <=
+              radioKm
+            );
           });
           if (nuevosQuePasanFiltro.length > 0) {
             const masSignificativo = nuevosQuePasanFiltro.reduce((a, b) =>
@@ -226,6 +282,7 @@ export default function MapaSismos({
         })
         .catch((error) => {
           console.error("[MapaSismos] poll error:", error);
+          setErrorConexion(true);
         });
     }, POLL_INTERVAL_MS);
 
@@ -273,7 +330,11 @@ export default function MapaSismos({
       speed: 1.2,
     });
 
-    const el = crearElementoSeleccion();
+    const el = crearElementoSeleccion({
+      magnitud: sismoSeleccionado.magnitud,
+      lugar: sismoSeleccionado.lugar,
+      fecha: sismoSeleccionado.fecha,
+    });
     const popup = new maplibregl.Popup({
       offset: 12,
       className: "popup-sismo",
@@ -326,8 +387,7 @@ export default function MapaSismos({
       const facilitado = 1 - (1 - t) ** 3; // ease-out cúbico
       const radioActual = Math.max(0.01, radioFinalKm * facilitado);
       const fuente = map.getSource(FUENTE_ONDA) as
-        | maplibregl.GeoJSONSource
-        | undefined;
+        maplibregl.GeoJSONSource | undefined;
       fuente?.setData(generarCirculoGeografico(centro, radioActual));
       if (t < 1) animacionId = requestAnimationFrame(animar);
     };
@@ -350,6 +410,14 @@ export default function MapaSismos({
   return (
     <div className="relative h-full w-full">
       <div ref={mapContainerRef} className="h-full w-full" />
+      {errorConexion && (
+        <div
+          style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+          className="absolute left-1/2 z-10 -translate-x-1/2 rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 py-2 text-xs font-medium text-neutral-300 shadow-lg"
+        >
+          Sin conexión, reintentando…
+        </div>
+      )}
       <div
         style={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
         className="absolute right-3 z-10 flex items-center gap-2"
