@@ -26,7 +26,8 @@ export default function PantallaHistorial({
   const [filtro, setFiltro] = useState<FiltroHistorial>(
     FILTRO_HISTORIAL_DEFAULT,
   );
-  const { tipo, setTipo, eventosFiltrados } = useHistorial(filtro);
+  const { tipo, setTipo, eventosFiltrados, loading, error, reintentar } =
+    useHistorial(filtro);
   const itemRefs = useRef<Map<string, HTMLLIElement>>(new Map());
 
   useEffect(() => {
@@ -110,6 +111,26 @@ export default function PantallaHistorial({
         </div>
       </div>
 
+      {loading ? (
+        <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-neutral-500">
+          Cargando sismos…
+        </div>
+      ) : error ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center text-sm text-neutral-500">
+          <p>No se pudo cargar el historial de sismos.</p>
+          <button
+            type="button"
+            onClick={reintentar}
+            className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition-colors hover:border-neutral-600"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : eventosFiltrados.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-neutral-500">
+          Sin sismos para estos filtros
+        </div>
+      ) : (
       <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
         {eventosFiltrados.map((evento) => {
           const seleccionado =
@@ -168,6 +189,7 @@ export default function PantallaHistorial({
           );
         })}
       </ul>
+      )}
     </div>
   );
 }

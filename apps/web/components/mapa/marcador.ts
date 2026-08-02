@@ -4,7 +4,7 @@ const TAP_TARGET_MIN_PX = 28;
 
 export function crearElementoMarcador(
   magnitud: number,
-  opciones: { pulsando: boolean },
+  opciones: { pulsando: boolean; lugar: string; fecha: string },
 ): HTMLDivElement {
   const size = tamanoPorMagnitud(magnitud);
   const color = colorPorMagnitud(magnitud);
@@ -16,6 +16,11 @@ export function crearElementoMarcador(
   wrapper.style.display = "flex";
   wrapper.style.alignItems = "center";
   wrapper.style.justifyContent = "center";
+  wrapper.setAttribute("role", "button");
+  wrapper.setAttribute(
+    "aria-label",
+    `Sismo M${magnitud} en ${opciones.lugar}, ${new Date(opciones.fecha).toLocaleString("es-CL")}`,
+  );
 
   const dot = document.createElement("div");
   dot.className = opciones.pulsando
@@ -31,14 +36,26 @@ export function crearElementoMarcador(
   return wrapper;
 }
 
-export function crearElementoSeleccion(): HTMLDivElement {
+export function crearElementoSeleccion(opciones: {
+  magnitud: number;
+  lugar: string;
+  fecha?: string;
+}): HTMLDivElement {
   const el = document.createElement("div");
   el.className = "marcador-seleccion";
+  const fechaTexto = opciones.fecha
+    ? `, ${new Date(opciones.fecha).toLocaleString("es-CL")}`
+    : "";
+  el.setAttribute(
+    "aria-label",
+    `Sismo seleccionado: M${opciones.magnitud} en ${opciones.lugar}${fechaTexto}`,
+  );
   return el;
 }
 
 export function crearElementoUbicacion(): HTMLDivElement {
   const el = document.createElement("div");
   el.className = "marcador-ubicacion";
+  el.setAttribute("aria-label", "Tu ubicación");
   return el;
 }
