@@ -439,12 +439,22 @@ export default function MapaSismos({
     if (!fallasVisibles) {
       if (map.getLayer(`${FUENTE_FALLAS}-linea`)) {
         map.setLayoutProperty(`${FUENTE_FALLAS}-linea`, "visibility", "none");
+        map.setLayoutProperty(
+          `${FUENTE_FALLAS}-linea-hitbox`,
+          "visibility",
+          "none",
+        );
       }
       return;
     }
 
     if (fallasCargadasRef.current) {
       map.setLayoutProperty(`${FUENTE_FALLAS}-linea`, "visibility", "visible");
+      map.setLayoutProperty(
+        `${FUENTE_FALLAS}-linea-hitbox`,
+        "visibility",
+        "visible",
+      );
       return;
     }
 
@@ -471,7 +481,20 @@ export default function MapaSismos({
             "line-opacity": 0.7,
           },
         });
-        map.on("click", `${FUENTE_FALLAS}-linea`, (e) => {
+        // Capa invisible más ancha bajo la línea visible: el área real
+        // clickeable de una línea de 1.5px punteada es casi imposible de
+        // acertar, así que el click se detecta acá en vez de en la línea
+        // visible.
+        map.addLayer({
+          id: `${FUENTE_FALLAS}-linea-hitbox`,
+          type: "line",
+          source: FUENTE_FALLAS,
+          paint: {
+            "line-width": 16,
+            "line-opacity": 0,
+          },
+        });
+        map.on("click", `${FUENTE_FALLAS}-linea-hitbox`, (e) => {
           const propiedadesFalla = e.features?.[0]?.properties as
             | { name: string | null }
             | undefined;
