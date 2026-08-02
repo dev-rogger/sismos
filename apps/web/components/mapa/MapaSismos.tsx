@@ -18,6 +18,7 @@ import { generarCirculoGeografico } from "../../lib/circulo-geografico";
 import { radioPercepcionKm } from "../../lib/radio-percepcion";
 import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
 import type { UbicacionUsuario } from "../../lib/use-ubicacion-usuario";
+import type { FallaSeleccionada } from "../../lib/tipos-falla";
 
 export type { SismoMapa, SismoSeleccionado };
 
@@ -32,6 +33,8 @@ interface MapaSismosProps {
   onPedirUbicacion: () => Promise<{ lat: number; lon: number } | null>;
   fallasVisibles: boolean;
   onFallasVisiblesChange: (visibles: boolean) => void;
+  fallaSeleccionada: FallaSeleccionada | null;
+  onSeleccionarFalla: (falla: FallaSeleccionada | null) => void;
 }
 
 // Chile es muy largo y angosto (~4300 km de norte a sur): un center+zoom
@@ -105,6 +108,8 @@ export default function MapaSismos({
   onPedirUbicacion,
   fallasVisibles,
   onFallasVisiblesChange,
+  fallaSeleccionada,
+  onSeleccionarFalla,
 }: MapaSismosProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -131,7 +136,8 @@ export default function MapaSismos({
   ubicacionRef.current = ubicacion;
   const marcadorUbicacionRef = useRef<maplibregl.Marker | null>(null);
   const fallasCargadasRef = useRef(false);
-  const popupFallaRef = useRef<maplibregl.Popup | null>(null);
+  const onSeleccionarFallaRef = useRef(onSeleccionarFalla);
+  onSeleccionarFallaRef.current = onSeleccionarFalla;
   const [errorConexion, setErrorConexion] = useState(false);
 
   function crearMarcador(
@@ -469,15 +475,11 @@ export default function MapaSismos({
           const propiedadesFalla = e.features?.[0]?.properties as
             | { name: string | null }
             | undefined;
-          popupFallaRef.current?.remove();
-          popupFallaRef.current = new maplibregl.Popup({
-            className: "popup-sismo",
-          })
-            .setLngLat(e.lngLat)
-            .setHTML(
-              `<div class="popup-sismo-titulo">${propiedadesFalla?.name ?? "Falla sin nombre registrado"}</div>`,
-            )
-            .addTo(map);
+          onSeleccionarFallaRef.current({
+            lat: e.lngLat.lat,
+            lon: e.lngLat.lng,
+            nombre: propiedadesFalla?.name ?? "Falla sin nombre registrado",
+          });
         });
         fallasCargadasRef.current = true;
       })
@@ -486,6 +488,36 @@ export default function MapaSismos({
         onFallasVisiblesChange(false);
       });
   }, [fallasVisibles, onFallasVisiblesChange]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !fallaSeleccionada) return;
+
+    map.flyTo({
+      center: [fallaSeleccionada.lon, fallaSeleccionada.lat],
+      zoom: Math.max(map.getZoom(), 12),
+      speed: 1.2,
+    });
+
+    const popup = new maplibregl.Popup({ className: "popup-sismo" })
+      .setLngLat([fallaSeleccionada.lon, fallaSeleccionada.lat])
+      .setHTML(
+        `<div class="popup-sismo-titulo">${fallaSeleccionada.nombre}</div>`,
+      )
+      .addTo(map);
+
+    // Igual que con los sismos: si el usuario cierra el popup con el botón
+    // ×, limpiamos la selección en vez de dejarla desincronizada.
+    const manejarCierre = () => {
+      onSeleccionarFallaRef.current(null);
+    };
+    popup.on("close", manejarCierre);
+
+    return () => {
+      popup.off("close", manejarCierre);
+      popup.remove();
+    };
+  }, [fallaSeleccionada]);
 
   return (
     <div className="relative h-full w-full">

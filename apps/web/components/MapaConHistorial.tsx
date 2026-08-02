@@ -4,12 +4,14 @@ import { useState } from "react";
 import MapaSismos from "./mapa/MapaSismos";
 import PanelHistorial from "./historial/PanelHistorial";
 import PantallaHistorial from "./historial/PantallaHistorial";
+import PantallaFallas from "./fallas/PantallaFallas";
 import MenuLateral from "./menu/MenuLateral";
 import ModalConfiguracion from "./configuracion/ModalConfiguracion";
 import { useFiltroMapa } from "../lib/use-filtro-mapa";
 import { useUbicacionUsuario } from "../lib/use-ubicacion-usuario";
 import { useCapaFallas } from "../lib/use-capa-fallas";
 import type { SismoMapa, SismoSeleccionado } from "../lib/tipos-sismo";
+import type { FallaSeleccionada } from "../lib/tipos-falla";
 
 interface MapaConHistorialProps {
   sismosIniciales: SismoMapa[];
@@ -31,8 +33,17 @@ export default function MapaConHistorial({
   const { filtro, setFiltro } = useFiltroMapa();
   const { ubicacion, pedirUbicacion, setRadioKm } = useUbicacionUsuario();
   const { fallasVisibles, setFallasVisibles } = useCapaFallas();
+  const [fallaSeleccionada, setFallaSeleccionada] =
+    useState<FallaSeleccionada | null>(null);
   const [historialAbierto, setHistorialAbierto] = useState(false);
+  const [pantallaFallasAbierta, setPantallaFallasAbierta] = useState(false);
   const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
+
+  const seleccionarFallaDesdeLista = (falla: FallaSeleccionada) => {
+    setFallaSeleccionada(falla);
+    setFallasVisibles(true);
+    setPantallaFallasAbierta(false);
+  };
 
   // Una selección que viene del mapa (clic manual o foco automático por un
   // sismo nuevo) solo puede ocurrir cuando el historial fullscreen no está
@@ -69,6 +80,8 @@ export default function MapaConHistorial({
           onPedirUbicacion={pedirUbicacion}
           fallasVisibles={fallasVisibles}
           onFallasVisiblesChange={setFallasVisibles}
+          fallaSeleccionada={fallaSeleccionada}
+          onSeleccionarFalla={setFallaSeleccionada}
         />
       </div>
       <PanelHistorial
@@ -81,8 +94,14 @@ export default function MapaConHistorial({
         onSeleccionar={seleccionarDesdeHistorial}
         onCerrar={() => setHistorialAbierto(false)}
       />
+      <PantallaFallas
+        abierto={pantallaFallasAbierta}
+        onSeleccionar={seleccionarFallaDesdeLista}
+        onCerrar={() => setPantallaFallasAbierta(false)}
+      />
       <MenuLateral
         onAbrirHistorial={() => setHistorialAbierto(true)}
+        onAbrirFallas={() => setPantallaFallasAbierta(true)}
         onAbrirNotificaciones={() => setNotificacionesAbiertas(true)}
       />
       <ModalConfiguracion

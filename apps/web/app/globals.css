@@ -110,6 +110,23 @@ body {
     0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .popup-sismo .maplibregl-popup-content {
+    animation: popup-sismo-entrada 0.15s ease-out;
+  }
+}
+
+@keyframes popup-sismo-entrada {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .popup-sismo .maplibregl-popup-close-button {
   top: 0.5rem;
   right: 0.5rem;

@@ -5,6 +5,7 @@ import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 
 interface MenuLateralProps {
   onAbrirHistorial: () => void;
+  onAbrirFallas: () => void;
   onAbrirNotificaciones: () => void;
 }
 
@@ -22,6 +23,22 @@ function IconoHistorial() {
       <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
       <path d="M3 3v5h5" />
       <path d="M12 7v5l4 2" />
+    </svg>
+  );
+}
+
+function IconoFallas() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <path d="M3 12l4-7 4 9 4-9 4 9 2-4" />
     </svg>
   );
 }
@@ -45,6 +62,7 @@ function IconoNotificaciones() {
 
 export default function MenuLateral({
   onAbrirHistorial,
+  onAbrirFallas,
   onAbrirNotificaciones,
 }: MenuLateralProps) {
   const [abierto, setAbierto] = useState(false);
@@ -119,7 +137,15 @@ export default function MenuLateral({
             className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
           >
             <IconoHistorial />
-            Historial
+            Sismos
+          </button>
+          <button
+            type="button"
+            onClick={() => elegir(onAbrirFallas)}
+            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+          >
+            <IconoFallas />
+            Fallas
           </button>
           <button
             type="button"
