@@ -2,6 +2,7 @@
 
 import SelectorMagnitudRangos from "../filtro/SelectorMagnitudRangos";
 import { VENTANAS_TIEMPO, type FiltroMapa } from "../../lib/filtro-tipos";
+import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 
 interface ModalFiltroMapaProps {
   abierto: boolean;
@@ -16,11 +17,27 @@ export default function ModalFiltroMapa({
   filtro,
   onFiltroChange,
 }: ModalFiltroMapaProps) {
-  if (!abierto) return null;
+  useOverlayAccesible(abierto, onCerrar);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-lg">
+    <div
+      aria-hidden={!abierto}
+      onClick={onCerrar}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 transition-opacity duration-200 motion-reduce:transition-none ${
+        abierto
+          ? "pointer-events-auto opacity-100"
+          : "pointer-events-none opacity-0"
+      }`}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Filtrar mapa"
+        onClick={(e) => e.stopPropagation()}
+        className={`w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
+          abierto ? "scale-100" : "scale-95"
+        }`}
+      >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-neutral-100">
             Filtrar mapa
@@ -29,7 +46,7 @@ export default function ModalFiltroMapa({
             type="button"
             onClick={onCerrar}
             aria-label="Cerrar"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
           >
             ✕
           </button>

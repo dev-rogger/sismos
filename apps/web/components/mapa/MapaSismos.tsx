@@ -380,21 +380,32 @@ export default function MapaSismos({
       paint: { "line-color": color, "line-width": 2, "line-opacity": 0.55 },
     });
 
-    let animacionId: number;
-    const inicioMs = performance.now();
-    const animar = (ahoraMs: number) => {
-      const t = Math.min(1, (ahoraMs - inicioMs) / DURACION_ONDA_MS);
-      const facilitado = 1 - (1 - t) ** 3; // ease-out cúbico
-      const radioActual = Math.max(0.01, radioFinalKm * facilitado);
+    let animacionId: number | undefined;
+    const prefiereMenosMovimiento = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (prefiereMenosMovimiento) {
+      // Sin animación: el círculo geográfico marca el área de percepción
+      // directamente en su radio final, sin la onda expansiva de 1.8s.
       const fuente = map.getSource(FUENTE_ONDA) as
         maplibregl.GeoJSONSource | undefined;
-      fuente?.setData(generarCirculoGeografico(centro, radioActual));
-      if (t < 1) animacionId = requestAnimationFrame(animar);
-    };
-    animacionId = requestAnimationFrame(animar);
+      fuente?.setData(generarCirculoGeografico(centro, radioFinalKm));
+    } else {
+      const inicioMs = performance.now();
+      const animar = (ahoraMs: number) => {
+        const t = Math.min(1, (ahoraMs - inicioMs) / DURACION_ONDA_MS);
+        const facilitado = 1 - (1 - t) ** 3; // ease-out cúbico
+        const radioActual = Math.max(0.01, radioFinalKm * facilitado);
+        const fuente = map.getSource(FUENTE_ONDA) as
+          maplibregl.GeoJSONSource | undefined;
+        fuente?.setData(generarCirculoGeografico(centro, radioActual));
+        if (t < 1) animacionId = requestAnimationFrame(animar);
+      };
+      animacionId = requestAnimationFrame(animar);
+    }
 
     return () => {
-      cancelAnimationFrame(animacionId);
+      if (animacionId !== undefined) cancelAnimationFrame(animacionId);
       popup.off("close", manejarCierre);
       marker.remove();
       if (map.getLayer(`${FUENTE_ONDA}-borde`)) {
@@ -460,7 +471,18 @@ export default function MapaSismos({
           aria-label="Mi ubicación"
           className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
         >
-          📍
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5"
+          >
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
         </button>
       </div>
     </div>

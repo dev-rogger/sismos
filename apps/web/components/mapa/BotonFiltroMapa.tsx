@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import ModalFiltroMapa from "./ModalFiltroMapa";
-import type { FiltroMapa } from "../../lib/filtro-tipos";
+import { filtroMapaEsDefault, type FiltroMapa } from "../../lib/filtro-tipos";
 
 interface BotonFiltroMapaProps {
   filtro: FiltroMapa;
@@ -14,14 +14,17 @@ export default function BotonFiltroMapa({
   onFiltroChange,
 }: BotonFiltroMapaProps) {
   const [abierto, setAbierto] = useState(false);
+  const filtroActivo = !filtroMapaEsDefault(filtro);
 
   return (
     <>
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        aria-label="Filtrar mapa"
-        className="flex min-h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
+        aria-label={
+          filtroActivo ? "Filtrar mapa (filtro activo)" : "Filtrar mapa"
+        }
+        className="relative flex min-h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
       >
         <svg
           viewBox="0 0 24 24"
@@ -36,6 +39,12 @@ export default function BotonFiltroMapa({
           <path d="M7 12h10" />
           <path d="M10 19h4" />
         </svg>
+        {filtroActivo && (
+          <span
+            aria-hidden="true"
+            className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-sky-500"
+          />
+        )}
       </button>
       <ModalFiltroMapa
         abierto={abierto}

@@ -53,13 +53,12 @@ export default function MapaConHistorial({
         sismoSeleccionado={sismoSeleccionado}
         onSeleccionar={setSismoSeleccionado}
       />
-      {historialAbierto && (
-        <PantallaHistorial
-          sismoSeleccionado={sismoSeleccionado}
-          onSeleccionar={setSismoSeleccionado}
-          onCerrar={() => setHistorialAbierto(false)}
-        />
-      )}
+      <PantallaHistorial
+        abierto={historialAbierto}
+        sismoSeleccionado={sismoSeleccionado}
+        onSeleccionar={setSismoSeleccionado}
+        onCerrar={() => setHistorialAbierto(false)}
+      />
       <MenuLateral
         onAbrirHistorial={() => setHistorialAbierto(true)}
         onAbrirNotificaciones={() => setNotificacionesAbiertas(true)}

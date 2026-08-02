@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 
 interface MenuLateralProps {
   onAbrirHistorial: () => void;
@@ -48,19 +49,7 @@ export default function MenuLateral({
 }: MenuLateralProps) {
   const [abierto, setAbierto] = useState(false);
 
-  useEffect(() => {
-    if (!abierto) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const manejarTecla = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setAbierto(false);
-    };
-    document.addEventListener("keydown", manejarTecla);
-    return () => {
-      document.body.style.overflow = original;
-      document.removeEventListener("keydown", manejarTecla);
-    };
-  }, [abierto]);
+  useOverlayAccesible(abierto, () => setAbierto(false));
 
   const elegir = (accion: () => void) => {
     setAbierto(false);
@@ -117,7 +106,7 @@ export default function MenuLateral({
             type="button"
             onClick={() => setAbierto(false)}
             aria-label="Cerrar menú"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
           >
             ✕
           </button>

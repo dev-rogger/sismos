@@ -20,11 +20,17 @@ body {
   inset: 0;
   border-radius: 50%;
   background-color: inherit;
-  animation-name: pulso-sismo;
-  animation-duration: 1.5s;
-  animation-timing-function: ease-out;
-  animation-iteration-count: 8;
-  animation-fill-mode: forwards;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .marcador-sismo--pulso::before {
+    animation-name: pulso-sismo;
+    animation-duration: 1.5s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 8;
+    animation-fill-mode: forwards;
+  }
 }
 
 @keyframes pulso-sismo {
@@ -53,15 +59,22 @@ body {
   inset: 0;
   border-radius: 50%;
   background-color: #38bdf8;
-  animation-name: pulso-seleccion;
-  animation-duration: 1.5s;
-  animation-timing-function: ease-out;
-  animation-iteration-count: 4;
-  animation-fill-mode: forwards;
+  opacity: 0;
 }
 
-.marcador-seleccion::after {
-  animation-delay: 0.5s;
+@media (prefers-reduced-motion: no-preference) {
+  .marcador-seleccion::before,
+  .marcador-seleccion::after {
+    animation-name: pulso-seleccion;
+    animation-duration: 1.5s;
+    animation-timing-function: ease-out;
+    animation-iteration-count: 4;
+    animation-fill-mode: forwards;
+  }
+
+  .marcador-seleccion::after {
+    animation-delay: 0.5s;
+  }
 }
 
 @keyframes pulso-seleccion {

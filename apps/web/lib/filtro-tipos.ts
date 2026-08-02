@@ -64,6 +64,15 @@ export const FILTRO_MAPA_DEFAULT: FiltroMapa = {
   ventana: "10d",
 };
 
+export function filtroMapaEsDefault(filtro: FiltroMapa): boolean {
+  return (
+    filtro.soloChile === FILTRO_MAPA_DEFAULT.soloChile &&
+    filtro.ventana === FILTRO_MAPA_DEFAULT.ventana &&
+    filtro.rangos.length === FILTRO_MAPA_DEFAULT.rangos.length &&
+    FILTRO_MAPA_DEFAULT.rangos.every((r) => filtro.rangos.includes(r))
+  );
+}
+
 export const FILTRO_HISTORIAL_DEFAULT: FiltroHistorial = {
   soloChile: false,
   rangos: TODOS_LOS_RANGOS,

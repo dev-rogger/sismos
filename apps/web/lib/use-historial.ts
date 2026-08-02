@@ -25,6 +25,11 @@ export const OPCIONES_TIPO: { valor: TipoHistorial; etiqueta: string }[] = [
 interface UseHistorialParams {
   soloChile: boolean;
   rangos: RangoMagnitud[];
+  // Pospone el fetch mientras es false. Lo usa PantallaHistorial (mobile),
+  // que ahora queda montada permanentemente para poder animar su cierre,
+  // así no dispara su propio fetch antes de que el usuario la abra la
+  // primera vez.
+  activo?: boolean;
 }
 
 // Más espaciado que el polling del mapa (15s): acá no hay una animación de
@@ -33,7 +38,11 @@ interface UseHistorialParams {
 // montado (que en desktop es casi siempre, por el `lg:flex` de PanelHistorial).
 const POLL_INTERVAL_MS = 60 * 1000;
 
-export function useHistorial({ soloChile, rangos }: UseHistorialParams) {
+export function useHistorial({
+  soloChile,
+  rangos,
+  activo = true,
+}: UseHistorialParams) {
   const [tipo, setTipo] = useState<TipoHistorial>("ultimos10dias");
   const [eventos, setEventos] = useState<ItemHistorial[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +50,7 @@ export function useHistorial({ soloChile, rangos }: UseHistorialParams) {
   const [reintentos, setReintentos] = useState(0);
 
   useEffect(() => {
+    if (!activo) return;
     let cancelado = false;
     setLoading(true);
     setError(false);
@@ -86,7 +96,7 @@ export function useHistorial({ soloChile, rangos }: UseHistorialParams) {
       cancelado = true;
       clearInterval(intervalId);
     };
-  }, [tipo, soloChile, reintentos]);
+  }, [tipo, soloChile, reintentos, activo]);
 
   const eventosFiltrados = eventos.filter((evento) => {
     if (soloChile && evento.bandera !== "🇨🇱") return false;
