@@ -9,6 +9,7 @@ import {
   crearElementoUbicacion,
 } from "./marcador";
 import BotonFiltroMapa from "./BotonFiltroMapa";
+import BotonFallasMapa from "./BotonFallasMapa";
 import { magnitudPasaRangos, fechaPasaVentana } from "../../lib/filtro-tipos";
 import type { FiltroMapa } from "../../lib/filtro-tipos";
 import { colorPorMagnitud, colorTextoPorMagnitud } from "../../lib/magnitud";
@@ -17,6 +18,7 @@ import { generarCirculoGeografico } from "../../lib/circulo-geografico";
 import { radioPercepcionKm } from "../../lib/radio-percepcion";
 import type { SismoMapa, SismoSeleccionado } from "../../lib/tipos-sismo";
 import type { UbicacionUsuario } from "../../lib/use-ubicacion-usuario";
+import type { FallaSeleccionada } from "../../lib/tipos-falla";
 
 export type { SismoMapa, SismoSeleccionado };
 
@@ -29,6 +31,10 @@ interface MapaSismosProps {
   onFiltroChange: (filtro: FiltroMapa) => void;
   ubicacion: UbicacionUsuario;
   onPedirUbicacion: () => Promise<{ lat: number; lon: number } | null>;
+  fallasVisibles: boolean;
+  onFallasVisiblesChange: (visibles: boolean) => void;
+  fallaSeleccionada: FallaSeleccionada | null;
+  onSeleccionarFalla: (falla: FallaSeleccionada | null) => void;
 }
 
 // Chile es muy largo y angosto (~4300 km de norte a sur): un center+zoom
@@ -43,6 +49,7 @@ const POLL_INTERVAL_MS = 15 * 1000;
 const ESTILO_URL = "https://tiles.openfreemap.org/styles/liberty";
 const FUENTE_ONDA = "onda-percepcion";
 const DURACION_ONDA_MS = 1800;
+const FUENTE_FALLAS = "fallas-chile";
 
 function pasaFiltro(sismo: SismoMapa, filtro: FiltroMapa): boolean {
   if (filtro.soloChile && sismo.bandera !== "🇨🇱") return false;
@@ -99,6 +106,10 @@ export default function MapaSismos({
   onFiltroChange,
   ubicacion,
   onPedirUbicacion,
+  fallasVisibles,
+  onFallasVisiblesChange,
+  fallaSeleccionada,
+  onSeleccionarFalla,
 }: MapaSismosProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -124,6 +135,9 @@ export default function MapaSismos({
   const ubicacionRef = useRef(ubicacion);
   ubicacionRef.current = ubicacion;
   const marcadorUbicacionRef = useRef<maplibregl.Marker | null>(null);
+  const fallasCargadasRef = useRef(false);
+  const onSeleccionarFallaRef = useRef(onSeleccionarFalla);
+  onSeleccionarFallaRef.current = onSeleccionarFalla;
   const [errorConexion, setErrorConexion] = useState(false);
 
   function crearMarcador(
@@ -418,6 +432,93 @@ export default function MapaSismos({
     };
   }, [sismoSeleccionado]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (!fallasVisibles) {
+      if (map.getLayer(`${FUENTE_FALLAS}-linea`)) {
+        map.setLayoutProperty(`${FUENTE_FALLAS}-linea`, "visibility", "none");
+      }
+      return;
+    }
+
+    if (fallasCargadasRef.current) {
+      map.setLayoutProperty(`${FUENTE_FALLAS}-linea`, "visibility", "visible");
+      return;
+    }
+
+    fetch("/data/fallas-chile.geojson")
+      .then((res) => {
+        if (!res.ok) throw new Error(`fallas fetch failed: ${res.status}`);
+        return res.json();
+      })
+      .then((geojson: GeoJSON.FeatureCollection) => {
+        map.addSource(FUENTE_FALLAS, {
+          type: "geojson",
+          data: geojson,
+          attribution:
+            '<a href="https://github.com/GEMScienceTools/gem-global-active-faults" target="_blank" rel="noreferrer">GEM Global Active Faults</a>',
+        });
+        map.addLayer({
+          id: `${FUENTE_FALLAS}-linea`,
+          type: "line",
+          source: FUENTE_FALLAS,
+          paint: {
+            "line-color": "#b45309",
+            "line-width": 1.5,
+            "line-dasharray": [2, 1.5],
+            "line-opacity": 0.7,
+          },
+        });
+        map.on("click", `${FUENTE_FALLAS}-linea`, (e) => {
+          const propiedadesFalla = e.features?.[0]?.properties as
+            | { name: string | null }
+            | undefined;
+          onSeleccionarFallaRef.current({
+            lat: e.lngLat.lat,
+            lon: e.lngLat.lng,
+            nombre: propiedadesFalla?.name ?? "Falla sin nombre registrado",
+          });
+        });
+        fallasCargadasRef.current = true;
+      })
+      .catch((error) => {
+        console.error("[MapaSismos] fallas fetch error:", error);
+        onFallasVisiblesChange(false);
+      });
+  }, [fallasVisibles, onFallasVisiblesChange]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !fallaSeleccionada) return;
+
+    map.flyTo({
+      center: [fallaSeleccionada.lon, fallaSeleccionada.lat],
+      zoom: Math.max(map.getZoom(), 12),
+      speed: 1.2,
+    });
+
+    const popup = new maplibregl.Popup({ className: "popup-sismo" })
+      .setLngLat([fallaSeleccionada.lon, fallaSeleccionada.lat])
+      .setHTML(
+        `<div class="popup-sismo-titulo">${fallaSeleccionada.nombre}</div>`,
+      )
+      .addTo(map);
+
+    // Igual que con los sismos: si el usuario cierra el popup con el botón
+    // ×, limpiamos la selección en vez de dejarla desincronizada.
+    const manejarCierre = () => {
+      onSeleccionarFallaRef.current(null);
+    };
+    popup.on("close", manejarCierre);
+
+    return () => {
+      popup.off("close", manejarCierre);
+      popup.remove();
+    };
+  }, [fallaSeleccionada]);
+
   return (
     <div className="relative h-full w-full">
       <div ref={mapContainerRef} className="h-full w-full" />
@@ -434,6 +535,10 @@ export default function MapaSismos({
         className="absolute right-3 z-10 flex items-center gap-2"
       >
         <BotonFiltroMapa filtro={filtro} onFiltroChange={onFiltroChange} />
+        <BotonFallasMapa
+          fallasVisibles={fallasVisibles}
+          onFallasVisiblesChange={onFallasVisiblesChange}
+        />
         <button
           type="button"
           onClick={() =>

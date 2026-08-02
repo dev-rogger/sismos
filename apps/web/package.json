@@ -8,7 +8,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint --max-warnings 0",
-    "check-types": "next typegen && tsc --noEmit"
+    "check-types": "next typegen && tsc --noEmit",
+    "generar-fallas-chile": "node scripts/generar-fallas-chile.mjs"
   },
   "dependencies": {
     "@sismos/db": "workspace:*",
