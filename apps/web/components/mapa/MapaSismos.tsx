@@ -579,18 +579,11 @@ export default function MapaSismos({
           onClick={async () => {
             const map = mapRef.current;
             if (!map) return;
-            if (ubicacion.centro) {
-              map.flyTo({
-                center: [ubicacion.centro.lon, ubicacion.centro.lat],
-                zoom: Math.max(map.getZoom(), 10),
-                speed: 1.2,
-              });
-              return;
-            }
             const centro = await onPedirUbicacion();
-            if (centro) {
+            const destino = centro ?? ubicacion.centro;
+            if (destino) {
               map.flyTo({
-                center: [centro.lon, centro.lat],
+                center: [destino.lon, destino.lat],
                 zoom: Math.max(map.getZoom(), 10),
                 speed: 1.2,
               });
