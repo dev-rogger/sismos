@@ -2,6 +2,7 @@ import {
   findDuplicate,
   normalizeCsnSismo,
   normalizeUsgsFeature,
+  UMBRAL_MAGNITUD_MUNDIAL,
   type SismoNormalizado,
 } from "@sismos/shared";
 import {
@@ -86,8 +87,15 @@ export async function runIngest(): Promise<IngestSummary> {
       });
       summary.deduped += 1;
     } else {
-      await upsertSismo(evento);
+      const { esNuevo } = await upsertSismo(evento);
       summary.usgs.inserted += 1;
+      if (esNuevo && evento.magnitud >= UMBRAL_MAGNITUD_MUNDIAL) {
+        try {
+          await enviarPushParaSismo(evento);
+        } catch (error) {
+          console.error("[ingest] push notification failed:", error);
+        }
+      }
     }
   }
 

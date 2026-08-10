@@ -55,6 +55,7 @@ export async function enviarPushParaSismo(
     magnitud: evento.magnitud,
     latitud: evento.latitud,
     longitud: evento.longitud,
+    fuente: evento.fuente,
   });
   if (suscripciones.length === 0) return;
 
