@@ -85,6 +85,16 @@ export async function upsertPushSubscription(
   return toPushSubscription(row);
 }
 
+export async function getPushSubscriptionByEndpoint(
+  endpoint: string,
+): Promise<PushSubscription | null> {
+  const [row] = await getDb()
+    .select()
+    .from(pushSubscriptions)
+    .where(eq(pushSubscriptions.endpoint, endpoint));
+  return row ? toPushSubscription(row) : null;
+}
+
 export async function deletePushSubscription(endpoint: string): Promise<void> {
   await getDb()
     .delete(pushSubscriptions)

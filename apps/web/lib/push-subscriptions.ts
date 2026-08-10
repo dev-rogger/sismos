@@ -1,6 +1,7 @@
 import {
   upsertPushSubscription,
   deletePushSubscription,
+  getPushSubscriptionByEndpoint,
   type PushSubscription,
 } from "@sismos/db";
 
@@ -21,4 +22,10 @@ export async function guardarSuscripcion(
 
 export async function eliminarSuscripcion(endpoint: string): Promise<void> {
   return deletePushSubscription(endpoint);
+}
+
+export async function obtenerSuscripcion(
+  endpoint: string,
+): Promise<PushSubscription | null> {
+  return getPushSubscriptionByEndpoint(endpoint);
 }

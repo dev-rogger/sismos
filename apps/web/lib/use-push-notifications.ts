@@ -72,6 +72,33 @@ export function usePushNotifications() {
       setPermission(Notification.permission as PermisoNotificacion);
       const registration = await navigator.serviceWorker.ready;
       const existente = await registration.pushManager.getSubscription();
+
+      if (existente) {
+        try {
+          const res = await fetch(
+            `/api/push/subscribe?endpoint=${encodeURIComponent(existente.endpoint)}`,
+          );
+          if (res.ok) {
+            const data = (await res.json()) as {
+              subscription: {
+                magnitudMinima: number;
+                centro: { lat: number; lon: number } | null;
+                radioKm: number | null;
+                alcanceMundial: boolean;
+              } | null;
+            };
+            if (data.subscription && !cancelado) {
+              setMagnitudMinima(data.subscription.magnitudMinima);
+              setRadioKm(data.subscription.radioKm);
+              setCentro(data.subscription.centro);
+              setAlcanceMundial(data.subscription.alcanceMundial);
+            }
+          }
+        } catch (error) {
+          console.error("[usePushNotifications] hydrate failed:", error);
+        }
+      }
+
       if (!cancelado) {
         setSuscrito(existente !== null);
         setLoading(false);

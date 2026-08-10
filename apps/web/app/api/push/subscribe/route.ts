@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { guardarSuscripcion, eliminarSuscripcion } from "../../../../lib/push-subscriptions";
+import {
+  guardarSuscripcion,
+  eliminarSuscripcion,
+  obtenerSuscripcion,
+} from "../../../../lib/push-subscriptions";
 import { esRadioKmValido, esCentroValido } from "../../../../lib/radio-notificacion";
 
 interface SubscribeBody {
@@ -65,6 +69,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("[api/push/subscribe] POST failed:", error);
+    return NextResponse.json(
+      { error: "Database connection failed" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const endpoint = url.searchParams.get("endpoint");
+  if (!endpoint) {
+    return NextResponse.json({ error: "Missing endpoint" }, { status: 400 });
+  }
+
+  try {
+    const suscripcion = await obtenerSuscripcion(endpoint);
+    if (!suscripcion) {
+      return NextResponse.json({ subscription: null });
+    }
+    return NextResponse.json({
+      subscription: {
+        magnitudMinima: suscripcion.magnitudMinima,
+        centro: suscripcion.centro,
+        radioKm: suscripcion.radioKm,
+        alcanceMundial: suscripcion.alcanceMundial,
+      },
+    });
+  } catch (error) {
+    console.error("[api/push/subscribe] GET failed:", error);
     return NextResponse.json(
       { error: "Database connection failed" },
       { status: 500 },
