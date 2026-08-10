@@ -68,7 +68,7 @@ export function useUbicacionUsuario() {
           resolve(centro);
         },
         () => resolve(null),
-        { enableHighAccuracy: false, timeout: 8000 },
+        { enableHighAccuracy: true, timeout: 8000 },
       );
     });
   }, []);
