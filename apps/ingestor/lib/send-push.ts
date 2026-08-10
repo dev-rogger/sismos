@@ -60,7 +60,8 @@ export async function enviarPushParaSismo(
   if (suscripciones.length === 0) return;
 
   const url = `/?sismo=${evento.externalId}&lat=${evento.latitud}&lon=${evento.longitud}&mag=${evento.magnitud}&lugar=${encodeURIComponent(evento.lugar)}`;
-  const nombreRegion = regionChilePorLatitud(evento.latitud);
+  const nombreRegion =
+    evento.fuente === "csn" ? regionChilePorLatitud(evento.latitud) : null;
   const region = nombreRegion ? formatearRegion(nombreRegion) : evento.lugar;
   const tipoEvento = evento.magnitud >= UMBRAL_TERREMOTO ? "terremoto" : "sismo";
   const payload = JSON.stringify({
