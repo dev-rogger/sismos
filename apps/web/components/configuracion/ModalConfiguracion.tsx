@@ -225,6 +225,11 @@ function ModalConfiguracionContenido({
                     onClick={() => {
                       setMundialLocal((v) => !v);
                       setUbicacionFallo(false);
+                      // Permite reintentar si el primer intento de esta
+                      // apertura falló: sin este reset, una vez que
+                      // yaPidioRef queda en true no vuelve a fetchear hasta
+                      // que el modal se cierre y reabra (nuevo montaje).
+                      yaPidioRef.current = false;
                     }}
                     aria-pressed={mundialLocal}
                     className={`flex min-h-9 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-colors ${
