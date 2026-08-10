@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePushNotifications } from "../../lib/use-push-notifications";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 import SelectorRadioMapa from "./SelectorRadioMapa";
@@ -98,15 +98,28 @@ function ModalConfiguracionContenido({
   const [pidiendoUbicacion, setPidiendoUbicacion] = useState(false);
   const [ubicacionFallo, setUbicacionFallo] = useState(false);
 
-  // Pide una ubicación fresca cada vez que el modal se abre en modo no
-  // "Mundial" — no solo la primera vez, para que un dispositivo que se
-  // movió refleje su posición actual y no una guardada de otra sesión.
+  // Pide una ubicación fresca una vez cada vez que el modal se abre en modo
+  // no "Mundial" — no solo la primera vez que existió, para que un
+  // dispositivo que se movió refleje su posición actual y no una guardada
+  // de otra sesión. `yaPidioRef` evita que un fetch exitoso (que hace pasar
+  // `pidiendoUbicacion` de true a false) dispare este efecto de nuevo y
+  // genere un loop de pedidos mientras el modal siga abierto — el ref vive
+  // por montaje, y cada apertura real remonta este componente (ver `key`
+  // en `ModalConfiguracion`), así que sigue pidiendo una vez por apertura.
   // `ubicacionFallo` evita reintentar en loop cuando el usuario ya rechazó
   // el permiso o el navegador no soporta geolocalización en esta apertura.
+  const yaPidioRef = useRef(false);
   useEffect(() => {
-    if (!abierto || mundialLocal || pidiendoUbicacion || ubicacionFallo) {
+    if (
+      !abierto ||
+      mundialLocal ||
+      pidiendoUbicacion ||
+      ubicacionFallo ||
+      yaPidioRef.current
+    ) {
       return;
     }
+    yaPidioRef.current = true;
     setPidiendoUbicacion(true);
     onPedirUbicacion().then((centro) => {
       setPidiendoUbicacion(false);
