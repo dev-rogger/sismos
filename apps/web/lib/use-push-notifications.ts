@@ -28,6 +28,7 @@ async function enviarSuscripcion(
   subscription: PushSubscription,
   magnitudMinima: number,
   preferenciaRadio: PreferenciaRadio,
+  alcanceMundial: boolean,
 ): Promise<void> {
   const res = await fetch("/api/push/subscribe", {
     method: "POST",
@@ -37,6 +38,7 @@ async function enviarSuscripcion(
       magnitudMinima,
       centro: preferenciaRadio.centro,
       radioKm: preferenciaRadio.radioKm,
+      alcanceMundial,
     }),
   });
   if (!res.ok) throw new Error(`subscribe failed: ${res.status}`);
@@ -52,6 +54,7 @@ export function usePushNotifications() {
   const [centro, setCentro] = useState<{ lat: number; lon: number } | null>(
     null,
   );
+  const [alcanceMundial, setAlcanceMundial] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -86,7 +89,11 @@ export function usePushNotifications() {
   }, []);
 
   const activar = useCallback(
-    async (nuevaMagnitudMinima: number, preferenciaRadio: PreferenciaRadio) => {
+    async (
+      nuevaMagnitudMinima: number,
+      preferenciaRadio: PreferenciaRadio,
+      nuevoAlcanceMundial: boolean,
+    ) => {
       setLoading(true);
       try {
         const permisoActual = await Notification.requestPermission();
@@ -112,10 +119,12 @@ export function usePushNotifications() {
           subscription,
           nuevaMagnitudMinima,
           preferenciaRadio,
+          nuevoAlcanceMundial,
         );
         setMagnitudMinima(nuevaMagnitudMinima);
         setRadioKm(preferenciaRadio.radioKm);
         setCentro(preferenciaRadio.centro);
+        setAlcanceMundial(nuevoAlcanceMundial);
         setSuscrito(true);
         return true;
       } finally {
@@ -146,7 +155,11 @@ export function usePushNotifications() {
   }, []);
 
   const actualizarUmbral = useCallback(
-    async (nuevaMagnitudMinima: number, preferenciaRadio: PreferenciaRadio) => {
+    async (
+      nuevaMagnitudMinima: number,
+      preferenciaRadio: PreferenciaRadio,
+      nuevoAlcanceMundial: boolean,
+    ) => {
       setLoading(true);
       try {
         const registration = await navigator.serviceWorker.ready;
@@ -156,10 +169,12 @@ export function usePushNotifications() {
           subscription,
           nuevaMagnitudMinima,
           preferenciaRadio,
+          nuevoAlcanceMundial,
         );
         setMagnitudMinima(nuevaMagnitudMinima);
         setRadioKm(preferenciaRadio.radioKm);
         setCentro(preferenciaRadio.centro);
+        setAlcanceMundial(nuevoAlcanceMundial);
       } finally {
         setLoading(false);
       }
@@ -174,6 +189,7 @@ export function usePushNotifications() {
     magnitudMinima,
     radioKm,
     centro,
+    alcanceMundial,
     activar,
     desactivar,
     actualizarUmbral,
