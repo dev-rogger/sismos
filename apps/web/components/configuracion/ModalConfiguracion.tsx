@@ -98,6 +98,22 @@ function ModalConfiguracionContenido({
   const [pidiendoUbicacion, setPidiendoUbicacion] = useState(false);
   const [ubicacionFallo, setUbicacionFallo] = useState(false);
 
+  // usePushNotifications() hidrata magnitudMinima/alcanceMundial desde la
+  // suscripción guardada en la base de forma asíncrona (fetch a
+  // /api/push/subscribe), pero umbralLocal/alcanceMundialLocal ya se
+  // inicializaron con useState() al primer render, cuando esos valores
+  // todavía eran el default — useState() solo lee su argumento inicial una
+  // vez, no se re-sincroniza solo. Sin este efecto, reabrir el modal
+  // siempre mostraba el umbral/alcance por default en vez del guardado.
+  // Se resincroniza recién cuando `loading` pasa a false (hidratación ya
+  // aplicada) para no pisar una edición del usuario en curso — después de
+  // eso solo vuelve a correr si el propio guardado actualiza el hook.
+  useEffect(() => {
+    if (loading) return;
+    setUmbralLocal(magnitudMinima);
+    setAlcanceMundialLocal(alcanceMundial);
+  }, [loading, magnitudMinima, alcanceMundial]);
+
   // Pide una ubicación fresca una vez cada vez que el modal se abre en modo
   // no "Mundial" — no solo la primera vez que existió, para que un
   // dispositivo que se movió refleje su posición actual y no una guardada
