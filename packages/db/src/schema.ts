@@ -5,6 +5,7 @@ import {
   timestamp,
   real,
   doublePrecision,
+  boolean,
   unique,
 } from "drizzle-orm/pg-core";
 
@@ -69,6 +70,7 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   centroLat: doublePrecision("centro_lat"),
   centroLon: doublePrecision("centro_lon"),
   radioKm: real("radio_km"),
+  alcanceMundial: boolean("alcance_mundial").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

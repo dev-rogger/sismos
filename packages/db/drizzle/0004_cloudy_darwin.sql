@@ -1,0 +1,1 @@
+ALTER TABLE "push_subscriptions" ADD COLUMN "alcance_mundial" boolean DEFAULT false NOT NULL;

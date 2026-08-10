@@ -1,5 +1,5 @@
 import { eq, lte } from "drizzle-orm";
-import { distanciaKm } from "@sismos/shared";
+import { distanciaKm, UMBRAL_MAGNITUD_MUNDIAL, type SismoFuente } from "@sismos/shared";
 import { getDb } from "../connection";
 import { pushSubscriptions } from "../schema";
 
@@ -10,6 +10,7 @@ export interface PushSubscription {
   magnitudMinima: number;
   centro: { lat: number; lon: number } | null;
   radioKm: number | null;
+  alcanceMundial: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,6 +21,7 @@ export interface SuscripcionInput {
   magnitudMinima: number;
   centro?: { lat: number; lon: number } | null;
   radioKm?: number | null;
+  alcanceMundial?: boolean;
 }
 
 function toPushSubscription(
@@ -35,6 +37,7 @@ function toPushSubscription(
         ? { lat: row.centroLat, lon: row.centroLon }
         : null,
     radioKm: row.radioKm,
+    alcanceMundial: row.alcanceMundial,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -46,6 +49,7 @@ export async function upsertPushSubscription(
   const now = new Date();
   const centro = input.centro ?? null;
   const radioKm = input.radioKm ?? null;
+  const alcanceMundial = input.alcanceMundial ?? false;
   const [row] = await getDb()
     .insert(pushSubscriptions)
     .values({
@@ -56,6 +60,7 @@ export async function upsertPushSubscription(
       centroLat: centro?.lat ?? null,
       centroLon: centro?.lon ?? null,
       radioKm,
+      alcanceMundial,
       updatedAt: now,
     })
     .onConflictDoUpdate({
@@ -67,6 +72,7 @@ export async function upsertPushSubscription(
         centroLat: centro?.lat ?? null,
         centroLon: centro?.lon ?? null,
         radioKm,
+        alcanceMundial,
         updatedAt: now,
       },
     })
@@ -89,7 +95,17 @@ export async function findSubscripcionesParaSismo(evento: {
   magnitud: number;
   latitud: number;
   longitud: number;
+  fuente: SismoFuente;
 }): Promise<PushSubscription[]> {
+  if (evento.fuente !== "csn") {
+    if (evento.magnitud < UMBRAL_MAGNITUD_MUNDIAL) return [];
+    const rows = await getDb()
+      .select()
+      .from(pushSubscriptions)
+      .where(eq(pushSubscriptions.alcanceMundial, true));
+    return rows.map(toPushSubscription);
+  }
+
   const rows = await getDb()
     .select()
     .from(pushSubscriptions)
