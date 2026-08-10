@@ -105,11 +105,17 @@ function ModalConfiguracionContenido({
   // todavía eran el default — useState() solo lee su argumento inicial una
   // vez, no se re-sincroniza solo. Sin este efecto, reabrir el modal
   // siempre mostraba el umbral/alcance por default en vez del guardado.
-  // Se resincroniza recién cuando `loading` pasa a false (hidratación ya
-  // aplicada) para no pisar una edición del usuario en curso — después de
-  // eso solo vuelve a correr si el propio guardado actualiza el hook.
+  // `hidratadoRef` limita el resync a la primera vez que `loading` pasa a
+  // false (la hidratación inicial) y nunca más — si en cambio corriera en
+  // cada transición de `loading`, un guardado (activar/actualizarUmbral)
+  // que termina mientras el usuario ya movió el slider de nuevo pisaría
+  // esa edición en curso con el valor recién guardado (ahora desactualizado).
+  // Después de la hidratación inicial, el estado local ya es la única
+  // fuente de verdad para el slider/toggle.
+  const hidratadoRef = useRef(false);
   useEffect(() => {
-    if (loading) return;
+    if (loading || hidratadoRef.current) return;
+    hidratadoRef.current = true;
     setUmbralLocal(magnitudMinima);
     setAlcanceMundialLocal(alcanceMundial);
   }, [loading, magnitudMinima, alcanceMundial]);
