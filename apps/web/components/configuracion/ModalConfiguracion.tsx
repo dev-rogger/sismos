@@ -84,6 +84,7 @@ function ModalConfiguracionContenido({
     suscrito,
     loading,
     magnitudMinima,
+    alcanceMundial,
     activar,
     desactivar,
     actualizarUmbral,
@@ -93,6 +94,7 @@ function ModalConfiguracionContenido({
   const [radioKmLocal, setRadioKmLocal] = useState(
     ubicacion.radioKm ?? RADIO_KM_DEFAULT,
   );
+  const [alcanceMundialLocal, setAlcanceMundialLocal] = useState(alcanceMundial);
   const [pidiendoUbicacion, setPidiendoUbicacion] = useState(false);
   const [ubicacionFallo, setUbicacionFallo] = useState(false);
 
@@ -132,7 +134,8 @@ function ModalConfiguracionContenido({
   const hayFormaCambios =
     umbralLocal !== magnitudMinima ||
     mundialLocal !== (ubicacion.radioKm === null) ||
-    (!mundialLocal && radioKmLocal !== ubicacion.radioKm);
+    (!mundialLocal && radioKmLocal !== ubicacion.radioKm) ||
+    alcanceMundialLocal !== alcanceMundial;
 
   return (
     <>
@@ -176,7 +179,7 @@ function ModalConfiguracionContenido({
                 return;
               }
               const preferencia = preferenciaRadio();
-              activar(umbralLocal, preferencia).then((exito) => {
+              activar(umbralLocal, preferencia, alcanceMundialLocal).then((exito) => {
                 if (exito) onSetRadioKm(preferencia.radioKm);
               });
             }}
@@ -274,12 +277,36 @@ function ModalConfiguracionContenido({
                 )}
               </div>
 
+              <div className="mt-4 border-t border-neutral-800 pt-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-xs text-neutral-400">
+                    Terremotos en el mundo
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setAlcanceMundialLocal((v) => !v)}
+                    aria-pressed={alcanceMundialLocal}
+                    className={`flex min-h-9 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-colors ${
+                      alcanceMundialLocal
+                        ? "border-sky-500 bg-sky-500/10 text-sky-400"
+                        : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
+                    }`}
+                  >
+                    Avisarme
+                  </button>
+                </div>
+                <p className="text-xs text-neutral-400">
+                  Terremotos grandes (M7.0+) en cualquier país, sin importar
+                  la distancia.
+                </p>
+              </div>
+
               <button
                 type="button"
                 disabled={loading || !hayFormaCambios}
                 onClick={() => {
                   const preferencia = preferenciaRadio();
-                  actualizarUmbral(umbralLocal, preferencia).then(() => {
+                  actualizarUmbral(umbralLocal, preferencia, alcanceMundialLocal).then(() => {
                     onSetRadioKm(preferencia.radioKm);
                   });
                 }}
