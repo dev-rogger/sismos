@@ -291,14 +291,18 @@ function ModalConfiguracionContenido({
                   <button
                     type="button"
                     onClick={() => setAlcanceMundialLocal((v) => !v)}
-                    aria-pressed={alcanceMundialLocal}
-                    className={`flex min-h-9 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-colors ${
-                      alcanceMundialLocal
-                        ? "border-sky-500 bg-sky-500/10 text-sky-400"
-                        : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
+                    role="switch"
+                    aria-checked={alcanceMundialLocal}
+                    aria-label="Avisarme de terremotos en el mundo"
+                    className={`relative flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+                      alcanceMundialLocal ? "bg-sky-500" : "bg-neutral-700"
                     }`}
                   >
-                    Avisarme
+                    <span
+                      className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                        alcanceMundialLocal ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
                   </button>
                 </div>
                 <p className="text-xs text-neutral-400">
