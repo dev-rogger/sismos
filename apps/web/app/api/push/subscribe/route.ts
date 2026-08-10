@@ -10,6 +10,7 @@ interface SubscribeBody {
   magnitudMinima?: number;
   centro?: { lat: number; lon: number } | null;
   radioKm?: number | null;
+  alcanceMundial?: boolean;
 }
 
 function esMagnitudValida(valor: unknown): valor is number {
@@ -45,6 +46,12 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+  if (body.alcanceMundial != null && typeof body.alcanceMundial !== "boolean") {
+    return NextResponse.json(
+      { error: "alcanceMundial must be a boolean" },
+      { status: 400 },
+    );
+  }
 
   try {
     await guardarSuscripcion({
@@ -53,6 +60,7 @@ export async function POST(request: Request) {
       magnitudMinima: body.magnitudMinima,
       centro: body.centro ?? null,
       radioKm: body.radioKm ?? null,
+      alcanceMundial: body.alcanceMundial ?? false,
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

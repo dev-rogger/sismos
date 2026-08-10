@@ -10,6 +10,7 @@ interface GuardarSuscripcionInput {
   magnitudMinima: number;
   centro?: { lat: number; lon: number } | null;
   radioKm?: number | null;
+  alcanceMundial?: boolean;
 }
 
 export async function guardarSuscripcion(
