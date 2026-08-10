@@ -7,8 +7,10 @@ import PantallaHistorial from "./historial/PantallaHistorial";
 import PantallaFallas from "./fallas/PantallaFallas";
 import MenuLateral from "./menu/MenuLateral";
 import ModalConfiguracion from "./configuracion/ModalConfiguracion";
+import ModalInstalarApp from "./instalar/ModalInstalarApp";
 import { useFiltroMapa } from "../lib/use-filtro-mapa";
 import { useUbicacionUsuario } from "../lib/use-ubicacion-usuario";
+import { useInstalarApp } from "../lib/use-instalar-app";
 import { useCapaFallas } from "../lib/use-capa-fallas";
 import type { SismoMapa, SismoSeleccionado } from "../lib/tipos-sismo";
 import type { FallaSeleccionada } from "../lib/tipos-falla";
@@ -32,6 +34,14 @@ export default function MapaConHistorial({
     useState(false);
   const { filtro, setFiltro } = useFiltroMapa();
   const { ubicacion, pedirUbicacion, setRadioKm } = useUbicacionUsuario();
+  const {
+    puedeInstalar,
+    plataforma,
+    visible: instalarVisible,
+    instalar,
+    descartar,
+    abrirManual,
+  } = useInstalarApp();
   const { fallasVisibles, setFallasVisibles } = useCapaFallas();
   const [fallaSeleccionada, setFallaSeleccionada] =
     useState<FallaSeleccionada | null>(null);
@@ -103,6 +113,8 @@ export default function MapaConHistorial({
         onAbrirHistorial={() => setHistorialAbierto(true)}
         onAbrirFallas={() => setPantallaFallasAbierta(true)}
         onAbrirNotificaciones={() => setNotificacionesAbiertas(true)}
+        puedeInstalarApp={puedeInstalar}
+        onAbrirInstalarApp={abrirManual}
       />
       <ModalConfiguracion
         abierto={notificacionesAbiertas}
@@ -110,6 +122,12 @@ export default function MapaConHistorial({
         ubicacion={ubicacion}
         onPedirUbicacion={pedirUbicacion}
         onSetRadioKm={setRadioKm}
+      />
+      <ModalInstalarApp
+        visible={instalarVisible}
+        plataforma={plataforma}
+        onInstalar={instalar}
+        onDescartar={descartar}
       />
     </>
   );

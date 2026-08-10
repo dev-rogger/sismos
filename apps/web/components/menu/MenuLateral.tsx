@@ -7,6 +7,8 @@ interface MenuLateralProps {
   onAbrirHistorial: () => void;
   onAbrirFallas: () => void;
   onAbrirNotificaciones: () => void;
+  puedeInstalarApp: boolean;
+  onAbrirInstalarApp: () => void;
 }
 
 function IconoHistorial() {
@@ -60,10 +62,30 @@ function IconoNotificaciones() {
   );
 }
 
+function IconoInstalar() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <path d="M12 3v12" />
+      <path d="M7 10l5 5 5-5" />
+      <path d="M4 19h16" />
+    </svg>
+  );
+}
+
 export default function MenuLateral({
   onAbrirHistorial,
   onAbrirFallas,
   onAbrirNotificaciones,
+  puedeInstalarApp,
+  onAbrirInstalarApp,
 }: MenuLateralProps) {
   const [abierto, setAbierto] = useState(false);
 
@@ -155,6 +177,16 @@ export default function MenuLateral({
             <IconoNotificaciones />
             Notificaciones
           </button>
+          {puedeInstalarApp && (
+            <button
+              type="button"
+              onClick={() => elegir(onAbrirInstalarApp)}
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+            >
+              <IconoInstalar />
+              Instalar app
+            </button>
+          )}
         </nav>
       </div>
     </>
