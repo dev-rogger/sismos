@@ -56,10 +56,11 @@ function marcarInstalada(): void {
   }
 }
 
-export function useInstalarApp() {
+export function useInstalarApp(bloqueado = false) {
   const [puedeInstalar, setPuedeInstalar] = useState(false);
   const [plataforma, setPlataforma] = useState<Plataforma>(null);
   const [visible, setVisible] = useState(false);
+  const [pendiente, setPendiente] = useState(false);
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
@@ -96,22 +97,20 @@ export function useInstalarApp() {
 
   useEffect(() => {
     if (!puedeInstalar || dentroDeCooldown() || yaFueInstalada()) return;
-    const timer = window.setTimeout(() => setVisible(true), AUTO_SHOW_DELAY_MS);
+    const timer = window.setTimeout(() => setPendiente(true), AUTO_SHOW_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [puedeInstalar]);
 
-  const instalar = useCallback(async () => {
-    const deferredPrompt = deferredPromptRef.current;
-    if (!deferredPrompt) return;
-    await deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    deferredPromptRef.current = null;
-    if (outcome === "accepted") {
-      marcarInstalada();
-      setVisible(false);
-      setPuedeInstalar(false);
+  // Si el timer de arriba se cumple mientras hay otro modal/pantalla
+  // abierto (`bloqueado`), no mostramos el aviso todavía — quedaría
+  // encima de lo que el usuario está haciendo — pero tampoco lo
+  // descartamos: en cuanto se desbloquea, se muestra una sola vez.
+  useEffect(() => {
+    if (pendiente && !bloqueado) {
+      setVisible(true);
+      setPendiente(false);
     }
-  }, []);
+  }, [pendiente, bloqueado]);
 
   const descartar = useCallback(() => {
     try {
@@ -121,6 +120,27 @@ export function useInstalarApp() {
     }
     setVisible(false);
   }, []);
+
+  const instalar = useCallback(async () => {
+    const deferredPrompt = deferredPromptRef.current;
+    if (!deferredPrompt) return;
+    try {
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        marcarInstalada();
+        setVisible(false);
+        setPuedeInstalar(false);
+      } else {
+        descartar();
+      }
+    } catch (error) {
+      console.error("[useInstalarApp] instalar failed:", error);
+      descartar();
+    } finally {
+      deferredPromptRef.current = null;
+    }
+  }, [descartar]);
 
   const abrirManual = useCallback(() => {
     setVisible(true);
