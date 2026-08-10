@@ -34,6 +34,13 @@ export default function MapaConHistorial({
     useState(false);
   const { filtro, setFiltro } = useFiltroMapa();
   const { ubicacion, pedirUbicacion, setRadioKm } = useUbicacionUsuario();
+  const { fallasVisibles, setFallasVisibles } = useCapaFallas();
+  const [fallaSeleccionada, setFallaSeleccionada] =
+    useState<FallaSeleccionada | null>(null);
+  const [historialAbierto, setHistorialAbierto] = useState(false);
+  const [pantallaFallasAbierta, setPantallaFallasAbierta] = useState(false);
+  const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
   const {
     puedeInstalar,
     plataforma,
@@ -41,13 +48,12 @@ export default function MapaConHistorial({
     instalar,
     descartar,
     abrirManual,
-  } = useInstalarApp();
-  const { fallasVisibles, setFallasVisibles } = useCapaFallas();
-  const [fallaSeleccionada, setFallaSeleccionada] =
-    useState<FallaSeleccionada | null>(null);
-  const [historialAbierto, setHistorialAbierto] = useState(false);
-  const [pantallaFallasAbierta, setPantallaFallasAbierta] = useState(false);
-  const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
+  } = useInstalarApp(
+    historialAbierto ||
+      pantallaFallasAbierta ||
+      notificacionesAbiertas ||
+      menuAbierto,
+  );
 
   const seleccionarFallaDesdeLista = (falla: FallaSeleccionada) => {
     setFallaSeleccionada(falla);
@@ -115,6 +121,7 @@ export default function MapaConHistorial({
         onAbrirNotificaciones={() => setNotificacionesAbiertas(true)}
         puedeInstalarApp={puedeInstalar}
         onAbrirInstalarApp={abrirManual}
+        onAbiertoChange={setMenuAbierto}
       />
       <ModalConfiguracion
         abierto={notificacionesAbiertas}

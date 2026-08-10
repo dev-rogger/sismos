@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 
 interface MenuLateralProps {
@@ -9,6 +9,7 @@ interface MenuLateralProps {
   onAbrirNotificaciones: () => void;
   puedeInstalarApp: boolean;
   onAbrirInstalarApp: () => void;
+  onAbiertoChange?: (abierto: boolean) => void;
 }
 
 function IconoHistorial() {
@@ -86,10 +87,15 @@ export default function MenuLateral({
   onAbrirNotificaciones,
   puedeInstalarApp,
   onAbrirInstalarApp,
+  onAbiertoChange,
 }: MenuLateralProps) {
   const [abierto, setAbierto] = useState(false);
 
   useOverlayAccesible(abierto, () => setAbierto(false));
+
+  useEffect(() => {
+    onAbiertoChange?.(abierto);
+  }, [abierto, onAbiertoChange]);
 
   const elegir = (accion: () => void) => {
     setAbierto(false);
