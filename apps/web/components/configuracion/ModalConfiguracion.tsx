@@ -98,18 +98,13 @@ function ModalConfiguracionContenido({
   const [pidiendoUbicacion, setPidiendoUbicacion] = useState(false);
   const [ubicacionFallo, setUbicacionFallo] = useState(false);
 
-  // Pide geolocalización solo si el modal está abierto y el usuario
-  // desactivó "Mundial" — nunca de forma automática al montar la app.
+  // Pide una ubicación fresca cada vez que el modal se abre en modo no
+  // "Mundial" — no solo la primera vez, para que un dispositivo que se
+  // movió refleje su posición actual y no una guardada de otra sesión.
   // `ubicacionFallo` evita reintentar en loop cuando el usuario ya rechazó
-  // el permiso o el navegador no soporta geolocalización.
+  // el permiso o el navegador no soporta geolocalización en esta apertura.
   useEffect(() => {
-    if (
-      !abierto ||
-      mundialLocal ||
-      ubicacion.centro ||
-      pidiendoUbicacion ||
-      ubicacionFallo
-    ) {
+    if (!abierto || mundialLocal || pidiendoUbicacion || ubicacionFallo) {
       return;
     }
     setPidiendoUbicacion(true);
@@ -117,14 +112,7 @@ function ModalConfiguracionContenido({
       setPidiendoUbicacion(false);
       setUbicacionFallo(centro === null);
     });
-  }, [
-    abierto,
-    mundialLocal,
-    ubicacion.centro,
-    pidiendoUbicacion,
-    ubicacionFallo,
-    onPedirUbicacion,
-  ]);
+  }, [abierto, mundialLocal, pidiendoUbicacion, ubicacionFallo, onPedirUbicacion]);
 
   const preferenciaRadio = () =>
     mundialLocal || !ubicacion.centro
@@ -238,13 +226,13 @@ function ModalConfiguracionContenido({
 
                 {!mundialLocal && (
                   <div className="mt-3">
-                    {pidiendoUbicacion && (
+                    {pidiendoUbicacion && !ubicacion.centro && (
                       <div className="flex h-40 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-800/50 text-xs text-neutral-400">
                         Buscando tu ubicación…
                       </div>
                     )}
 
-                    {!pidiendoUbicacion && ubicacion.centro && (
+                    {ubicacion.centro && (
                       <>
                         <SelectorRadioMapa
                           centro={ubicacion.centro}
@@ -267,7 +255,7 @@ function ModalConfiguracionContenido({
                       </>
                     )}
 
-                    {!pidiendoUbicacion && ubicacionFallo && (
+                    {!pidiendoUbicacion && !ubicacion.centro && ubicacionFallo && (
                       <p className="mt-3 text-xs text-neutral-400">
                         No pudimos acceder a tu ubicación, así que las
                         notificaciones quedan sin límite de distancia.
