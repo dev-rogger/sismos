@@ -574,6 +574,11 @@ export default function MapaSismos({
         >
           Ver todo Chile
         </button>
+      </div>
+      <div
+        style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        className="absolute right-3 z-10 flex items-center gap-2"
+      >
         <button
           type="button"
           onClick={async () => {
@@ -601,8 +606,11 @@ export default function MapaSismos({
             strokeLinejoin="round"
             className="h-5 w-5"
           >
-            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-            <circle cx="12" cy="10" r="3" />
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 3v3" />
+            <path d="M12 18v3" />
+            <path d="M21 12h-3" />
+            <path d="M6 12H3" />
           </svg>
         </button>
       </div>
