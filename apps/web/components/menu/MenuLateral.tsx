@@ -81,6 +81,29 @@ function IconoInstalar() {
   );
 }
 
+function IconoCompartir() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="M8.59 13.51l6.83 3.98" />
+      <path d="M15.41 6.51l-6.82 3.98" />
+    </svg>
+  );
+}
+
+const MENSAJE_COMPARTIR =
+  "🌎📍 Sismos de Chile y el mundo en tiempo real. Míralo acá:";
+
 export default function MenuLateral({
   onAbrirHistorial,
   onAbrirFallas,
@@ -90,6 +113,7 @@ export default function MenuLateral({
   onAbiertoChange,
 }: MenuLateralProps) {
   const [abierto, setAbierto] = useState(false);
+  const [enlaceCopiado, setEnlaceCopiado] = useState(false);
 
   useOverlayAccesible(abierto, () => setAbierto(false));
 
@@ -100,6 +124,29 @@ export default function MenuLateral({
   const elegir = (accion: () => void) => {
     setAbierto(false);
     accion();
+  };
+
+  const compartir = async () => {
+    const url = window.location.origin;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Sismos", text: MENSAJE_COMPARTIR, url });
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          console.error("[MenuLateral] compartir error:", error);
+        }
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${MENSAJE_COMPARTIR} ${url}`);
+      setEnlaceCopiado(true);
+      setTimeout(() => setEnlaceCopiado(false), 2000);
+    } catch (error) {
+      console.error("[MenuLateral] clipboard error:", error);
+    }
   };
 
   return (
@@ -182,6 +229,14 @@ export default function MenuLateral({
           >
             <IconoNotificaciones />
             Notificaciones
+          </button>
+          <button
+            type="button"
+            onClick={compartir}
+            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+          >
+            <IconoCompartir />
+            {enlaceCopiado ? "Enlace copiado" : "Compartir"}
           </button>
           {puedeInstalarApp && (
             <button
