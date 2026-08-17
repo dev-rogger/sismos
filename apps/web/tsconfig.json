@@ -7,7 +7,9 @@
       }
     ],
     "strictNullChecks": true,
-    "lib": ["es2022", "DOM", "DOM.Iterable", "webworker"]
+    "lib": ["es2022", "DOM", "DOM.Iterable", "webworker"],
+    "declaration": false,
+    "declarationMap": false
   },
   "include": [
     "**/*.ts",
