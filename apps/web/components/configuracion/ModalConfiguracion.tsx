@@ -83,19 +83,22 @@ function SwitchToggle({
   checked,
   onChange,
   label,
+  disabled,
 }: {
   checked: boolean;
   onChange: () => void;
   label: string;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onChange}
+      disabled={disabled}
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      className={`relative flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+      className={`relative flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
         checked ? "bg-sky-500" : "bg-neutral-700"
       }`}
     >
@@ -295,16 +298,30 @@ function ModalConfiguracionContenido({
               step={1}
               value={umbralLocal}
               onChange={(e) => setUmbralLocal(Number(e.target.value))}
-              className="w-full accent-sky-500"
+              disabled={loading}
+              className="w-full accent-sky-500 disabled:opacity-50"
             />
 
-            {/* "Alcance" fusiona el toggle mundial/local con la excepción
-                de terremotos grandes (M7+) en cualquier país: cuando
-                mundialLocal es true ya se reciben avisos de todo el mundo,
-                así que la excepción quedaría redundante y se oculta. */}
+            {/* "Alcance" agrupa visualmente dos controles independientes
+                (no uno anidado dentro del otro): el radio dentro de Chile
+                solo afecta sismos con fuente CSN; el switch de M7+ es la
+                ÚNICA forma de recibir avisos de sismos fuera de Chile (vía
+                USGS), sin importar cómo esté configurado el radio — ver
+                findSubscripcionesParaSismo() en
+                packages/db/src/queries/push-subscription.ts, que para
+                fuentes != "csn" filtra exclusivamente por la columna
+                alcanceMundial. Por eso el switch de M7+ tiene que estar
+                siempre visible y togglable, nunca condicionado a
+                mundialLocal. */}
             <div className="mt-4 border-t border-neutral-800 pt-4">
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="text-xs text-neutral-400">Alcance</span>
+              <span className="mb-2 block text-xs text-neutral-400">
+                Alcance
+              </span>
+
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-neutral-400">
+                  Sin límite de distancia (dentro de Chile)
+                </span>
                 <SwitchToggle
                   checked={mundialLocal}
                   onChange={() => {
@@ -318,19 +335,15 @@ function ModalConfiguracionContenido({
                   }}
                   label={
                     mundialLocal
-                      ? "Alcance mundial, sin límite de distancia (activado)"
-                      : "Alcance mundial, sin límite de distancia (desactivado)"
+                      ? "Sin límite de distancia dentro de Chile (activado)"
+                      : "Sin límite de distancia dentro de Chile (desactivado)"
                   }
+                  disabled={loading}
                 />
               </div>
 
-              {mundialLocal ? (
-                <p className="text-xs text-neutral-400">
-                  🌎 Ya estás recibiendo avisos de terremotos de todo el
-                  mundo.
-                </p>
-              ) : (
-                <div className="mt-1 space-y-4">
+              {!mundialLocal && (
+                <div className="mt-3">
                   {pidiendoUbicacion && !ubicacion.centro && (
                     <div className="flex h-40 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-800/50 text-xs text-neutral-400">
                       Buscando tu ubicación…
@@ -370,22 +383,21 @@ function ModalConfiguracionContenido({
                       notificaciones quedan sin límite de distancia.
                     </p>
                   )}
-
-                  <div className="border-t border-neutral-800 pt-3">
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <span className="text-xs text-neutral-400">
-                        Avisarme también de terremotos M7+ en cualquier
-                        país, aunque esté fuera de mi radio
-                      </span>
-                      <SwitchToggle
-                        checked={alcanceMundialLocal}
-                        onChange={() => setAlcanceMundialLocal((v) => !v)}
-                        label="Avisarme también de terremotos M7+ en cualquier país"
-                      />
-                    </div>
-                  </div>
                 </div>
               )}
+
+              <div className="mt-3 flex items-center justify-between gap-3 border-t border-neutral-800 pt-3">
+                <span className="text-xs text-neutral-400">
+                  Avisarme también de terremotos M7+ en cualquier país, sin
+                  importar la distancia
+                </span>
+                <SwitchToggle
+                  checked={alcanceMundialLocal}
+                  onChange={() => setAlcanceMundialLocal((v) => !v)}
+                  label="Avisarme también de terremotos M7+ en cualquier país"
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             {suscrito && (
