@@ -26,6 +26,7 @@ export const sismos = pgTable(
     refCruzadaExternalId: text("ref_cruzada_external_id"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
+    ubicacionAproximada: boolean("ubicacion_aproximada").notNull().default(false),
   },
   (table) => [
     unique("sismos_fuente_external_id_unique").on(
@@ -73,4 +74,9 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   alcanceMundial: boolean("alcance_mundial").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const estadoIngesta = pgTable("estado_ingesta", {
+  fuente: text("fuente").primaryKey(),
+  ultimaAlertaEnviada: timestamp("ultima_alerta_enviada"),
 });
