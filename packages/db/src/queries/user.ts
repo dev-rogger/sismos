@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { getDb } from "../connection";
 import { users } from "../schema";
 
@@ -100,4 +100,12 @@ export async function upsertUsuarioGoogle(input: {
     );
   }
   return toUser(row);
+}
+
+export async function listUsers(): Promise<User[]> {
+  const rows = await getDb()
+    .select()
+    .from(users)
+    .orderBy(desc(users.createdAt));
+  return rows.map(toUser);
 }
