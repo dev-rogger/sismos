@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 
 interface MenuLateralProps {
@@ -101,6 +103,23 @@ function IconoCompartir() {
   );
 }
 
+function IconoUsuario() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+    </svg>
+  );
+}
+
 const MENSAJE_COMPARTIR =
   "🌎📍 Sismos de Chile y el mundo en tiempo real. Míralo acá:";
 
@@ -114,6 +133,8 @@ export default function MenuLateral({
 }: MenuLateralProps) {
   const [abierto, setAbierto] = useState(false);
   const [enlaceCopiado, setEnlaceCopiado] = useState(false);
+  const router = useRouter();
+  const { data: session } = useSession();
 
   useOverlayAccesible(abierto, () => setAbierto(false));
 
@@ -238,6 +259,25 @@ export default function MenuLateral({
             <IconoCompartir />
             {enlaceCopiado ? "Enlace copiado" : "Compartir"}
           </button>
+          {session ? (
+            <button
+              type="button"
+              onClick={() => elegir(() => signOut({ callbackUrl: "/" }))}
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+            >
+              <IconoUsuario />
+              Cerrar sesión ({session.user?.name ?? session.user?.email})
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => elegir(() => router.push("/login"))}
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+            >
+              <IconoUsuario />
+              Iniciar sesión
+            </button>
+          )}
           {puedeInstalarApp && (
             <button
               type="button"
