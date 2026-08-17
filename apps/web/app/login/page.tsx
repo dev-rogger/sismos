@@ -18,31 +18,35 @@ export default function LoginPage() {
     setError(null);
     setCargando(true);
 
-    if (modoRegistro) {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name: nombre || undefined }),
+    try {
+      if (modoRegistro) {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, name: nombre || undefined }),
+        });
+        if (!res.ok) {
+          const data = (await res.json()) as { error?: string };
+          setError(data.error ?? "No se pudo crear la cuenta");
+          return;
+        }
+      }
+
+      const resultado = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
       });
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        setError(data.error ?? "No se pudo crear la cuenta");
-        setCargando(false);
+      if (resultado?.error) {
+        setError("Email o contraseña incorrectos");
         return;
       }
+      router.push("/");
+    } catch {
+      setError("Ocurrió un error, intentá de nuevo");
+    } finally {
+      setCargando(false);
     }
-
-    const resultado = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-    setCargando(false);
-    if (resultado?.error) {
-      setError("Email o contraseña incorrectos");
-      return;
-    }
-    router.push("/");
   };
 
   return (
