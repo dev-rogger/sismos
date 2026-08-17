@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import SelectorMagnitudRangos from "../filtro/SelectorMagnitudRangos";
 import { VENTANAS_TIEMPO, type FiltroMapa } from "../../lib/filtro-tipos";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
@@ -17,19 +18,21 @@ export default function ModalFiltroMapa({
   filtro,
   onFiltroChange,
 }: ModalFiltroMapaProps) {
-  useOverlayAccesible(abierto, onCerrar);
+  const contenedorRef = useRef<HTMLDivElement>(null);
+  useOverlayAccesible(abierto, onCerrar, contenedorRef);
 
   return (
     <div
       aria-hidden={!abierto}
       onClick={onCerrar}
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 transition-opacity duration-200 motion-reduce:transition-none ${
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none ${
         abierto
           ? "pointer-events-auto opacity-100"
           : "pointer-events-none opacity-0"
       }`}
     >
       <div
+        ref={contenedorRef}
         role="dialog"
         aria-modal="true"
         aria-label="Filtrar mapa"
@@ -92,7 +95,7 @@ export default function ModalFiltroMapa({
                   ventana: e.target.value as FiltroMapa["ventana"],
                 })
               }
-              className="w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
+              className="min-h-11 w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
             >
               {VENTANAS_TIEMPO.map((v) => (
                 <option key={v.valor} value={v.valor}>
