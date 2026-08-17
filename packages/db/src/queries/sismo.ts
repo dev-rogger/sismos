@@ -171,29 +171,53 @@ export async function replaceWithCsn(
   return row ? toSismo(row) : null;
 }
 
-export async function reemplazarConPrecision(
-  externalIdAproximado: string,
-  eventoPreciso: SismoNormalizado,
+// Pisa una fila 'csn' existente (identificada por su external_id actual) con
+// los datos de otra lectura del mismo evento. `ubicacionAproximada` se toma
+// del evento nuevo: la reconciliación con xor.cl la baja a false, mientras que
+// una relectura vía GAEL la mantiene en true.
+async function actualizarFilaCsn(
+  externalIdActual: string,
+  evento: SismoNormalizado,
 ): Promise<Sismo | null> {
   const [row] = await getDb()
     .update(sismos)
     .set({
-      externalId: eventoPreciso.externalId,
-      fecha: eventoPreciso.fecha,
-      magnitud: eventoPreciso.magnitud,
-      profundidadKm: eventoPreciso.profundidadKm,
-      latitud: eventoPreciso.latitud,
-      longitud: eventoPreciso.longitud,
-      lugar: eventoPreciso.lugar,
-      bandera: eventoPreciso.bandera,
-      ubicacionAproximada: false,
+      externalId: evento.externalId,
+      fecha: evento.fecha,
+      magnitud: evento.magnitud,
+      profundidadKm: evento.profundidadKm,
+      latitud: evento.latitud,
+      longitud: evento.longitud,
+      lugar: evento.lugar,
+      bandera: evento.bandera,
+      ubicacionAproximada: evento.ubicacionAproximada,
       updatedAt: new Date(),
     })
     .where(
-      and(eq(sismos.fuente, "csn"), eq(sismos.externalId, externalIdAproximado)),
+      and(eq(sismos.fuente, "csn"), eq(sismos.externalId, externalIdActual)),
     )
     .returning();
   return row ? toSismo(row) : null;
+}
+
+export async function reemplazarConPrecision(
+  externalIdAproximado: string,
+  eventoPreciso: SismoNormalizado,
+): Promise<Sismo | null> {
+  return actualizarFilaCsn(externalIdAproximado, {
+    ...eventoPreciso,
+    ubicacionAproximada: false,
+  });
+}
+
+// Mismo evento releído desde GAEL con un ID sintético distinto (ej. CSN revisó
+// la magnitud entre polls): actualiza la fila aproximada existente en vez de
+// insertar una segunda fila aproximada duplicada.
+export async function actualizarAproximadoExistente(
+  externalIdExistente: string,
+  eventoAproximado: SismoNormalizado,
+): Promise<Sismo | null> {
+  return actualizarFilaCsn(externalIdExistente, eventoAproximado);
 }
 
 export async function findUltimos10Dias(): Promise<Sismo[]> {

@@ -12,6 +12,7 @@ import {
   findUltimoCsnPreciso,
   replaceWithCsn,
   reemplazarConPrecision,
+  actualizarAproximadoExistente,
   setRefCruzada,
   upsertSismo,
   getUltimaAlertaEnviada,
@@ -51,15 +52,29 @@ export async function runIngest(): Promise<IngestSummary> {
     csnEventos = raw.map(normalizeCsnSismo);
     summary.csn.fetched = csnEventos.length;
   } catch (error) {
-    console.error("[ingest] CSN fetch failed, intentando respaldo GAEL:", error);
+    console.error(
+      "[ingest] CSN fetch failed, intentando respaldo GAEL:",
+      error,
+    );
     summary.csn.errors = 1;
     csnPreciso = false;
     try {
       const rawGael = await fetchGaelRecent();
+      // `fetched` cuenta lo que entregó la fuente, no lo que sobrevivió a la
+      // geocodificación — igual que en la rama precisa — para que el descarte
+      // sea visible en la respuesta del cron.
+      summary.csn.fetched = rawGael.length;
       csnEventos = rawGael
-        .map(normalizeGaelSismo)
+        .map((raw) => {
+          const evento = normalizeGaelSismo(raw);
+          if (!evento) {
+            console.warn(
+              `[ingest] GAEL: evento descartado, no se pudo geocodificar o traía datos inválidos: "${raw.RefGeografica}" (M${raw.Magnitud}, prof ${raw.Profundidad}, ${raw.Fecha})`,
+            );
+          }
+          return evento;
+        })
         .filter((evento): evento is SismoNormalizado => evento !== null);
-      summary.csn.fetched = csnEventos.length;
     } catch (gaelError) {
       console.error("[ingest] GAEL fetch failed:", gaelError);
     }
@@ -80,9 +95,8 @@ export async function runIngest(): Promise<IngestSummary> {
 
   for (const evento of csnEventos) {
     if (csnPreciso) {
-      const aproximadoCandidatos = await findRecentAproximados(
-        desdeReconciliacion,
-      );
+      const aproximadoCandidatos =
+        await findRecentAproximados(desdeReconciliacion);
       const matchAproximado = findDuplicate(
         evento,
         aproximadoCandidatos as SismoNormalizado[],
@@ -105,6 +119,55 @@ export async function runIngest(): Promise<IngestSummary> {
         // No se pudo reconciliar (0 filas afectadas o error): degradar a
         // insertar/deduplicar como si no hubiera match aproximado, para no
         // perder el evento.
+      }
+    } else {
+      // Respaldo GAEL activo. El feed de GAEL devuelve los ~15 últimos sismos
+      // nacionales sin filtro de fecha, y su ID sintético nunca coincide con
+      // el ID real de xor.cl, así que sin este chequeo cada failover
+      // insertaría una fila aproximada duplicada por cada evento que ya
+      // habíamos guardado con precisión (y volvería a notificarlo).
+      const csnCandidatos = await findRecentByFuente(
+        "csn",
+        desdeReconciliacion,
+      );
+      const matchPreciso = findDuplicate(
+        evento,
+        csnCandidatos.filter(
+          (c) => !c.ubicacionAproximada,
+        ) as SismoNormalizado[],
+      );
+      if (matchPreciso) {
+        // Ya existe la versión precisa de este sismo: la lectura aproximada
+        // de GAEL no aporta nada y no debe volver a notificar.
+        continue;
+      }
+
+      const matchAproximado = findDuplicate(
+        evento,
+        csnCandidatos.filter(
+          (c) => c.ubicacionAproximada,
+        ) as SismoNormalizado[],
+      );
+      if (matchAproximado && matchAproximado.externalId !== evento.externalId) {
+        // Mismo evento releído desde GAEL con otro ID sintético (CSN revisó la
+        // magnitud, la referencia geográfica o la hora entre polls): se
+        // actualiza la fila aproximada existente, sin crear un duplicado y sin
+        // notificar de nuevo.
+        try {
+          const actualizado = await actualizarAproximadoExistente(
+            matchAproximado.externalId,
+            evento,
+          );
+          if (actualizado) continue;
+        } catch (error) {
+          console.error(
+            "[ingest] no se pudo actualizar el aproximado existente:",
+            error,
+          );
+        }
+        // Si falló (0 filas o conflicto de external_id porque el ID nuevo ya
+        // existe en otra fila), se cae al upsert de abajo, que en ese caso
+        // actualiza esa otra fila en vez de insertar una nueva.
       }
     }
 
@@ -175,6 +238,8 @@ async function revisarAlertaCsn(): Promise<void> {
   }
 
   const horas = Math.round(antiguedadMs / (60 * 60 * 1000));
-  await enviarAlertaAdmin(`CSN (xor.cl) lleva ${horas}h sin actualizar datos precisos.`);
+  await enviarAlertaAdmin(
+    `CSN (xor.cl) lleva ${horas}h sin actualizar datos precisos.`,
+  );
   await marcarAlertaEnviada("csn");
 }
