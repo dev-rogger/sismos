@@ -8,6 +8,7 @@ export interface SismoMapa {
   lugar: string;
   bandera: string | null;
   profundidadKm: number;
+  ubicacionAproximada: boolean;
 }
 
 export interface SismoSeleccionado {
@@ -19,4 +20,5 @@ export interface SismoSeleccionado {
   fecha?: string;
   bandera?: string | null;
   profundidadKm?: number;
+  ubicacionAproximada?: boolean;
 }
