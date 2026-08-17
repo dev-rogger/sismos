@@ -6,6 +6,7 @@ import {
 import { regionChilePorLatitud, type SismoNormalizado } from "@sismos/shared";
 
 const UMBRAL_TERREMOTO = 8;
+const TOPE_ANTIGUEDAD_PUSH_MS = 60 * 60 * 1000;
 
 const REGIONES_CON_DEL = new Set([
   "Biobío",
@@ -49,6 +50,14 @@ function esErrorConStatusCode(
 export async function enviarPushParaSismo(
   evento: SismoNormalizado,
 ): Promise<void> {
+  const antiguedadMs = Date.now() - evento.fecha.getTime();
+  if (antiguedadMs > TOPE_ANTIGUEDAD_PUSH_MS) {
+    console.log(
+      `[send-push] omitiendo push para ${evento.externalId}: antigüedad ${Math.round(antiguedadMs / 60000)}min supera el tope de 60min`,
+    );
+    return;
+  }
+
   configurarVapid();
 
   const suscripciones = await findSubscripcionesParaSismo({
@@ -93,4 +102,29 @@ export async function enviarPushParaSismo(
       return undefined;
     }),
   );
+}
+
+export async function enviarAlertaAdmin(mensaje: string): Promise<void> {
+  const endpoint = process.env.ALERTA_PUSH_ENDPOINT;
+  const p256dh = process.env.ALERTA_PUSH_P256DH;
+  const auth = process.env.ALERTA_PUSH_AUTH;
+  if (!endpoint || !p256dh || !auth) {
+    console.warn(
+      "[send-push] alerta admin no configurada (faltan ALERTA_PUSH_ENDPOINT/P256DH/AUTH)",
+    );
+    return;
+  }
+
+  configurarVapid();
+  const payload = JSON.stringify({
+    title: "Sismos — alerta de ingesta",
+    body: mensaje,
+    url: "/",
+  });
+
+  try {
+    await webpush.sendNotification({ endpoint, keys: { p256dh, auth } }, payload);
+  } catch (error) {
+    console.error("[send-push] error enviando alerta admin:", error);
+  }
 }
