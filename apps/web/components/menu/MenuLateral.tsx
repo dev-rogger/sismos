@@ -247,7 +247,7 @@ export default function MenuLateral({
           <button
             type="button"
             onClick={() => elegir(onAbrirHistorial)}
-            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
           >
             <IconoHistorial />
             Sismos
@@ -255,7 +255,7 @@ export default function MenuLateral({
           <button
             type="button"
             onClick={() => elegir(onAbrirFallas)}
-            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
           >
             <IconoFallas />
             Fallas
@@ -263,7 +263,7 @@ export default function MenuLateral({
           <button
             type="button"
             onClick={() => elegir(onAbrirNotificaciones)}
-            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
           >
             <IconoNotificaciones />
             Notificaciones
@@ -271,7 +271,7 @@ export default function MenuLateral({
           <button
             type="button"
             onClick={compartir}
-            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
           >
             <IconoCompartir />
             {enlaceCopiado ? "Enlace copiado" : "Compartir"}
@@ -285,7 +285,7 @@ export default function MenuLateral({
                 type="button"
                 onClick={() => setAdminAbierto((v) => !v)}
                 aria-expanded={adminAbierto}
-                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
               >
                 <IconoAdmin />
                 Admin
@@ -302,14 +302,14 @@ export default function MenuLateral({
                   <button
                     type="button"
                     onClick={() => elegir(() => router.push("/admin/usuarios"))}
-                    className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-neutral-400 transition-colors duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:bg-neutral-800"
+                    className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 transition-colors duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:bg-neutral-800"
                   >
                     Usuarios
                   </button>
                   <button
                     type="button"
                     onClick={() => elegir(() => router.push("/admin/reportes"))}
-                    className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-neutral-400 transition-colors duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:bg-neutral-800"
+                    className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 transition-colors duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:bg-neutral-800"
                   >
                     Reportes
                   </button>
@@ -321,7 +321,7 @@ export default function MenuLateral({
             <button
               type="button"
               onClick={() => elegir(onAbrirInstalarApp)}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
             >
               <IconoInstalar />
               Instalar app
@@ -331,7 +331,7 @@ export default function MenuLateral({
             <button
               type="button"
               onClick={() => elegir(() => signOut({ callbackUrl: "/" }))}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
             >
               <IconoUsuario />
               Cerrar sesión ({session.user?.name ?? session.user?.email})
@@ -340,7 +340,7 @@ export default function MenuLateral({
             <button
               type="button"
               onClick={() => elegir(() => router.push("/login"))}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
             >
               <IconoUsuario />
               Iniciar sesión
