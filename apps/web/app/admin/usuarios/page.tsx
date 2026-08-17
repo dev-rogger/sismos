@@ -5,19 +5,19 @@ export default async function AdminUsuariosPage() {
   const usuarios = await listUsers();
 
   return (
-    <main className="min-h-screen bg-neutral-950 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
+    <main className="pantalla-entrada min-h-screen bg-neutral-950 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="mb-4 flex items-center gap-2">
+          <Link
+            href="/"
+            aria-label="Volver"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
+          >
+            ←
+          </Link>
           <h1 className="text-lg font-semibold text-neutral-100">
             Usuarios registrados
           </h1>
-          <Link
-            href="/"
-            aria-label="Cerrar"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
-          >
-            ✕
-          </Link>
         </div>
 
         {usuarios.length === 0 ? (

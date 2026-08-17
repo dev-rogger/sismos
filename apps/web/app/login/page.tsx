@@ -55,7 +55,7 @@ function LoginForm() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-950 p-4">
+    <main className="pantalla-entrada flex min-h-screen items-center justify-center bg-neutral-950 p-4">
       <div className="w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-6 shadow-lg">
         <div className="mb-1 flex items-center justify-between gap-2">
           <h1 className="text-lg font-semibold text-neutral-100">

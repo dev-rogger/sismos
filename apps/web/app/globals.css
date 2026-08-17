@@ -10,6 +10,23 @@ body {
   color: var(--color-foreground);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .pantalla-entrada {
+    animation: pantalla-entrada 0.2s ease-out;
+  }
+}
+
+@keyframes pantalla-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .marcador-sismo {
   position: relative;
 }
