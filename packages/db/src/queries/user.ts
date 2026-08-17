@@ -26,15 +26,21 @@ function toUser(row: typeof users.$inferSelect): User {
   };
 }
 
-function rolParaEmail(email: string): "user" | "admin" {
-  return email === process.env.ADMIN_EMAIL ? "admin" : "user";
+function normalizarEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function esEmailAdmin(email: string): boolean {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return false;
+  return normalizarEmail(email) === normalizarEmail(adminEmail);
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
   const [row] = await getDb()
     .select()
     .from(users)
-    .where(eq(users.email, email));
+    .where(eq(users.email, normalizarEmail(email)));
   return row ? toUser(row) : null;
 }
 
@@ -46,10 +52,10 @@ export async function createUserConPassword(input: {
   const [row] = await getDb()
     .insert(users)
     .values({
-      email: input.email,
+      email: normalizarEmail(input.email),
       passwordHash: input.passwordHash,
       name: input.name ?? null,
-      role: rolParaEmail(input.email),
+      role: "user",
     })
     .returning();
   if (!row) {
@@ -65,41 +71,32 @@ export async function upsertUsuarioGoogle(input: {
   name?: string | null;
   image?: string | null;
 }): Promise<User> {
-  const existente = await findUserByEmail(input.email);
+  const email = normalizarEmail(input.email);
   const now = new Date();
-
-  if (!existente) {
-    const [row] = await getDb()
-      .insert(users)
-      .values({
-        email: input.email,
-        name: input.name ?? null,
-        image: input.image ?? null,
-        role: rolParaEmail(input.email),
-        updatedAt: now,
-      })
-      .returning();
-    if (!row) {
-      throw new Error(
-        "upsertUsuarioGoogle: insert returned no row unexpectedly",
-      );
-    }
-    return toUser(row);
-  }
+  const role = esEmailAdmin(email) ? "admin" : "user";
 
   const [row] = await getDb()
-    .update(users)
-    .set({
-      name: input.name ?? existente.name,
-      image: input.image ?? existente.image,
-      role: rolParaEmail(input.email),
+    .insert(users)
+    .values({
+      email,
+      name: input.name ?? null,
+      image: input.image ?? null,
+      role,
       updatedAt: now,
     })
-    .where(eq(users.email, input.email))
+    .onConflictDoUpdate({
+      target: users.email,
+      set: {
+        name: input.name ?? undefined,
+        image: input.image ?? undefined,
+        role,
+        updatedAt: now,
+      },
+    })
     .returning();
   if (!row) {
     throw new Error(
-      "upsertUsuarioGoogle: update returned no row unexpectedly",
+      "upsertUsuarioGoogle: insert...onConflictDoUpdate returned no row unexpectedly",
     );
   }
   return toUser(row);
