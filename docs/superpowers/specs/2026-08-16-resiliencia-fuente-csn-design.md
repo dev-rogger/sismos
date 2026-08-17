@@ -27,13 +27,15 @@ Decisiones de scope (de la conversación de brainstorming):
 
 ```json
 {
-  "Fecha": "2026-08-16 15:08:08",       // UTC (confirmado cruzando con FechaUpdate)
+  "Fecha": "2026-08-16 15:08:08",       // hora local de Chile (America/Santiago), NO UTC
   "Profundidad": "228",
   "Magnitud": "3.7",
   "RefGeografica": "63 km al E de Socaire",
   "FechaUpdate": "2026-08-16T16:00:00.533Z"
 }
 ```
+
+**Corrección (2026-08-17, post-implementación):** la afirmación original de este spec ("UTC, confirmado cruzando con `FechaUpdate`") era incorrecta — se basaba en una inferencia indirecta sobre qué representa `FechaUpdate`, no en una comparación directa. La implementación cruzó `Fecha` de GAEL contra el campo `local_date` de la respuesta cruda de `xor.cl` (`CsnSismoRaw.local_date`, distinto de `utc_date`) para el mismo evento físico y confirmó una coincidencia exacta en múltiples eventos: **`Fecha` es hora local de Chile**, con cambio de horario (DST) incluido. El parseo (`packages/shared/src/normalize/gael.ts`) convierte explícitamente desde `America/Santiago` a UTC, no trata el string como UTC directamente.
 
 No trae `latitud`/`longitud` ni un ID estable — solo texto libre en `RefGeografica` con el patrón `"{distancia} km al {dirección} de {localidad}"` (direcciones en 8 puntos cardinales en español: N, NE, E, SE, S, SO, O, NO).
 
