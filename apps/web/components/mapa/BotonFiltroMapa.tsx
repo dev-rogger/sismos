@@ -46,7 +46,7 @@ export default function BotonFiltroMapa({
         Filtro
         <span
           aria-hidden="true"
-          className={`absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-sky-500 transition-transform transition-opacity duration-150 ${
+          className={`absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-sky-500 transition-[transform,opacity] duration-150 motion-reduce:transition-none ${
             filtroActivo ? "scale-100 opacity-100" : "scale-75 opacity-0"
           }`}
         />
