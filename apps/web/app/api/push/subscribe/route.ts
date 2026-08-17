@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "../../../../lib/auth";
 import {
   guardarSuscripcion,
   eliminarSuscripcion,
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const session = await auth();
     await guardarSuscripcion({
       endpoint,
       keys: { p256dh: keys.p256dh, auth: keys.auth },
@@ -65,6 +67,7 @@ export async function POST(request: Request) {
       centro: body.centro ?? null,
       radioKm: body.radioKm ?? null,
       alcanceMundial: body.alcanceMundial ?? false,
+      userId: session?.user?.id ?? null,
     });
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -12,6 +12,7 @@ interface GuardarSuscripcionInput {
   centro?: { lat: number; lon: number } | null;
   radioKm?: number | null;
   alcanceMundial?: boolean;
+  userId?: string | null;
 }
 
 export async function guardarSuscripcion(
