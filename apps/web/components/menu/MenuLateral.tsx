@@ -120,6 +120,22 @@ function IconoUsuario() {
   );
 }
 
+function IconoAdmin() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3Z" />
+    </svg>
+  );
+}
+
 const MENSAJE_COMPARTIR =
   "🌎📍 Sismos de Chile y el mundo en tiempo real. Míralo acá:";
 
@@ -133,6 +149,7 @@ export default function MenuLateral({
 }: MenuLateralProps) {
   const [abierto, setAbierto] = useState(false);
   const [enlaceCopiado, setEnlaceCopiado] = useState(false);
+  const [adminAbierto, setAdminAbierto] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -277,6 +294,44 @@ export default function MenuLateral({
               <IconoUsuario />
               Iniciar sesión
             </button>
+          )}
+          {session?.user?.role === "admin" && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setAdminAbierto((v) => !v)}
+                aria-expanded={adminAbierto}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+              >
+                <IconoAdmin />
+                Admin
+                <span
+                  className={`ml-auto text-neutral-500 transition-transform duration-150 ${
+                    adminAbierto ? "rotate-180" : ""
+                  }`}
+                >
+                  ▾
+                </span>
+              </button>
+              {adminAbierto && (
+                <div className="flex flex-col gap-1 pl-9">
+                  <button
+                    type="button"
+                    onClick={() => elegir(() => router.push("/admin/usuarios"))}
+                    className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-neutral-400 transition-colors duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:bg-neutral-800"
+                  >
+                    Usuarios
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => elegir(() => router.push("/admin/reportes"))}
+                    className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-neutral-400 transition-colors duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:bg-neutral-800"
+                  >
+                    Reportes
+                  </button>
+                </div>
+              )}
+            </div>
           )}
           {puedeInstalarApp && (
             <button
