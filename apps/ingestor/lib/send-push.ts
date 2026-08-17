@@ -36,9 +36,7 @@ function configurarVapid(): void {
   vapidConfigurado = true;
 }
 
-function esErrorConStatusCode(
-  error: unknown,
-): error is { statusCode: number } {
+function esErrorConStatusCode(error: unknown): error is { statusCode: number } {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -72,7 +70,8 @@ export async function enviarPushParaSismo(
   const nombreRegion =
     evento.fuente === "csn" ? regionChilePorLatitud(evento.latitud) : null;
   const region = nombreRegion ? formatearRegion(nombreRegion) : evento.lugar;
-  const tipoEvento = evento.magnitud >= UMBRAL_TERREMOTO ? "terremoto" : "sismo";
+  const tipoEvento =
+    evento.magnitud >= UMBRAL_TERREMOTO ? "terremoto" : "sismo";
   const payload = JSON.stringify({
     title: `Nuevo ${tipoEvento} de ${evento.magnitud} en ${region}`,
     body: evento.fecha.toLocaleString("es-CL"),
@@ -123,7 +122,10 @@ export async function enviarAlertaAdmin(mensaje: string): Promise<void> {
   });
 
   try {
-    await webpush.sendNotification({ endpoint, keys: { p256dh, auth } }, payload);
+    await webpush.sendNotification(
+      { endpoint, keys: { p256dh, auth } },
+      payload,
+    );
   } catch (error) {
     console.error("[send-push] error enviando alerta admin:", error);
   }

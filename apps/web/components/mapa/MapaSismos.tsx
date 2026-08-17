@@ -505,8 +505,7 @@ export default function MapaSismos({
         });
         map.on("click", `${FUENTE_FALLAS}-linea-hitbox`, (e) => {
           const propiedadesFalla = e.features?.[0]?.properties as
-            | { name: string | null }
-            | undefined;
+            { name: string | null } | undefined;
           onSeleccionarFallaRef.current({
             lat: e.lngLat.lat,
             lon: e.lngLat.lng,

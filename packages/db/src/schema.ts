@@ -26,7 +26,9 @@ export const sismos = pgTable(
     refCruzadaExternalId: text("ref_cruzada_external_id"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
-    ubicacionAproximada: boolean("ubicacion_aproximada").notNull().default(false),
+    ubicacionAproximada: boolean("ubicacion_aproximada")
+      .notNull()
+      .default(false),
   },
   (table) => [
     unique("sismos_fuente_external_id_unique").on(

@@ -16,7 +16,9 @@ describe("parsearReferenciaGeografica", () => {
   });
 
   it("parsea localidades de dos palabras", () => {
-    expect(parsearReferenciaGeografica("54 km al SO de Mina Collahuasi")).toEqual({
+    expect(
+      parsearReferenciaGeografica("54 km al SO de Mina Collahuasi"),
+    ).toEqual({
       distanciaKm: 54,
       direccion: "SO",
       localidad: "Mina Collahuasi",
