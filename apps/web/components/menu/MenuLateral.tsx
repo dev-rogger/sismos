@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -152,10 +152,16 @@ export default function MenuLateral({
   const [enlaceCopiado, setEnlaceCopiado] = useState(false);
   const [adminAbierto, setAdminAbierto] = useState(false);
   const [cuentaAbierta, setCuentaAbierta] = useState(false);
+  const cuentaMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { data: session } = useSession();
 
   useOverlayAccesible(abierto, () => setAbierto(false));
+  useOverlayAccesible(
+    cuentaAbierta,
+    () => setCuentaAbierta(false),
+    cuentaMenuRef,
+  );
 
   useEffect(() => {
     onAbiertoChange?.(abierto);
@@ -330,7 +336,7 @@ export default function MenuLateral({
             </button>
           )}
           {session ? (
-            <div>
+            <div className="relative">
               <button
                 type="button"
                 onClick={() => setCuentaAbierta((v) => !v)}
@@ -361,15 +367,27 @@ export default function MenuLateral({
                 </span>
               </button>
               {cuentaAbierta && (
-                <div className="flex flex-col gap-1 pl-9">
-                  <button
-                    type="button"
-                    onClick={() => elegir(() => signOut({ callbackUrl: "/" }))}
-                    className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 transition-colors duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:bg-neutral-800"
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setCuentaAbierta(false)}
+                  />
+                  <div
+                    ref={cuentaMenuRef}
+                    className="absolute bottom-full left-0 z-20 mb-2 w-full min-w-56 overflow-hidden rounded-lg border border-neutral-700 bg-neutral-800 shadow-xl"
                   >
-                    Cerrar sesión
-                  </button>
-                </div>
+                    <p className="truncate border-b border-neutral-700 px-3 py-2 text-xs text-neutral-500">
+                      {session.user?.email}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => elegir(() => signOut({ callbackUrl: "/" }))}
+                      className="flex min-h-11 w-full items-center px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-700 active:bg-neutral-700"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           ) : (

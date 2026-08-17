@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { listUsers } from "@sismos/db";
 
 export default async function AdminUsuariosPage() {
@@ -6,9 +7,18 @@ export default async function AdminUsuariosPage() {
   return (
     <main className="min-h-screen bg-neutral-950 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
       <div className="mx-auto max-w-3xl">
-        <h1 className="mb-4 text-lg font-semibold text-neutral-100">
-          Usuarios registrados
-        </h1>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h1 className="text-lg font-semibold text-neutral-100">
+            Usuarios registrados
+          </h1>
+          <Link
+            href="/"
+            aria-label="Cerrar"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
+          >
+            ✕
+          </Link>
+        </div>
 
         {usuarios.length === 0 ? (
           <p className="text-sm text-neutral-500">Sin usuarios registrados</p>
