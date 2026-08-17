@@ -26,7 +26,8 @@ export default function ModalConfiguracion({
   onPedirUbicacion,
   onSetRadioKm,
 }: ModalConfiguracionProps) {
-  useOverlayAccesible(abierto, onCerrar);
+  const contenedorRef = useRef<HTMLDivElement>(null);
+  useOverlayAccesible(abierto, onCerrar, contenedorRef);
 
   // El contenido se remonta (vía `key`) cada vez que el modal pasa de
   // cerrado a abierto, para que sus useState nazcan ya con el valor
@@ -44,13 +45,14 @@ export default function ModalConfiguracion({
     <div
       aria-hidden={!abierto}
       onClick={onCerrar}
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 transition-opacity duration-200 motion-reduce:transition-none ${
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none ${
         abierto
           ? "pointer-events-auto opacity-100"
           : "pointer-events-none opacity-0"
       }`}
     >
       <div
+        ref={contenedorRef}
         role="dialog"
         aria-modal="true"
         aria-label="Notificaciones"
