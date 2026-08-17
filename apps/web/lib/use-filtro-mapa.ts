@@ -11,6 +11,12 @@ function esFiltroMapaValido(valor: unknown): valor is FiltroMapa {
   return (
     typeof v.soloChile === "boolean" &&
     Array.isArray(v.rangos) &&
+    // Un array vacío es un estado inválido (dejaba el mapa completamente
+    // vacío por el bug ya arreglado en SelectorMagnitudRangos): un usuario
+    // que ya lo pisó antes del fix puede tener `{"rangos":[]}` persistido
+    // en localStorage, así que lo tratamos como inválido y caemos al
+    // filtro default en vez de seguir cargando con el mapa vacío.
+    v.rangos.length > 0 &&
     typeof v.ventana === "string"
   );
 }

@@ -562,8 +562,11 @@ export default function MapaSismos({
         </div>
       )}
       <div
-        style={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
-        className="absolute right-3 z-10 flex items-center gap-2"
+        style={{
+          top: "calc(0.75rem + env(safe-area-inset-top))",
+          maxWidth: "calc(100vw - 1.5rem)",
+        }}
+        className="absolute right-3 z-10 flex flex-wrap items-center justify-end gap-2"
       >
         <BotonFiltroMapa filtro={filtro} onFiltroChange={onFiltroChange} />
         <BotonFallasMapa
