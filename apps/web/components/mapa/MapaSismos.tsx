@@ -92,6 +92,11 @@ function construirHtmlPopup(sismo: SismoSeleccionado): string {
                 .join(" · ")}</div>`
             : ""
         }
+        ${
+          sismo.ubicacionAproximada
+            ? `<div class="popup-sismo-region">📍 Ubicación aproximada</div>`
+            : ""
+        }
       </div>
     </div>
   `;
@@ -149,6 +154,7 @@ export default function MapaSismos({
       pulsando,
       lugar: sismo.lugar,
       fecha: sismo.fecha,
+      ubicacionAproximada: sismo.ubicacionAproximada,
     });
     el.addEventListener("click", () => {
       if (sismoSeleccionadoRef.current?.externalId === sismo.externalId) {
@@ -164,6 +170,7 @@ export default function MapaSismos({
         fecha: sismo.fecha,
         bandera: sismo.bandera,
         profundidadKm: sismo.profundidadKm,
+        ubicacionAproximada: sismo.ubicacionAproximada,
       });
     });
 
@@ -259,6 +266,7 @@ export default function MapaSismos({
                 fecha: sismo.fecha,
                 bandera: sismo.bandera,
                 profundidadKm: sismo.profundidadKm,
+                ubicacionAproximada: sismo.ubicacionAproximada,
               });
             }
           }
@@ -291,6 +299,7 @@ export default function MapaSismos({
               lugar: masSignificativo.lugar,
               fecha: masSignificativo.fecha,
               bandera: masSignificativo.bandera,
+              ubicacionAproximada: masSignificativo.ubicacionAproximada,
             });
           }
         })
