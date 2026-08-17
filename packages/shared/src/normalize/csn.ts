@@ -24,5 +24,6 @@ export function normalizeCsnSismo(raw: CsnSismoRaw): SismoNormalizado {
     longitud: raw.longitude,
     lugar: raw.geo_reference,
     bandera: "🇨🇱",
+    ubicacionAproximada: false,
   };
 }

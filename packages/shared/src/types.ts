@@ -10,4 +10,5 @@ export interface SismoNormalizado {
   longitud: number;
   lugar: string;
   bandera: string | null;
+  ubicacionAproximada: boolean;
 }
