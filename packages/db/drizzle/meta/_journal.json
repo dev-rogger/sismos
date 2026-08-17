@@ -43,6 +43,13 @@
       "when": 1786927637620,
       "tag": "0005_cold_old_lace",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786982472947,
+      "tag": "0006_keen_sumo",
+      "breakpoints": true
     }
   ]
 }

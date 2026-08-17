@@ -8,6 +8,7 @@ import {
   boolean,
   unique,
 } from "drizzle-orm/pg-core";
+import crypto from "node:crypto";
 
 export const sismos = pgTable(
   "sismos",
@@ -64,6 +65,19 @@ export const sismosHistoricos = pgTable(
   ],
 );
 
+export const users = pgTable("users", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  image: text("image"),
+  passwordHash: text("password_hash"),
+  role: text("role").notNull().default("user"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const pushSubscriptions = pgTable("push_subscriptions", {
   id: serial("id").primaryKey(),
   endpoint: text("endpoint").notNull().unique(),
@@ -74,6 +88,7 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   centroLon: doublePrecision("centro_lon"),
   radioKm: real("radio_km"),
   alcanceMundial: boolean("alcance_mundial").notNull().default(false),
+  userId: text("user_id").references(() => users.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
