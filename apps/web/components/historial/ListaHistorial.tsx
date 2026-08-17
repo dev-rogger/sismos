@@ -26,6 +26,7 @@ function sismoDesdeEvento(evento: ItemHistorial): SismoSeleccionado {
     fecha: evento.fecha,
     bandera: evento.bandera,
     profundidadKm: evento.profundidadKm,
+    ubicacionAproximada: evento.ubicacionAproximada,
   };
 }
 
