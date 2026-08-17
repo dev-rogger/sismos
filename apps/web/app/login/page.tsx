@@ -57,9 +57,19 @@ function LoginForm() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-neutral-950 p-4">
       <div className="w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-6 shadow-lg">
-        <h1 className="mb-1 text-lg font-semibold text-neutral-100">
-          {modoRegistro ? "Crear cuenta" : "Iniciar sesión"}
-        </h1>
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <h1 className="text-lg font-semibold text-neutral-100">
+            {modoRegistro ? "Crear cuenta" : "Iniciar sesión"}
+          </h1>
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            aria-label="Cerrar"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
+          >
+            ✕
+          </button>
+        </div>
         <p className="mb-5 text-xs text-neutral-400">
           Opcional — sirve para que tus notificaciones no se pierdan al
           cambiar de dispositivo.
