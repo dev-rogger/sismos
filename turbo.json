@@ -10,7 +10,11 @@
     "VAPID_SUBJECT",
     "ALERTA_PUSH_ENDPOINT",
     "ALERTA_PUSH_P256DH",
-    "ALERTA_PUSH_AUTH"
+    "ALERTA_PUSH_AUTH",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "AUTH_SECRET",
+    "ADMIN_EMAIL"
   ],
   "tasks": {
     "build": {
