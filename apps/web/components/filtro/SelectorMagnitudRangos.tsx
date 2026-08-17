@@ -13,6 +13,10 @@ export default function SelectorMagnitudRangos({
 }: SelectorMagnitudRangosProps) {
   const alternar = (valor: RangoMagnitud) => {
     if (seleccionados.includes(valor)) {
+      // Nunca deseleccionar el último chip activo: si quedara
+      // `seleccionados: []`, magnitudPasaRangos() rechazaría todos los
+      // sismos y el mapa quedaría vacío sin ningún aviso al usuario.
+      if (seleccionados.length === 1 && seleccionados[0] === valor) return;
       onChange(seleccionados.filter((r) => r !== valor));
     } else {
       onChange([...seleccionados, valor]);
