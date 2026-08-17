@@ -17,6 +17,7 @@ export interface Sismo {
   refCruzada: { fuente: SismoFuente; externalId: string } | null;
   createdAt: Date;
   updatedAt: Date;
+  ubicacionAproximada: boolean;
 }
 
 function toSismo(row: typeof sismos.$inferSelect): Sismo {
@@ -40,6 +41,7 @@ function toSismo(row: typeof sismos.$inferSelect): Sismo {
         : null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    ubicacionAproximada: row.ubicacionAproximada,
   };
 }
 
@@ -51,6 +53,20 @@ export async function findRecentByFuente(
     .select()
     .from(sismos)
     .where(and(eq(sismos.fuente, fuente), gte(sismos.fecha, since)));
+  return rows.map(toSismo);
+}
+
+export async function findRecentAproximados(since: Date): Promise<Sismo[]> {
+  const rows = await getDb()
+    .select()
+    .from(sismos)
+    .where(
+      and(
+        eq(sismos.fuente, "csn"),
+        eq(sismos.ubicacionAproximada, true),
+        gte(sismos.fecha, since),
+      ),
+    );
   return rows.map(toSismo);
 }
 
@@ -75,6 +91,7 @@ export async function upsertSismo(
       longitud: evento.longitud,
       lugar: evento.lugar,
       bandera: evento.bandera,
+      ubicacionAproximada: evento.ubicacionAproximada,
       updatedAt: now,
     })
     .onConflictDoUpdate({
@@ -87,6 +104,7 @@ export async function upsertSismo(
         longitud: evento.longitud,
         lugar: evento.lugar,
         bandera: evento.bandera,
+        ubicacionAproximada: evento.ubicacionAproximada,
         updatedAt: now,
       },
     })
@@ -152,6 +170,31 @@ export async function replaceWithCsn(
   return row ? toSismo(row) : null;
 }
 
+export async function reemplazarConPrecision(
+  externalIdAproximado: string,
+  eventoPreciso: SismoNormalizado,
+): Promise<Sismo | null> {
+  const [row] = await getDb()
+    .update(sismos)
+    .set({
+      externalId: eventoPreciso.externalId,
+      fecha: eventoPreciso.fecha,
+      magnitud: eventoPreciso.magnitud,
+      profundidadKm: eventoPreciso.profundidadKm,
+      latitud: eventoPreciso.latitud,
+      longitud: eventoPreciso.longitud,
+      lugar: eventoPreciso.lugar,
+      bandera: eventoPreciso.bandera,
+      ubicacionAproximada: false,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(eq(sismos.fuente, "csn"), eq(sismos.externalId, externalIdAproximado)),
+    )
+    .returning();
+  return row ? toSismo(row) : null;
+}
+
 export async function findUltimos10Dias(): Promise<Sismo[]> {
   const since = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
   const rows = await getDb()
@@ -185,4 +228,14 @@ export async function findTop10UltimosAnios(anios: number): Promise<Sismo[]> {
     .orderBy(desc(sismos.magnitud))
     .limit(10);
   return rows.map(toSismo);
+}
+
+export async function findUltimoCsnPreciso(): Promise<Date | null> {
+  const [row] = await getDb()
+    .select({ actualizado: sismos.updatedAt })
+    .from(sismos)
+    .where(and(eq(sismos.fuente, "csn"), eq(sismos.ubicacionAproximada, false)))
+    .orderBy(desc(sismos.updatedAt))
+    .limit(1);
+  return row?.actualizado ?? null;
 }
