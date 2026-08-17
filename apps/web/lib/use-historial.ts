@@ -14,6 +14,7 @@ export interface ItemHistorial {
   longitud: number;
   bandera: string | null;
   profundidadKm: number;
+  ubicacionAproximada?: boolean;
 }
 
 export const OPCIONES_TIPO: { valor: TipoHistorial; etiqueta: string }[] = [

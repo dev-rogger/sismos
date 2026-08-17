@@ -4,7 +4,12 @@ const TAP_TARGET_MIN_PX = 28;
 
 export function crearElementoMarcador(
   magnitud: number,
-  opciones: { pulsando: boolean; lugar: string; fecha: string },
+  opciones: {
+    pulsando: boolean;
+    lugar: string;
+    fecha: string;
+    ubicacionAproximada?: boolean;
+  },
 ): HTMLDivElement {
   const size = tamanoPorMagnitud(magnitud);
   const color = colorPorMagnitud(magnitud);
@@ -19,7 +24,7 @@ export function crearElementoMarcador(
   wrapper.setAttribute("role", "button");
   wrapper.setAttribute(
     "aria-label",
-    `Sismo M${magnitud} en ${opciones.lugar}, ${new Date(opciones.fecha).toLocaleString("es-CL")}`,
+    `Sismo M${magnitud} en ${opciones.lugar}${opciones.ubicacionAproximada ? " (ubicación aproximada)" : ""}, ${new Date(opciones.fecha).toLocaleString("es-CL")}`,
   );
 
   const dot = document.createElement("div");
@@ -30,7 +35,9 @@ export function crearElementoMarcador(
   dot.style.height = `${size}px`;
   dot.style.backgroundColor = color;
   dot.style.borderRadius = "50%";
-  dot.style.border = "2px solid rgba(255, 255, 255, 0.8)";
+  dot.style.border = opciones.ubicacionAproximada
+    ? "2px dashed rgba(255, 255, 255, 0.8)"
+    : "2px solid rgba(255, 255, 255, 0.8)";
 
   wrapper.appendChild(dot);
   return wrapper;

@@ -25,5 +25,6 @@ export function normalizeUsgsFeature(raw: UsgsFeatureRaw): SismoNormalizado {
     longitud,
     lugar: raw.properties.place,
     bandera: emojiFlag([longitud, latitud]) ?? null,
+    ubicacionAproximada: false,
   };
 }

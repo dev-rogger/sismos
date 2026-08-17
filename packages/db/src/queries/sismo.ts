@@ -17,6 +17,7 @@ export interface Sismo {
   refCruzada: { fuente: SismoFuente; externalId: string } | null;
   createdAt: Date;
   updatedAt: Date;
+  ubicacionAproximada: boolean;
 }
 
 function toSismo(row: typeof sismos.$inferSelect): Sismo {
@@ -40,6 +41,7 @@ function toSismo(row: typeof sismos.$inferSelect): Sismo {
         : null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    ubicacionAproximada: row.ubicacionAproximada,
   };
 }
 
@@ -51,6 +53,20 @@ export async function findRecentByFuente(
     .select()
     .from(sismos)
     .where(and(eq(sismos.fuente, fuente), gte(sismos.fecha, since)));
+  return rows.map(toSismo);
+}
+
+export async function findRecentAproximados(since: Date): Promise<Sismo[]> {
+  const rows = await getDb()
+    .select()
+    .from(sismos)
+    .where(
+      and(
+        eq(sismos.fuente, "csn"),
+        eq(sismos.ubicacionAproximada, true),
+        gte(sismos.fecha, since),
+      ),
+    );
   return rows.map(toSismo);
 }
 
@@ -75,6 +91,7 @@ export async function upsertSismo(
       longitud: evento.longitud,
       lugar: evento.lugar,
       bandera: evento.bandera,
+      ubicacionAproximada: evento.ubicacionAproximada,
       updatedAt: now,
     })
     .onConflictDoUpdate({
@@ -87,6 +104,7 @@ export async function upsertSismo(
         longitud: evento.longitud,
         lugar: evento.lugar,
         bandera: evento.bandera,
+        ubicacionAproximada: evento.ubicacionAproximada,
         updatedAt: now,
       },
     })
@@ -141,6 +159,7 @@ export async function replaceWithCsn(
       longitud: csnEvento.longitud,
       lugar: csnEvento.lugar,
       bandera: csnEvento.bandera,
+      ubicacionAproximada: csnEvento.ubicacionAproximada,
       refCruzadaFuente: "usgs",
       refCruzadaExternalId: usgsExternalId,
       updatedAt: new Date(),
@@ -150,6 +169,55 @@ export async function replaceWithCsn(
     )
     .returning();
   return row ? toSismo(row) : null;
+}
+
+// Pisa una fila 'csn' existente (identificada por su external_id actual) con
+// los datos de otra lectura del mismo evento. `ubicacionAproximada` se toma
+// del evento nuevo: la reconciliación con xor.cl la baja a false, mientras que
+// una relectura vía GAEL la mantiene en true.
+async function actualizarFilaCsn(
+  externalIdActual: string,
+  evento: SismoNormalizado,
+): Promise<Sismo | null> {
+  const [row] = await getDb()
+    .update(sismos)
+    .set({
+      externalId: evento.externalId,
+      fecha: evento.fecha,
+      magnitud: evento.magnitud,
+      profundidadKm: evento.profundidadKm,
+      latitud: evento.latitud,
+      longitud: evento.longitud,
+      lugar: evento.lugar,
+      bandera: evento.bandera,
+      ubicacionAproximada: evento.ubicacionAproximada,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(eq(sismos.fuente, "csn"), eq(sismos.externalId, externalIdActual)),
+    )
+    .returning();
+  return row ? toSismo(row) : null;
+}
+
+export async function reemplazarConPrecision(
+  externalIdAproximado: string,
+  eventoPreciso: SismoNormalizado,
+): Promise<Sismo | null> {
+  return actualizarFilaCsn(externalIdAproximado, {
+    ...eventoPreciso,
+    ubicacionAproximada: false,
+  });
+}
+
+// Mismo evento releído desde GAEL con un ID sintético distinto (ej. CSN revisó
+// la magnitud entre polls): actualiza la fila aproximada existente en vez de
+// insertar una segunda fila aproximada duplicada.
+export async function actualizarAproximadoExistente(
+  externalIdExistente: string,
+  eventoAproximado: SismoNormalizado,
+): Promise<Sismo | null> {
+  return actualizarFilaCsn(externalIdExistente, eventoAproximado);
 }
 
 export async function findUltimos10Dias(): Promise<Sismo[]> {
@@ -185,4 +253,14 @@ export async function findTop10UltimosAnios(anios: number): Promise<Sismo[]> {
     .orderBy(desc(sismos.magnitud))
     .limit(10);
   return rows.map(toSismo);
+}
+
+export async function findUltimoCsnPreciso(): Promise<Date | null> {
+  const [row] = await getDb()
+    .select({ actualizado: sismos.updatedAt })
+    .from(sismos)
+    .where(and(eq(sismos.fuente, "csn"), eq(sismos.ubicacionAproximada, false)))
+    .orderBy(desc(sismos.updatedAt))
+    .limit(1);
+  return row?.actualizado ?? null;
 }
