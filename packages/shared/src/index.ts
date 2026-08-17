@@ -5,3 +5,4 @@ export * from "./dedupe";
 export * from "./region-chile";
 export * from "./distancia";
 export * from "./umbral-mundial";
+export * from "./geocodificacion-aproximada";
