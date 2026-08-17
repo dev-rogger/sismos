@@ -21,7 +21,7 @@
 
 ---
 
-### Tarea 1: Tipo `ubicacionAproximada` en `SismoNormalizado`
+### Task 1: Tipo `ubicacionAproximada` en `SismoNormalizado`
 
 **Files:**
 - Modify: `packages/shared/src/types.ts`
@@ -72,7 +72,7 @@ git commit -m "feat(shared): agregar campo ubicacionAproximada a SismoNormalizad
 
 ---
 
-### Tarea 2: Geocodificación aproximada (con setup de vitest)
+### Task 2: Geocodificación aproximada (con setup de vitest)
 
 **Files:**
 - Create: `packages/shared/vitest.config.ts`
@@ -340,7 +340,7 @@ git commit -m "feat(shared): geocodificación aproximada para referencias de tex
 
 ---
 
-### Tarea 3: Normalización de eventos GAEL Cloud
+### Task 3: Normalización de eventos GAEL Cloud
 
 **Files:**
 - Create: `packages/shared/src/normalize/gael.ts`
@@ -414,7 +414,7 @@ git commit -m "feat(shared): normalizar eventos de GAEL Cloud a SismoNormalizado
 
 ---
 
-### Tarea 4: Schema de base de datos
+### Task 4: Schema de base de datos
 
 **Files:**
 - Modify: `packages/db/src/schema.ts`
@@ -469,7 +469,7 @@ git commit -m "feat(db): agregar ubicacionAproximada a sismos y tabla estado_ing
 
 ---
 
-### Tarea 5: Queries de base de datos
+### Task 5: Queries de base de datos
 
 **Files:**
 - Modify: `packages/db/src/queries/sismo.ts`
@@ -651,7 +651,7 @@ git commit -m "feat(db): queries para reconciliación de ubicación aproximada y
 
 ---
 
-### Tarea 6: Reintentos en `fetch-csn.ts`
+### Task 6: Reintentos en `fetch-csn.ts`
 
 **Files:**
 - Modify: `apps/ingestor/lib/fetch-csn.ts`
@@ -716,7 +716,7 @@ git commit -m "fix(ingestor): reintentos con backoff antes de dar por caído a x
 
 ---
 
-### Tarea 7: Fetch de GAEL Cloud
+### Task 7: Fetch de GAEL Cloud
 
 **Files:**
 - Create: `apps/ingestor/lib/fetch-gael.ts`
@@ -766,7 +766,7 @@ git commit -m "feat(ingestor): fetch de GAEL Cloud como fuente de respaldo"
 
 ---
 
-### Tarea 8: Tope de antigüedad y alerta admin en `send-push.ts`
+### Task 8: Tope de antigüedad y alerta admin en `send-push.ts`
 
 **Files:**
 - Modify: `apps/ingestor/lib/send-push.ts`
@@ -861,7 +861,7 @@ git commit -m "feat(ingestor): tope de antigüedad para push y alerta push al ad
 
 ---
 
-### Tarea 9: Orquestación en `ingest.ts`
+### Task 9: Orquestación en `ingest.ts`
 
 **Files:**
 - Modify: `apps/ingestor/lib/ingest.ts`
@@ -1047,7 +1047,7 @@ git commit -m "feat(ingestor): fallback a GAEL, reconciliación y alerta de inge
 
 ---
 
-### Tarea 10: Tipos y mapeo en el frontend
+### Task 10: Tipos y mapeo en el frontend
 
 **Files:**
 - Modify: `apps/web/lib/tipos-sismo.ts`
@@ -1083,7 +1083,7 @@ git commit -m "feat(web): propagar ubicacionAproximada a los tipos del frontend"
 
 ---
 
-### Tarea 11: Indicador visual en el marcador
+### Task 11: Indicador visual en el marcador
 
 **Files:**
 - Modify: `apps/web/components/mapa/marcador.ts`
@@ -1139,7 +1139,7 @@ git commit -m "feat(web): borde punteado en el marcador para sismos de ubicació
 
 ---
 
-### Tarea 12: Wiring en `MapaSismos.tsx`
+### Task 12: Wiring en `MapaSismos.tsx`
 
 **Files:**
 - Modify: `apps/web/components/mapa/MapaSismos.tsx`
@@ -1183,7 +1183,7 @@ git commit -m "feat(web): mostrar indicador de ubicación aproximada en el mapa"
 
 ---
 
-### Tarea 13: Verificación manual end-to-end
+### Task 13: Verificación manual end-to-end
 
 **Files:** ninguno nuevo — solo verificación.
 
