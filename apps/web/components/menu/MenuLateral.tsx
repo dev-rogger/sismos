@@ -276,25 +276,9 @@ export default function MenuLateral({
             <IconoCompartir />
             {enlaceCopiado ? "Enlace copiado" : "Compartir"}
           </button>
-          {session ? (
-            <button
-              type="button"
-              onClick={() => elegir(() => signOut({ callbackUrl: "/" }))}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
-            >
-              <IconoUsuario />
-              Cerrar sesión ({session.user?.name ?? session.user?.email})
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => elegir(() => router.push("/login"))}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
-            >
-              <IconoUsuario />
-              Iniciar sesión
-            </button>
-          )}
+        </nav>
+
+        <div className="mt-auto border-t border-neutral-800 px-3 py-2">
           {session?.user?.role === "admin" && (
             <div>
               <button
@@ -343,7 +327,26 @@ export default function MenuLateral({
               Instalar app
             </button>
           )}
-        </nav>
+          {session ? (
+            <button
+              type="button"
+              onClick={() => elegir(() => signOut({ callbackUrl: "/" }))}
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+            >
+              <IconoUsuario />
+              Cerrar sesión ({session.user?.name ?? session.user?.email})
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => elegir(() => router.push("/login"))}
+              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+            >
+              <IconoUsuario />
+              Iniciar sesión
+            </button>
+          )}
+        </div>
       </div>
     </>
   );
