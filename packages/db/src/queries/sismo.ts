@@ -159,6 +159,7 @@ export async function replaceWithCsn(
       longitud: csnEvento.longitud,
       lugar: csnEvento.lugar,
       bandera: csnEvento.bandera,
+      ubicacionAproximada: csnEvento.ubicacionAproximada,
       refCruzadaFuente: "usgs",
       refCruzadaExternalId: usgsExternalId,
       updatedAt: new Date(),

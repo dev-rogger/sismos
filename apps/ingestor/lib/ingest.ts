@@ -35,6 +35,7 @@ export interface IngestSummary {
 }
 
 const DEDUPE_WINDOW_MS = 10 * 60 * 1000;
+const RECONCILIACION_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 
 export async function runIngest(): Promise<IngestSummary> {
   const summary: IngestSummary = {
@@ -75,18 +76,35 @@ export async function runIngest(): Promise<IngestSummary> {
   }
 
   const since = new Date(Date.now() - DEDUPE_WINDOW_MS);
+  const desdeReconciliacion = new Date(Date.now() - RECONCILIACION_LOOKBACK_MS);
 
   for (const evento of csnEventos) {
     if (csnPreciso) {
-      const aproximadoCandidatos = await findRecentAproximados(since);
+      const aproximadoCandidatos = await findRecentAproximados(
+        desdeReconciliacion,
+      );
       const matchAproximado = findDuplicate(
         evento,
         aproximadoCandidatos as SismoNormalizado[],
       );
       if (matchAproximado) {
-        await reemplazarConPrecision(matchAproximado.externalId, evento);
-        summary.csn.inserted += 1;
-        continue;
+        let reconciliado = false;
+        try {
+          const resultado = await reemplazarConPrecision(
+            matchAproximado.externalId,
+            evento,
+          );
+          reconciliado = resultado !== null;
+        } catch (error) {
+          console.error("[ingest] reconciliación con aproximado falló:", error);
+        }
+        if (reconciliado) {
+          summary.csn.inserted += 1;
+          continue;
+        }
+        // No se pudo reconciliar (0 filas afectadas o error): degradar a
+        // insertar/deduplicar como si no hubiera match aproximado, para no
+        // perder el evento.
       }
     }
 
@@ -130,7 +148,11 @@ export async function runIngest(): Promise<IngestSummary> {
     }
   }
 
-  await revisarAlertaCsn();
+  try {
+    await revisarAlertaCsn();
+  } catch (error) {
+    console.error("[ingest] revisión de alerta CSN falló:", error);
+  }
 
   return summary;
 }
