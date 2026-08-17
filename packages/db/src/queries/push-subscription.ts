@@ -11,6 +11,7 @@ export interface PushSubscription {
   centro: { lat: number; lon: number } | null;
   radioKm: number | null;
   alcanceMundial: boolean;
+  userId: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +23,7 @@ export interface SuscripcionInput {
   centro?: { lat: number; lon: number } | null;
   radioKm?: number | null;
   alcanceMundial?: boolean;
+  userId?: string | null;
 }
 
 function toPushSubscription(
@@ -38,6 +40,7 @@ function toPushSubscription(
         : null,
     radioKm: row.radioKm,
     alcanceMundial: row.alcanceMundial,
+    userId: row.userId,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -61,6 +64,7 @@ export async function upsertPushSubscription(
       centroLon: centro?.lon ?? null,
       radioKm,
       alcanceMundial,
+      userId: input.userId ?? null,
       updatedAt: now,
     })
     .onConflictDoUpdate({
@@ -73,6 +77,7 @@ export async function upsertPushSubscription(
         centroLon: centro?.lon ?? null,
         radioKm,
         alcanceMundial,
+        userId: input.userId ?? null,
         updatedAt: now,
       },
     })
