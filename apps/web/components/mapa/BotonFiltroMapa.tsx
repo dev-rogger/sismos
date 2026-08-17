@@ -26,7 +26,7 @@ export default function BotonFiltroMapa({
         }
         className={`relative flex min-h-11 items-center gap-2 rounded-lg border px-3 text-xs font-medium shadow-lg transition-colors ${
           filtroActivo
-            ? "border-sky-500 bg-sky-500/10 text-sky-400"
+            ? "border-sky-500 bg-neutral-900/90 text-sky-400 hover:bg-neutral-800"
             : "border-neutral-700 bg-neutral-900/90 text-neutral-100 hover:bg-neutral-800"
         }`}
       >

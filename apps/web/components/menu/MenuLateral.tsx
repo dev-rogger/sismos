@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
@@ -150,6 +151,7 @@ export default function MenuLateral({
   const [abierto, setAbierto] = useState(false);
   const [enlaceCopiado, setEnlaceCopiado] = useState(false);
   const [adminAbierto, setAdminAbierto] = useState(false);
+  const [cuentaAbierta, setCuentaAbierta] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -328,14 +330,48 @@ export default function MenuLateral({
             </button>
           )}
           {session ? (
-            <button
-              type="button"
-              onClick={() => elegir(() => signOut({ callbackUrl: "/" }))}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
-            >
-              <IconoUsuario />
-              Cerrar sesión ({session.user?.name ?? session.user?.email})
-            </button>
+            <div>
+              <button
+                type="button"
+                onClick={() => setCuentaAbierta((v) => !v)}
+                aria-expanded={cuentaAbierta}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-800 active:bg-neutral-800"
+              >
+                {session.user?.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt=""
+                    width={20}
+                    height={20}
+                    unoptimized
+                    className="h-5 w-5 shrink-0 rounded-full"
+                  />
+                ) : (
+                  <IconoUsuario />
+                )}
+                <span className="min-w-0 flex-1 truncate">
+                  {session.user?.name ?? session.user?.email}
+                </span>
+                <span
+                  className={`ml-auto shrink-0 text-neutral-500 transition-transform duration-150 ${
+                    cuentaAbierta ? "rotate-180" : ""
+                  }`}
+                >
+                  ▾
+                </span>
+              </button>
+              {cuentaAbierta && (
+                <div className="flex flex-col gap-1 pl-9">
+                  <button
+                    type="button"
+                    onClick={() => elegir(() => signOut({ callbackUrl: "/" }))}
+                    className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 transition-colors duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:bg-neutral-800"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <button
               type="button"
