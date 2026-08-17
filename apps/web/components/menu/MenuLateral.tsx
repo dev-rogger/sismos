@@ -284,9 +284,6 @@ export default function MenuLateral({
             <IconoCompartir />
             {enlaceCopiado ? "Enlace copiado" : "Compartir"}
           </button>
-        </nav>
-
-        <div className="mt-auto border-t border-neutral-800 px-3 py-2">
           {session?.user?.role === "admin" && (
             <div>
               <button
@@ -325,6 +322,9 @@ export default function MenuLateral({
               )}
             </div>
           )}
+        </nav>
+
+        <div className="mt-auto border-t border-neutral-800 px-3 py-2">
           {puedeInstalarApp && (
             <button
               type="button"
