@@ -74,6 +74,40 @@ export default function ModalConfiguracion({
   );
 }
 
+// Switch estilo iOS reutilizado por los dos controles booleanos de
+// "Alcance": mundialLocal (alcance mundial vs. radio local) y
+// alcanceMundialLocal (excepción de M7+ en cualquier país). Antes uno era
+// un chip con aria-pressed y el otro un switch con role="switch"; se
+// unifica el lenguaje visual usando el switch para los dos.
+function SwitchToggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      className={`relative flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
+        checked ? "bg-sky-500" : "bg-neutral-700"
+      }`}
+    >
+      <span
+        className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${
+          checked ? "translate-x-6" : "translate-x-1"
+        }`}
+      />
+    </button>
+  );
+}
+
 function ModalConfiguracionContenido({
   abierto,
   onCerrar,
@@ -99,6 +133,23 @@ function ModalConfiguracionContenido({
   const [alcanceMundialLocal, setAlcanceMundialLocal] = useState(alcanceMundial);
   const [pidiendoUbicacion, setPidiendoUbicacion] = useState(false);
   const [ubicacionFallo, setUbicacionFallo] = useState(false);
+  // Estados explícitos del botón "Guardar": idle -> guardando (promesa en
+  // curso) -> guardado (transitorio, ~1.8s) | error (si la promesa
+  // rechaza). `guardando` es un flag local propio (no el `loading` del
+  // hook, que también se pone en true durante activar/desactivar) para que
+  // el texto "Guardando…" solo aparezca cuando este botón es la causa.
+  const [guardando, setGuardando] = useState(false);
+  const [estadoGuardado, setEstadoGuardado] = useState<"idle" | "guardado" | "error">(
+    "idle",
+  );
+  const guardadoTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  useEffect(() => {
+    return () => {
+      if (guardadoTimeoutRef.current) clearTimeout(guardadoTimeoutRef.current);
+    };
+  }, []);
 
   // usePushNotifications() hidrata magnitudMinima/alcanceMundial desde la
   // suscripción guardada en la base de forma asíncrona (fetch a
@@ -219,137 +270,174 @@ function ModalConfiguracionContenido({
               ? "..."
               : suscrito
                 ? "Desactivar notificaciones"
-                : "Activar notificaciones"}
+                : "Activar con esta configuración"}
           </button>
 
-          {suscrito && (
-            <div className="mt-4">
-              <label
-                htmlFor="umbral-push"
-                className="mb-2 block text-xs text-neutral-400"
-              >
-                Avisar desde M{umbralLocal}+
-              </label>
-              <input
-                id="umbral-push"
-                type="range"
-                min={4}
-                max={7}
-                step={1}
-                value={umbralLocal}
-                onChange={(e) => setUmbralLocal(Number(e.target.value))}
-                className="w-full accent-sky-500"
-              />
+          {/* El panel de umbral/radio/alcance se muestra siempre, esté
+              suscrito o no: antes vivía detrás de `{suscrito && ...}`, así
+              que el usuario activaba notificaciones con los valores por
+              defecto y recién después veía los controles para ajustarlos
+              (teniendo que volver a guardar). Ahora puede ajustar todo acá
+              antes de tocar "Activar con esta configuración", que ya usa
+              estos mismos valores locales. */}
+          <div className="mt-4">
+            <label
+              htmlFor="umbral-push"
+              className="mb-2 block text-xs text-neutral-400"
+            >
+              Avisar desde M{umbralLocal}+
+            </label>
+            <input
+              id="umbral-push"
+              type="range"
+              min={4}
+              max={7}
+              step={1}
+              value={umbralLocal}
+              onChange={(e) => setUmbralLocal(Number(e.target.value))}
+              className="w-full accent-sky-500"
+            />
 
-              <div className="mt-4 border-t border-neutral-800 pt-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs text-neutral-400">Alcance</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMundialLocal((v) => !v);
-                      setUbicacionFallo(false);
-                      // Permite reintentar si el primer intento de esta
-                      // apertura falló: sin este reset, una vez que
-                      // yaPidioRef queda en true no vuelve a fetchear hasta
-                      // que el modal se cierre y reabra (nuevo montaje).
-                      yaPidioRef.current = false;
-                    }}
-                    aria-pressed={mundialLocal}
-                    className={`flex min-h-9 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-colors ${
-                      mundialLocal
-                        ? "border-sky-500 bg-sky-500/10 text-sky-400"
-                        : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
-                    }`}
-                  >
-                    🌎 Mundial, sin rango
-                  </button>
-                </div>
-
-                {!mundialLocal && (
-                  <div className="mt-3">
-                    {pidiendoUbicacion && !ubicacion.centro && (
-                      <div className="flex h-40 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-800/50 text-xs text-neutral-400">
-                        Buscando tu ubicación…
-                      </div>
-                    )}
-
-                    {ubicacion.centro && (
-                      <>
-                        <SelectorRadioMapa
-                          centro={ubicacion.centro}
-                          radioKm={radioKmLocal}
-                        />
-                        <p className="mt-3 text-xs text-neutral-400">
-                          Avisar hasta a {radioKmLocal} km de tu ubicación
-                        </p>
-                        <input
-                          type="range"
-                          min={RADIO_KM_MIN}
-                          max={RADIO_KM_MAX}
-                          step={25}
-                          value={radioKmLocal}
-                          onChange={(e) =>
-                            setRadioKmLocal(Number(e.target.value))
-                          }
-                          className="mt-2 w-full accent-sky-500"
-                        />
-                      </>
-                    )}
-
-                    {!pidiendoUbicacion && !ubicacion.centro && ubicacionFallo && (
-                      <p className="mt-3 text-xs text-neutral-400">
-                        No pudimos acceder a tu ubicación, así que las
-                        notificaciones quedan sin límite de distancia.
-                      </p>
-                    )}
-                  </div>
-                )}
+            {/* "Alcance" fusiona el toggle mundial/local con la excepción
+                de terremotos grandes (M7+) en cualquier país: cuando
+                mundialLocal es true ya se reciben avisos de todo el mundo,
+                así que la excepción quedaría redundante y se oculta. */}
+            <div className="mt-4 border-t border-neutral-800 pt-4">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="text-xs text-neutral-400">Alcance</span>
+                <SwitchToggle
+                  checked={mundialLocal}
+                  onChange={() => {
+                    setMundialLocal((v) => !v);
+                    setUbicacionFallo(false);
+                    // Permite reintentar si el primer intento de esta
+                    // apertura falló: sin este reset, una vez que
+                    // yaPidioRef queda en true no vuelve a fetchear hasta
+                    // que el modal se cierre y reabra (nuevo montaje).
+                    yaPidioRef.current = false;
+                  }}
+                  label={
+                    mundialLocal
+                      ? "Alcance mundial, sin límite de distancia (activado)"
+                      : "Alcance mundial, sin límite de distancia (desactivado)"
+                  }
+                />
               </div>
 
-              <div className="mt-4 border-t border-neutral-800 pt-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs text-neutral-400">
-                    Terremotos en el mundo
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setAlcanceMundialLocal((v) => !v)}
-                    role="switch"
-                    aria-checked={alcanceMundialLocal}
-                    aria-label="Avisarme de terremotos en el mundo"
-                    className={`relative flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
-                      alcanceMundialLocal ? "bg-sky-500" : "bg-neutral-700"
-                    }`}
-                  >
-                    <span
-                      className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                        alcanceMundialLocal ? "translate-x-6" : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                </div>
+              {mundialLocal ? (
                 <p className="text-xs text-neutral-400">
-                  Terremotos grandes (M7.0+) en cualquier país, sin importar
-                  la distancia.
+                  🌎 Ya estás recibiendo avisos de terremotos de todo el
+                  mundo.
                 </p>
-              </div>
+              ) : (
+                <div className="mt-1 space-y-4">
+                  {pidiendoUbicacion && !ubicacion.centro && (
+                    <div className="flex h-40 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-800/50 text-xs text-neutral-400">
+                      Buscando tu ubicación…
+                    </div>
+                  )}
 
-              <button
-                type="button"
-                disabled={loading || !hayFormaCambios}
-                onClick={() => {
-                  const preferencia = preferenciaRadio();
-                  actualizarUmbral(umbralLocal, preferencia, alcanceMundialLocal).then(() => {
-                    onSetRadioKm(preferencia.radioKm);
-                  });
-                }}
-                className="mt-4 flex min-h-11 w-full items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition-colors hover:border-neutral-600 disabled:opacity-50"
-              >
-                Guardar
-              </button>
+                  {ubicacion.centro && (
+                    <div>
+                      <SelectorRadioMapa
+                        centro={ubicacion.centro}
+                        radioKm={radioKmLocal}
+                      />
+                      <label
+                        htmlFor="radio-push"
+                        className="mt-3 block text-xs text-neutral-400"
+                      >
+                        Avisar hasta a {radioKmLocal} km de tu ubicación
+                      </label>
+                      <input
+                        id="radio-push"
+                        type="range"
+                        min={RADIO_KM_MIN}
+                        max={RADIO_KM_MAX}
+                        step={25}
+                        value={radioKmLocal}
+                        onChange={(e) =>
+                          setRadioKmLocal(Number(e.target.value))
+                        }
+                        className="mt-2 w-full accent-sky-500"
+                      />
+                    </div>
+                  )}
+
+                  {!pidiendoUbicacion && !ubicacion.centro && ubicacionFallo && (
+                    <p className="text-xs text-neutral-400">
+                      No pudimos acceder a tu ubicación, así que las
+                      notificaciones quedan sin límite de distancia.
+                    </p>
+                  )}
+
+                  <div className="border-t border-neutral-800 pt-3">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <span className="text-xs text-neutral-400">
+                        Avisarme también de terremotos M7+ en cualquier
+                        país, aunque esté fuera de mi radio
+                      </span>
+                      <SwitchToggle
+                        checked={alcanceMundialLocal}
+                        onChange={() => setAlcanceMundialLocal((v) => !v)}
+                        label="Avisarme también de terremotos M7+ en cualquier país"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+
+            {suscrito && (
+              <>
+                <button
+                  type="button"
+                  disabled={loading || guardando || !hayFormaCambios}
+                  onClick={() => {
+                    setGuardando(true);
+                    setEstadoGuardado("idle");
+                    const preferencia = preferenciaRadio();
+                    actualizarUmbral(umbralLocal, preferencia, alcanceMundialLocal)
+                      .then(() => {
+                        onSetRadioKm(preferencia.radioKm);
+                        setEstadoGuardado("guardado");
+                        if (guardadoTimeoutRef.current) {
+                          clearTimeout(guardadoTimeoutRef.current);
+                        }
+                        guardadoTimeoutRef.current = setTimeout(
+                          () => setEstadoGuardado("idle"),
+                          1800,
+                        );
+                      })
+                      .catch((error) => {
+                        console.error(
+                          "[ModalConfiguracion] guardar failed:",
+                          error,
+                        );
+                        setEstadoGuardado("error");
+                      })
+                      .finally(() => setGuardando(false));
+                  }}
+                  className={`mt-4 flex min-h-11 w-full items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors duration-200 ease-out disabled:opacity-50 ${
+                    estadoGuardado === "guardado"
+                      ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
+                      : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
+                  }`}
+                >
+                  {guardando
+                    ? "Guardando…"
+                    : estadoGuardado === "guardado"
+                      ? "Guardado ✓"
+                      : "Guardar"}
+                </button>
+                {estadoGuardado === "error" && (
+                  <p className="mt-2 text-xs text-red-400">
+                    No pudimos guardar los cambios. Probá de nuevo.
+                  </p>
+                )}
+              </>
+            )}
+          </div>
         </>
       )}
     </>
