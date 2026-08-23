@@ -208,6 +208,9 @@ export default function MapaSismos({
       fitBoundsOptions: { padding: CHILE_BOUNDS_PADDING },
     });
     mapRef.current = map;
+    map.once("load", () => {
+      window.dispatchEvent(new Event("sismos:mapa-listo"));
+    });
 
     for (const sismo of sismosIniciales) {
       todosSismosRef.current.set(sismo.externalId, sismo);

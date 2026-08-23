@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import SessionProviderWrapper from "../components/SessionProviderWrapper";
+import SplashPWA from "../components/SplashPWA";
 
 export const metadata: Metadata = {
   title: "Sismos",
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <SplashPWA />
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
       </body>
     </html>

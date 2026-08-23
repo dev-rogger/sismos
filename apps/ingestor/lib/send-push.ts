@@ -70,12 +70,18 @@ export async function enviarPushParaSismo(
   const nombreRegion =
     evento.fuente === "csn" ? regionChilePorLatitud(evento.latitud) : null;
   const region = nombreRegion ? formatearRegion(nombreRegion) : evento.lugar;
-  const tipoEvento =
-    evento.magnitud >= UMBRAL_TERREMOTO ? "terremoto" : "sismo";
+  const esTerremoto = evento.magnitud >= UMBRAL_TERREMOTO;
+  const tipoEvento = esTerremoto ? "Terremoto" : "Sismo";
+  const emoji = esTerremoto ? "🚨" : "📍";
+  const hora = evento.fecha.toLocaleTimeString("es-CL", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   const payload = JSON.stringify({
-    title: `Nuevo ${tipoEvento} de ${evento.magnitud} en ${region}`,
-    body: evento.fecha.toLocaleString("es-CL"),
+    title: `${emoji} ${tipoEvento} de magnitud ${evento.magnitud} en ${region}`,
+    body: `${evento.lugar} · ${hora} hrs · Toca para ver el mapa`,
     url,
+    severo: esTerremoto,
   });
 
   const resultados = await Promise.allSettled(

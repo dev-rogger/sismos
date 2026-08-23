@@ -27,6 +27,8 @@ self.addEventListener("push", (event) => {
       body: data.body,
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
+      vibrate: data.severo ? [200, 100, 200, 100, 300] : [150, 80, 150],
+      requireInteraction: Boolean(data.severo),
       data: { url: data.url ?? "/" },
     }),
   );
