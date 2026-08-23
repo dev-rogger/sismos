@@ -59,9 +59,6 @@ export default function SplashPWA() {
     <div className="splash-pwa" data-saliendo={saliendo}>
       <div className="flex flex-col items-center">
         <div className="splash-epicentro">
-          <span className="splash-anillo" />
-          <span className="splash-anillo" />
-          <span className="splash-anillo" />
           <span className="splash-resplandor" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
