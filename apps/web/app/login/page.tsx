@@ -3,6 +3,7 @@
 import { Suspense, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { marcarLogin } from "../../lib/auth-toast-marker";
 
 function LoginForm() {
   const router = useRouter();
@@ -37,6 +38,7 @@ function LoginForm() {
         }
       }
 
+      marcarLogin();
       const resultado = await signIn("credentials", {
         email,
         password,
@@ -77,7 +79,10 @@ function LoginForm() {
 
         <button
           type="button"
-          onClick={() => signIn("google", { callbackUrl: "/" })}
+          onClick={() => {
+            marcarLogin();
+            signIn("google", { callbackUrl: "/" });
+          }}
           className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-200 transition-colors hover:border-neutral-600"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden="true">

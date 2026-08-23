@@ -3,20 +3,20 @@
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { leerYLimpiarMarca } from "../../lib/auth-toast-marker";
 
 export default function AuthToastWatcher() {
   const { data: session, status } = useSession();
-  const estadoPrevio = useRef<typeof status | null>(null);
+  const disparadoRef = useRef(false);
 
   useEffect(() => {
-    const anterior = estadoPrevio.current;
-    estadoPrevio.current = status;
+    if (status === "loading" || disparadoRef.current) return;
 
-    if (status === "loading" || anterior === null || anterior === status) {
-      return;
-    }
+    const marca = leerYLimpiarMarca();
+    if (!marca) return;
 
-    if (anterior === "unauthenticated" && status === "authenticated") {
+    if (marca === "login" && status === "authenticated") {
+      disparadoRef.current = true;
       const nombre = session?.user?.name ?? session?.user?.email ?? "";
       const imagen = session?.user?.image ?? null;
       toast.custom(() => (
@@ -52,9 +52,8 @@ export default function AuthToastWatcher() {
           </div>
         </div>
       ));
-    }
-
-    if (anterior === "authenticated" && status === "unauthenticated") {
+    } else if (marca === "logout" && status === "unauthenticated") {
+      disparadoRef.current = true;
       toast.custom(() => (
         <div className="flex items-center gap-3 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-3 shadow-lg shadow-black/40">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-800">

@@ -238,14 +238,11 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--color-background);
-  transition:
-    opacity 0.45s ease,
-    transform 0.45s ease;
+  transition: opacity 0.45s ease;
 }
 
 .splash-pwa[data-saliendo="true"] {
   opacity: 0;
-  transform: scale(1.03);
 }
 
 .splash-epicentro {
@@ -253,15 +250,73 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 4rem;
-  height: 4rem;
+  width: 5rem;
+  height: 5rem;
 }
 
-.splash-nucleo {
-  width: 0.625rem;
-  height: 0.625rem;
-  border-radius: 9999px;
-  background-color: #34d399;
+.splash-resplandor {
+  position: absolute;
+  inset: -0.75rem;
+  border-radius: 1.75rem;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.4), transparent 70%);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .splash-resplandor {
+    animation: splash-resplandor 1s ease-out 0.5s forwards;
+  }
+}
+
+@keyframes splash-resplandor {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+.splash-icono {
+  position: relative;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .splash-icono {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(0.5);
+    animation: splash-icono-formar 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.5s
+      forwards;
+  }
+}
+
+@keyframes splash-icono-formar {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(0.5);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(1px);
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
 }
 
 .splash-anillo {
@@ -274,25 +329,25 @@ body {
 
 @media (prefers-reduced-motion: no-preference) {
   .splash-anillo {
-    animation: splash-onda 1.4s ease-out infinite;
+    animation: splash-onda 1.8s ease-out 2;
   }
 
   .splash-anillo:nth-child(2) {
-    animation-delay: 0.35s;
+    animation-delay: 0.45s;
   }
 
   .splash-anillo:nth-child(3) {
-    animation-delay: 0.7s;
+    animation-delay: 0.9s;
   }
 }
 
 @keyframes splash-onda {
   0% {
-    transform: scale(0.5);
+    transform: scale(0.75);
     opacity: 0.6;
   }
   100% {
-    transform: scale(4.5);
+    transform: scale(3.2);
     opacity: 0;
   }
 }

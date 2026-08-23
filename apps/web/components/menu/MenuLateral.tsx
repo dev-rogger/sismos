@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
+import { marcarLogout } from "../../lib/auth-toast-marker";
 
 interface MenuLateralProps {
   onAbrirHistorial: () => void;
@@ -381,7 +382,12 @@ export default function MenuLateral({
                     </p>
                     <button
                       type="button"
-                      onClick={() => elegir(() => signOut({ callbackUrl: "/" }))}
+                      onClick={() =>
+                        elegir(() => {
+                          marcarLogout();
+                          signOut({ callbackUrl: "/" });
+                        })
+                      }
                       className="flex min-h-11 w-full items-center px-3 text-left text-sm font-medium text-neutral-200 transition-colors duration-150 hover:bg-neutral-700 active:bg-neutral-700"
                     >
                       Cerrar sesión

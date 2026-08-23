@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 
 // Piso: aunque el mapa esté listo al instante (caché, red rápida), el splash
-// se ve al menos esto para no sentirse un flash accidental.
-const DURACION_MINIMA_MS = 900;
+// se ve al menos esto para que se sienta una intro real, no un flash.
+const DURACION_MINIMA_MS = 1800;
 // Techo: si el evento "mapa listo" nunca llega (ruta sin mapa, error, red muy
 // lenta), no queremos que el splash se quede pegado para siempre.
-const DURACION_MAXIMA_MS = 4500;
+const DURACION_MAXIMA_MS = 6000;
 const DURACION_SALIDA_MS = 450;
 
 function esStandalone(): boolean {
@@ -62,9 +62,17 @@ export default function SplashPWA() {
           <span className="splash-anillo" />
           <span className="splash-anillo" />
           <span className="splash-anillo" />
-          <span className="splash-nucleo" />
+          <span className="splash-resplandor" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icons/icon-192.png"
+            alt=""
+            width={80}
+            height={80}
+            className="splash-icono"
+          />
         </div>
-        <p className="splash-titulo text-xl font-semibold tracking-tight text-neutral-100">
+        <p className="splash-titulo text-2xl font-semibold tracking-tight text-neutral-100">
           Sismos
         </p>
       </div>
