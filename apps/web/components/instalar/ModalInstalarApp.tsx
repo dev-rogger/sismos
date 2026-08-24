@@ -51,7 +51,7 @@ export default function ModalInstalarApp({
             <button
               type="button"
               onClick={onDescartar}
-              className="mt-4 flex min-h-11 w-full items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition-colors hover:border-neutral-600"
+              className="mt-4 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
             >
               Entendido
             </button>
@@ -66,14 +66,14 @@ export default function ModalInstalarApp({
               <button
                 type="button"
                 onClick={onDescartar}
-                className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition-colors hover:border-neutral-600"
+                className="flex min-h-11 flex-1 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
               >
                 Ahora no
               </button>
               <button
                 type="button"
                 onClick={onInstalar}
-                className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-sky-500 bg-sky-500/10 px-3 text-sm font-medium text-sky-400 transition-colors hover:bg-sky-500/20"
+                className="flex min-h-11 flex-1 touch-manipulation items-center justify-center rounded-lg border border-sky-500 bg-sky-500/10 px-3 text-sm font-medium text-sky-400 transition active:scale-[0.97] active:brightness-95 hover:bg-sky-500/20"
               >
                 Instalar
               </button>

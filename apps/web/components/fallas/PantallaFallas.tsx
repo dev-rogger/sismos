@@ -108,7 +108,7 @@ export default function PantallaFallas({
           type="button"
           onClick={onCerrar}
           aria-label="Volver"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-300 hover:bg-neutral-800"
+          className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
         >
           <svg
             viewBox="0 0 24 24"
@@ -147,7 +147,7 @@ export default function PantallaFallas({
           <button
             type="button"
             onClick={() => setReintentos((n) => n + 1)}
-            className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition-colors hover:border-neutral-600"
+            className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
           >
             Reintentar
           </button>
@@ -163,7 +163,7 @@ export default function PantallaFallas({
               <button
                 type="button"
                 onClick={() => onSeleccionar(falla)}
-                className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-left text-sm text-neutral-100 transition-colors hover:bg-neutral-800/60"
+                className="w-full touch-manipulation rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-left text-sm text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800/60"
               >
                 {falla.nombre}
               </button>

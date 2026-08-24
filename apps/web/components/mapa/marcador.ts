@@ -1,6 +1,6 @@
 import { colorPorMagnitud, tamanoPorMagnitud } from "../../lib/magnitud";
 
-const TAP_TARGET_MIN_PX = 28;
+const TAP_TARGET_MIN_PX = 44;
 
 export function crearElementoMarcador(
   magnitud: number,

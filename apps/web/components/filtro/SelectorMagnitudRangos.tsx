@@ -33,7 +33,7 @@ export default function SelectorMagnitudRangos({
             type="button"
             onClick={() => alternar(rango.valor)}
             aria-pressed={activo}
-            className={`flex min-h-11 items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors ${
+            className={`flex min-h-11 touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:scale-[0.97] active:brightness-95 ${
               activo
                 ? "border-sky-500 bg-sky-500/10 text-sky-400"
                 : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"

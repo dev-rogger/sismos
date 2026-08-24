@@ -81,7 +81,7 @@ export default function ListaHistorial({
           type="button"
           onClick={() => setFiltro((f) => ({ ...f, soloChile: !f.soloChile }))}
           aria-pressed={filtro.soloChile}
-          className={`mt-2 flex min-h-11 w-full items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors ${
+          className={`mt-2 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:scale-[0.97] active:brightness-95 ${
             filtro.soloChile
               ? "border-sky-500 bg-sky-500/10 text-sky-400"
               : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
@@ -108,7 +108,7 @@ export default function ListaHistorial({
           <button
             type="button"
             onClick={reintentar}
-            className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition-colors hover:border-neutral-600"
+            className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
           >
             Reintentar
           </button>
@@ -139,7 +139,7 @@ export default function ListaHistorial({
                     onSeleccionar(sismoDesdeEvento(evento), seleccionado)
                   }
                   style={{ borderLeftColor: colorPorMagnitud(evento.magnitud) }}
-                  className={`w-full rounded-lg border border-l-4 px-3 py-2 text-left text-sm transition-colors ${
+                  className={`w-full touch-manipulation rounded-lg border border-l-4 px-3 py-2 text-left text-sm transition active:scale-[0.97] active:brightness-95 ${
                     seleccionado
                       ? "border-neutral-600 bg-neutral-800"
                       : "border-neutral-800 bg-neutral-900 hover:bg-neutral-800/60"

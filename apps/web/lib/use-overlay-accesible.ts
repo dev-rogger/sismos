@@ -12,11 +12,13 @@ function obtenerFocusables(contenedor: HTMLElement): HTMLElement[] {
 }
 
 // Comportamiento compartido entre menú, modales y pantallas overlay: cerrar
-// con Escape, bloquear el scroll del fondo mientras están abiertos y atrapar
+// con Escape, bloquear el scroll del fondo mientras están abiertos, atrapar
 // el foco de teclado dentro del overlay (autofocus al abrir + ciclado con
-// Tab). `contenedorRef` es opcional para no romper la firma de los llamadores
-// existentes que todavía no lo pasan: sin él, el hook se comporta igual que
-// antes (solo Escape + scroll lock), sin focus trap.
+// Tab) e interceptar el botón/gesto atrás para cerrar el overlay en vez de
+// navegar fuera de la app. `contenedorRef` es opcional para no romper la
+// firma de los llamadores existentes que todavía no lo pasan: sin él, el
+// hook se comporta igual que antes (solo Escape + scroll lock), sin focus
+// trap.
 export function useOverlayAccesible(
   abierto: boolean,
   onCerrar: () => void,
@@ -57,9 +59,30 @@ export function useOverlayAccesible(
       }
     };
     document.addEventListener("keydown", manejarTecla);
+
+    // Empujamos una entrada de historial liviana al abrir, así el botón
+    // atrás del navegador (o el gesto equivalente en Android/iOS) cierra el
+    // overlay en vez de sacar al usuario de la app.
+    let cerradoPorNavegacion = false;
+    window.history.pushState({ overlayAccesible: true }, "");
+
+    const manejarPopState = () => {
+      cerradoPorNavegacion = true;
+      onCerrarRef.current();
+    };
+    window.addEventListener("popstate", manejarPopState);
+
     return () => {
       document.body.style.overflow = original;
       document.removeEventListener("keydown", manejarTecla);
+      window.removeEventListener("popstate", manejarPopState);
+      // Si el overlay se cerró por otra vía (Escape, click afuera, botón de
+      // cerrar) la entrada que empujamos sigue en el historial: la
+      // retrocedemos para que el próximo "atrás" navegue de verdad en vez
+      // de quedar "vacío" cerrando un overlay que ya está cerrado.
+      if (!cerradoPorNavegacion) {
+        window.history.back();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [abierto]);

@@ -67,7 +67,7 @@ function LoginForm() {
             type="button"
             onClick={() => router.push("/")}
             aria-label="Cerrar"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
+            className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
           >
             ✕
           </button>
@@ -83,7 +83,7 @@ function LoginForm() {
             marcarLogin();
             signIn("google", { callbackUrl: "/" });
           }}
-          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-200 transition-colors hover:border-neutral-600"
+          className="flex min-h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-200 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden="true">
             <path
@@ -144,7 +144,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={cargando}
-            className="mt-1 flex min-h-11 w-full items-center justify-center rounded-lg border border-sky-500 bg-sky-500/10 px-3 text-sm font-medium text-sky-400 transition-colors disabled:opacity-50"
+            className="mt-1 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border border-sky-500 bg-sky-500/10 px-3 text-sm font-medium text-sky-400 transition active:scale-[0.97] active:brightness-95 disabled:opacity-50"
           >
             {cargando
               ? "..."
@@ -160,7 +160,7 @@ function LoginForm() {
             setModoRegistro((v) => !v);
             setError(null);
           }}
-          className="mt-4 w-full text-center text-xs text-neutral-400 hover:text-neutral-200"
+          className="mt-4 w-full touch-manipulation text-center text-xs text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:text-neutral-200"
         >
           {modoRegistro
             ? "¿Ya tenés cuenta? Iniciar sesión"

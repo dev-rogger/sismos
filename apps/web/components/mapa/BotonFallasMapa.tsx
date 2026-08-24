@@ -19,7 +19,7 @@ export default function BotonFallasMapa({
           ? "Ocultar fallas geológicas"
           : "Mostrar fallas geológicas"
       }
-      className={`flex min-h-11 items-center gap-2 rounded-lg border px-3 text-xs font-medium shadow-lg transition-colors ${
+      className={`flex min-h-11 touch-manipulation items-center gap-2 rounded-lg border px-3 text-xs font-medium shadow-lg transition active:scale-[0.97] active:brightness-95 ${
         fallasVisibles
           ? "border-sky-500 bg-sky-500/10 text-sky-400"
           : "border-neutral-700 bg-neutral-900/90 text-neutral-100 hover:bg-neutral-800"

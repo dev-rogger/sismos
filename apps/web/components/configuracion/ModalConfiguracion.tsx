@@ -98,7 +98,7 @@ function SwitchToggle({
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      className={`relative flex h-7 w-12 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+      className={`relative flex h-7 w-12 shrink-0 touch-manipulation items-center rounded-full transition active:scale-[0.97] active:brightness-95 disabled:opacity-50 ${
         checked ? "bg-sky-500" : "bg-neutral-700"
       }`}
     >
@@ -136,6 +136,11 @@ function ModalConfiguracionContenido({
   const [alcanceMundialLocal, setAlcanceMundialLocal] = useState(alcanceMundial);
   const [pidiendoUbicacion, setPidiendoUbicacion] = useState(false);
   const [ubicacionFallo, setUbicacionFallo] = useState(false);
+  // Mismo patrón de estado explícito que "Guardar" (más abajo): si
+  // activar() resuelve false (p. ej. el usuario rechazó el permiso del
+  // navegador) o la promesa rechaza, mostramos un aviso en vez de dejar el
+  // botón volver a su estado normal sin ninguna señal de que algo falló.
+  const [errorActivar, setErrorActivar] = useState(false);
   // Estados explícitos del botón "Guardar": idle -> guardando (promesa en
   // curso) -> guardado (transitorio, ~1.8s) | error (si la promesa
   // rechaza). `guardando` es un flag local propio (no el `loading` del
@@ -226,7 +231,7 @@ function ModalConfiguracionContenido({
           type="button"
           onClick={onCerrar}
           aria-label="Cerrar"
-          className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
+          className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
         >
           ✕
         </button>
@@ -257,13 +262,26 @@ function ModalConfiguracionContenido({
                 onSetRadioKm(null);
                 return;
               }
+              setErrorActivar(false);
               const preferencia = preferenciaRadio();
-              activar(umbralLocal, preferencia, alcanceMundialLocal).then((exito) => {
-                if (exito) onSetRadioKm(preferencia.radioKm);
-              });
+              activar(umbralLocal, preferencia, alcanceMundialLocal)
+                .then((exito) => {
+                  if (exito) {
+                    onSetRadioKm(preferencia.radioKm);
+                  } else {
+                    setErrorActivar(true);
+                  }
+                })
+                .catch((error) => {
+                  console.error(
+                    "[ModalConfiguracion] activar failed:",
+                    error,
+                  );
+                  setErrorActivar(true);
+                });
             }}
             aria-pressed={suscrito}
-            className={`flex min-h-11 w-full items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors disabled:opacity-50 ${
+            className={`flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:scale-[0.97] active:brightness-95 disabled:opacity-50 ${
               suscrito
                 ? "border-sky-500 bg-sky-500/10 text-sky-400"
                 : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
@@ -275,6 +293,11 @@ function ModalConfiguracionContenido({
                 ? "Desactivar notificaciones"
                 : "Activar con esta configuración"}
           </button>
+          {errorActivar && (
+            <p className="mt-2 text-xs text-red-400">
+              No pudimos activar las notificaciones. Probá de nuevo.
+            </p>
+          )}
 
           {/* El panel de umbral/radio/alcance se muestra siempre, esté
               suscrito o no: antes vivía detrás de `{suscrito && ...}`, así
@@ -430,7 +453,7 @@ function ModalConfiguracionContenido({
                       })
                       .finally(() => setGuardando(false));
                   }}
-                  className={`mt-4 flex min-h-11 w-full items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors duration-200 ease-out disabled:opacity-50 ${
+                  className={`mt-4 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition duration-200 ease-out active:scale-[0.97] active:brightness-95 disabled:opacity-50 ${
                     estadoGuardado === "guardado"
                       ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
                       : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"

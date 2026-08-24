@@ -49,7 +49,7 @@ export default function ModalFiltroMapa({
             type="button"
             onClick={onCerrar}
             aria-label="Cerrar"
-            className="flex h-11 w-11 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
+            className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
           >
             ✕
           </button>
@@ -61,7 +61,7 @@ export default function ModalFiltroMapa({
             onFiltroChange({ ...filtro, soloChile: !filtro.soloChile })
           }
           aria-pressed={filtro.soloChile}
-          className={`flex min-h-11 w-full items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors ${
+          className={`flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:scale-[0.97] active:brightness-95 ${
             filtro.soloChile
               ? "border-sky-500 bg-sky-500/10 text-sky-400"
               : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"

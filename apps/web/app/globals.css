@@ -296,7 +296,7 @@ body {
     opacity: 0;
     filter: blur(8px);
     transform: scale(0.5);
-    animation: splash-icono-formar 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.4s
+    animation: splash-icono-formar 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.1s
       forwards;
   }
 }
@@ -327,7 +327,8 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .splash-titulo {
     opacity: 0;
-    animation: splash-titulo-entrada 0.5s ease-out 0.35s forwards;
+    animation: splash-titulo-entrada 0.35s cubic-bezier(0.22, 1, 0.36, 1) 0.55s
+      forwards;
   }
 }
 

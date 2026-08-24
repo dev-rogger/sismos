@@ -49,6 +49,15 @@ const POLL_INTERVAL_MS = 15 * 1000;
 const ESTILO_URL = "https://tiles.openfreemap.org/styles/liberty";
 const FUENTE_ONDA = "onda-percepcion";
 const DURACION_ONDA_MS = 1800;
+// Pulso de radar: anillos concéntricos que siguen "naciendo" del epicentro
+// y se desvanecen al llegar al borde del área de percepción, mientras el
+// sismo sigue seleccionado (como ondas en el agua, no un barrido de radar).
+const FUENTE_ONDA_PULSO = "onda-percepcion-pulso";
+const PULSO_ANILLOS = 2;
+const PULSO_DURACION_MS = 1800; // mismo ritmo que la onda de formación
+const PULSO_INTERVALO_MS = 900; // medio ciclo: un anillo nuevo cada 900ms
+const PULSO_OPACIDAD_MAX = 0.35;
+const PULSO_ANCHO_LINEA = 1.5;
 const FUENTE_FALLAS = "fallas-chile";
 
 function pasaFiltro(sismo: SismoMapa, filtro: FiltroMapa): boolean {
@@ -407,12 +416,15 @@ export default function MapaSismos({
     });
 
     let animacionId: number | undefined;
+    let pulsoAnimacionId: number | undefined;
+    let pulsoTimeoutId: ReturnType<typeof setTimeout> | undefined;
     const prefiereMenosMovimiento = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
     if (prefiereMenosMovimiento) {
       // Sin animación: el círculo geográfico marca el área de percepción
-      // directamente en su radio final, sin la onda expansiva de 1.8s.
+      // directamente en su radio final, sin la onda expansiva de 1.8s ni
+      // el pulso de radar en loop.
       const fuente = map.getSource(FUENTE_ONDA) as
         maplibregl.GeoJSONSource | undefined;
       fuente?.setData(generarCirculoGeografico(centro, radioFinalKm));
@@ -428,12 +440,59 @@ export default function MapaSismos({
         if (t < 1) animacionId = requestAnimationFrame(animar);
       };
       animacionId = requestAnimationFrame(animar);
+
+      // El pulso de radar arranca recién cuando la onda principal terminó
+      // de formarse, para no competir con ese beat inicial: primero se
+      // establece el área, después empieza a "latir" sobre ella.
+      pulsoTimeoutId = setTimeout(() => {
+        map.addSource(FUENTE_ONDA_PULSO, {
+          type: "geojson",
+          data: { type: "FeatureCollection", features: [] },
+        });
+        map.addLayer({
+          id: `${FUENTE_ONDA_PULSO}-linea`,
+          type: "line",
+          source: FUENTE_ONDA_PULSO,
+          paint: {
+            "line-color": color,
+            "line-width": PULSO_ANCHO_LINEA,
+            "line-opacity": ["get", "opacidad"],
+          },
+        });
+
+        const inicioPulsoMs = performance.now();
+        const animarPulso = (ahoraMs: number) => {
+          const transcurrido = ahoraMs - inicioPulsoMs;
+          const anillos: GeoJSON.Feature<GeoJSON.Polygon>[] = [];
+          for (let i = 0; i < PULSO_ANILLOS; i++) {
+            const faseMs =
+              (transcurrido + i * PULSO_INTERVALO_MS) % PULSO_DURACION_MS;
+            const t = faseMs / PULSO_DURACION_MS;
+            const facilitado = 1 - (1 - t) ** 3; // mismo ease-out que la onda
+            const radio = Math.max(0.01, radioFinalKm * facilitado);
+            const anillo = generarCirculoGeografico(centro, radio);
+            anillo.properties = { opacidad: PULSO_OPACIDAD_MAX * (1 - facilitado) };
+            anillos.push(anillo);
+          }
+          const fuentePulso = map.getSource(FUENTE_ONDA_PULSO) as
+            maplibregl.GeoJSONSource | undefined;
+          fuentePulso?.setData({ type: "FeatureCollection", features: anillos });
+          pulsoAnimacionId = requestAnimationFrame(animarPulso);
+        };
+        pulsoAnimacionId = requestAnimationFrame(animarPulso);
+      }, DURACION_ONDA_MS);
     }
 
     return () => {
       if (animacionId !== undefined) cancelAnimationFrame(animacionId);
+      if (pulsoTimeoutId !== undefined) clearTimeout(pulsoTimeoutId);
+      if (pulsoAnimacionId !== undefined) cancelAnimationFrame(pulsoAnimacionId);
       popup.off("close", manejarCierre);
       marker.remove();
+      if (map.getLayer(`${FUENTE_ONDA_PULSO}-linea`)) {
+        map.removeLayer(`${FUENTE_ONDA_PULSO}-linea`);
+      }
+      if (map.getSource(FUENTE_ONDA_PULSO)) map.removeSource(FUENTE_ONDA_PULSO);
       if (map.getLayer(`${FUENTE_ONDA}-borde`)) {
         map.removeLayer(`${FUENTE_ONDA}-borde`);
       }
@@ -584,7 +643,7 @@ export default function MapaSismos({
               speed: 1.2,
             })
           }
-          className="flex min-h-11 items-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
+          className="flex min-h-11 touch-manipulation items-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
         >
           Ver todo Chile
         </button>
@@ -609,7 +668,7 @@ export default function MapaSismos({
             }
           }}
           aria-label="Mi ubicación"
-          className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition-colors hover:bg-neutral-800"
+          className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
         >
           <svg
             viewBox="0 0 24 24"
