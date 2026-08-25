@@ -97,5 +97,13 @@
     "androidNativoInstrucciones": "Agrega Sismos a tu pantalla de inicio: se abre a pantalla completa, con su propio ícono, y se siente como una app real.",
     "androidManualInstrucciones": "Abre el menú ⋮ del navegador y elige \"Instalar app\" o \"Agregar a pantalla de inicio\".",
     "instalar": "Instalar"
+  },
+  "fallas": {
+    "titulo": "Fallas geológicas",
+    "buscarPlaceholder": "Buscar falla por nombre…",
+    "cargando": "Cargando fallas…",
+    "errorCarga": "No se pudo cargar la lista de fallas.",
+    "reintentar": "Reintentar",
+    "sinResultados": "Sin resultados para \"{busqueda}\""
   }
 }

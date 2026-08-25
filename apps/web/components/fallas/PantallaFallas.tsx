@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 import type { FallaSeleccionada } from "../../lib/tipos-falla";
 
@@ -30,6 +31,8 @@ export default function PantallaFallas({
   onSeleccionar,
   onCerrar,
 }: PantallaFallasProps) {
+  const t = useTranslations("fallas");
+  const tc = useTranslations("comun");
   useOverlayAccesible(abierto, onCerrar);
 
   // Queda montada permanentemente (para animar su cierre), pero el fetch se
@@ -107,7 +110,7 @@ export default function PantallaFallas({
         <button
           type="button"
           onClick={onCerrar}
-          aria-label="Volver"
+          aria-label={tc("volver")}
           className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
         >
           <svg
@@ -123,7 +126,7 @@ export default function PantallaFallas({
           </svg>
         </button>
         <h1 className="text-base font-semibold text-neutral-100">
-          Fallas geológicas
+          {t("titulo")}
         </h1>
       </div>
 
@@ -132,29 +135,29 @@ export default function PantallaFallas({
           type="text"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="Buscar falla por nombre…"
+          placeholder={t("buscarPlaceholder")}
           className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 transition-colors placeholder:text-neutral-500 hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
         />
       </div>
 
       {loading ? (
         <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-neutral-500">
-          Cargando fallas…
+          {t("cargando")}
         </div>
       ) : error ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center text-sm text-neutral-500">
-          <p>No se pudo cargar la lista de fallas.</p>
+          <p>{t("errorCarga")}</p>
           <button
             type="button"
             onClick={() => setReintentos((n) => n + 1)}
             className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
           >
-            Reintentar
+            {t("reintentar")}
           </button>
         </div>
       ) : fallasFiltradas.length === 0 ? (
         <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-neutral-500">
-          Sin resultados para &quot;{busqueda}&quot;
+          {t("sinResultados", { busqueda })}
         </div>
       ) : (
         <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
