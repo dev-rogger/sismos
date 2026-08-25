@@ -14,11 +14,11 @@ export async function POST(request: Request) {
   const password = body.password;
 
   if (!email || !email.includes("@")) {
-    return NextResponse.json({ error: "Email inválido" }, { status: 400 });
+    return NextResponse.json({ error: "email_invalido" }, { status: 400 });
   }
   if (!password || password.length < 8) {
     return NextResponse.json(
-      { error: "La contraseña debe tener al menos 8 caracteres" },
+      { error: "password_corta" },
       { status: 400 },
     );
   }
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const existente = await findUserByEmail(email);
     if (existente) {
       return NextResponse.json(
-        { error: "Ya existe una cuenta con ese email" },
+        { error: "email_existente" },
         { status: 409 },
       );
     }
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[api/auth/register] failed:", error);
     return NextResponse.json(
-      { error: "Database connection failed" },
+      { error: "error_servidor" },
       { status: 500 },
     );
   }

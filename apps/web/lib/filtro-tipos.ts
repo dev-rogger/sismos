@@ -14,13 +14,12 @@ export interface FiltroHistorial {
 
 export const RANGOS_MAGNITUD: {
   valor: RangoMagnitud;
-  etiqueta: string;
   min: number;
   max: number;
 }[] = [
-  { valor: "leve", etiqueta: "Leve (M2–4)", min: 2, max: 4 },
-  { valor: "moderado", etiqueta: "Moderado (M4–6)", min: 4, max: 6 },
-  { valor: "fuerte", etiqueta: "Fuerte (M6+)", min: 6, max: Infinity },
+  { valor: "leve", min: 2, max: 4 },
+  { valor: "moderado", min: 4, max: 6 },
+  { valor: "fuerte", min: 6, max: Infinity },
 ];
 
 export const TODOS_LOS_RANGOS: RangoMagnitud[] = RANGOS_MAGNITUD.map(
@@ -38,14 +37,13 @@ export function magnitudPasaRangos(
 
 export const VENTANAS_TIEMPO: {
   valor: VentanaTiempo;
-  etiqueta: string;
   horas: number | null;
 }[] = [
-  { valor: "6h", etiqueta: "Últimas 6 horas", horas: 6 },
-  { valor: "24h", etiqueta: "Últimas 24 horas", horas: 24 },
-  { valor: "3d", etiqueta: "Últimos 3 días", horas: 72 },
-  { valor: "5d", etiqueta: "Últimos 5 días", horas: 120 },
-  { valor: "10d", etiqueta: "Últimos 10 días", horas: null },
+  { valor: "6h", horas: 6 },
+  { valor: "24h", horas: 24 },
+  { valor: "3d", horas: 72 },
+  { valor: "5d", horas: 120 },
+  { valor: "10d", horas: null },
 ];
 
 export function fechaPasaVentana(

@@ -7,6 +7,13 @@ import { useTranslations } from "next-intl";
 import { marcarLogin } from "../../lib/auth-toast-marker";
 import IconoSpinner from "../../components/IconoSpinner";
 
+const CODIGOS_ERROR_REGISTRO: Record<string, string> = {
+  email_invalido: "emailInvalido",
+  password_corta: "passwordCorta",
+  email_existente: "emailExistente",
+  error_servidor: "errorGenerico",
+};
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -35,7 +42,9 @@ function LoginForm() {
         });
         if (!res.ok) {
           const data = (await res.json()) as { error?: string };
-          setError(data.error ?? t("errorCrearCuenta"));
+          const codigo = data.error;
+          const clave = codigo ? CODIGOS_ERROR_REGISTRO[codigo] : undefined;
+          setError(clave ? t(clave) : t("errorCrearCuenta"));
           return;
         }
       }

@@ -127,6 +127,9 @@
     "errorCrearCuenta": "We couldn't create the account",
     "credencialesIncorrectas": "Incorrect email or password",
     "errorGenerico": "Something went wrong, please try again",
+    "emailInvalido": "Invalid email",
+    "passwordCorta": "Password must be at least 8 characters",
+    "emailExistente": "An account with that email already exists",
     "yaTienesCuenta": "Already have an account? Sign in",
     "noTienesCuenta": "Don't have an account? Sign up"
   },

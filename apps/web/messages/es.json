@@ -127,6 +127,9 @@
     "errorCrearCuenta": "No se pudo crear la cuenta",
     "credencialesIncorrectas": "Email o contraseña incorrectos",
     "errorGenerico": "Ocurrió un error, intenta de nuevo",
+    "emailInvalido": "Email inválido",
+    "passwordCorta": "La contraseña debe tener al menos 8 caracteres",
+    "emailExistente": "Ya existe una cuenta con ese email",
     "yaTienesCuenta": "¿Ya tienes cuenta? Iniciar sesión",
     "noTienesCuenta": "¿No tienes cuenta? Regístrate"
   },

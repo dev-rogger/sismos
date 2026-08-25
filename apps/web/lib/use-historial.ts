@@ -17,10 +17,10 @@ export interface ItemHistorial {
   ubicacionAproximada?: boolean;
 }
 
-export const OPCIONES_TIPO: { valor: TipoHistorial; etiqueta: string }[] = [
-  { valor: "ultimos10dias", etiqueta: "Últimos 10 días" },
-  { valor: "top10anios", etiqueta: "Top 10 últimos 10 años" },
-  { valor: "historico", etiqueta: "Los más poderosos de la historia" },
+export const OPCIONES_TIPO: { valor: TipoHistorial }[] = [
+  { valor: "ultimos10dias" },
+  { valor: "top10anios" },
+  { valor: "historico" },
 ];
 
 interface UseHistorialParams {
