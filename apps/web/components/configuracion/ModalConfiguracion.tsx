@@ -240,13 +240,13 @@ function ModalConfiguracionContenido({
       {permission === "unsupported" && (
         <p className="text-sm text-neutral-400">
           Tu navegador o dispositivo no soporta notificaciones push. En iPhone,
-          primero agregá esta app a la pantalla de inicio.
+          primero agrega esta app a la pantalla de inicio.
         </p>
       )}
 
       {permission === "denied" && (
         <p className="text-sm text-neutral-400">
-          Bloqueaste las notificaciones para este sitio. Para activarlas, cambiá
+          Bloqueaste las notificaciones para este sitio. Para activarlas, cambia
           el permiso desde la configuración de notificaciones de tu navegador.
         </p>
       )}
@@ -295,7 +295,7 @@ function ModalConfiguracionContenido({
           </button>
           {errorActivar && (
             <p className="mt-2 text-xs text-red-400">
-              No pudimos activar las notificaciones. Probá de nuevo.
+              No pudimos activar las notificaciones. Prueba de nuevo.
             </p>
           )}
 
@@ -467,7 +467,7 @@ function ModalConfiguracionContenido({
                 </button>
                 {estadoGuardado === "error" && (
                   <p className="mt-2 text-xs text-red-400">
-                    No pudimos guardar los cambios. Probá de nuevo.
+                    No pudimos guardar los cambios. Prueba de nuevo.
                   </p>
                 )}
               </>

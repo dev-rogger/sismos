@@ -14,7 +14,7 @@ function LoginForm() {
   const [nombre, setNombre] = useState("");
   const [error, setError] = useState<string | null>(() =>
     searchParams.get("error")
-      ? "No se pudo iniciar sesión con Google. Intentá de nuevo."
+      ? "No se pudo iniciar sesión con Google. Intenta de nuevo."
       : null,
   );
   const [cargando, setCargando] = useState(false);
@@ -50,7 +50,7 @@ function LoginForm() {
       }
       router.push("/");
     } catch {
-      setError("Ocurrió un error, intentá de nuevo");
+      setError("Ocurrió un error, intenta de nuevo");
     } finally {
       setCargando(false);
     }
@@ -163,8 +163,8 @@ function LoginForm() {
           className="mt-4 w-full touch-manipulation text-center text-xs text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:text-neutral-200"
         >
           {modoRegistro
-            ? "¿Ya tenés cuenta? Iniciar sesión"
-            : "¿No tenés cuenta? Registrate"}
+            ? "¿Ya tienes cuenta? Iniciar sesión"
+            : "¿No tienes cuenta? Regístrate"}
         </button>
       </div>
     </main>

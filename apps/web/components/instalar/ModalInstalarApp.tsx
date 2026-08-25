@@ -64,7 +64,7 @@ export default function ModalInstalarApp({
 
   // Mismo patrón que ModalConfiguracion: el contenido se remonta (vía
   // `key`) cada vez que el modal pasa de cerrado a abierto, para que
-  // siempre arranque en el picker "¿Qué usás?" en vez de recordar la
+  // siempre arranque en el picker "¿Qué estás usando?" en vez de recordar la
   // plataforma elegida en la apertura anterior.
   const [visiblePrevio, setVisiblePrevio] = useState(visible);
   const [aperturaId, setAperturaId] = useState(0);
@@ -116,14 +116,47 @@ function ModalInstalarAppContenido({
   onDescartar: () => void;
 }) {
   const [vista, setVista] = useState<Vista>("picker");
+  const [mostrarInfoPwa, setMostrarInfoPwa] = useState(false);
 
   if (vista === "picker") {
     return (
       <div key="picker" className="pantalla-entrada">
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-neutral-100">
-            Instalá la app
-          </h2>
+          <div className="relative flex items-center gap-1">
+            <h2 className="text-base font-semibold text-neutral-100">
+              Instala la app
+            </h2>
+            <button
+              type="button"
+              onClick={() => setMostrarInfoPwa((v) => !v)}
+              aria-label="¿Qué es una PWA?"
+              aria-expanded={mostrarInfoPwa}
+              className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-500 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-300"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
+            </button>
+            {mostrarInfoPwa && (
+              <div
+                role="tooltip"
+                className="absolute top-full left-0 z-10 mt-1 w-52 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-xs text-neutral-300 shadow-lg"
+              >
+                Una PWA es una app web que se instala como una app normal:
+                ícono propio, pantalla completa y notificaciones.
+              </div>
+            )}
+          </div>
           <button
             type="button"
             onClick={onDescartar}
@@ -133,7 +166,7 @@ function ModalInstalarAppContenido({
             ✕
           </button>
         </div>
-        <p className="mb-4 text-sm text-neutral-400">
+        <p className="mb-4 text-center text-sm text-neutral-400">
           ¿Qué estás usando? Te mostramos los pasos para tu dispositivo.
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -188,14 +221,14 @@ function ModalInstalarAppContenido({
           <IconoVolver />
         </button>
         <h2 className="text-base font-semibold text-neutral-100">
-          Instalá la app
+          Instala la app
         </h2>
       </div>
 
       {vista === "ios" ? (
         <>
-          <p className="text-sm text-neutral-400">
-            Tocá el ícono Compartir (⬆️) en la barra del navegador y elegí
+          <p className="text-center text-sm text-neutral-400">
+            Toca el ícono Compartir (⬆️) en la barra del navegador y elige
             &quot;Agregar a inicio&quot;. En iPhone las notificaciones de
             sismos solo funcionan así — y en general se siente como una app
             real, a pantalla completa.
@@ -210,8 +243,8 @@ function ModalInstalarAppContenido({
         </>
       ) : puedeInstalarNativo ? (
         <>
-          <p className="text-sm text-neutral-400">
-            Agregá Sismos a tu pantalla de inicio: se abre a pantalla
+          <p className="text-center text-sm text-neutral-400">
+            Agrega Sismos a tu pantalla de inicio: se abre a pantalla
             completa, con su propio ícono, y se siente como una app real.
           </p>
           <div className="mt-4 flex gap-2">
@@ -233,8 +266,8 @@ function ModalInstalarAppContenido({
         </>
       ) : (
         <>
-          <p className="text-sm text-neutral-400">
-            Abrí el menú ⋮ del navegador y elegí &quot;Instalar app&quot; o
+          <p className="text-center text-sm text-neutral-400">
+            Abre el menú ⋮ del navegador y elige &quot;Instalar app&quot; o
             &quot;Agregar a pantalla de inicio&quot;.
           </p>
           <button
