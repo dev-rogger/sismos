@@ -327,6 +327,7 @@ export default function MenuLateral({
                 }),
               )
             }
+            aria-label={`${t("idioma")}: ${locale === "es" ? "English" : "Español"}`}
             className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
           >
             <IconoIdioma />

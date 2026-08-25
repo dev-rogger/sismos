@@ -287,7 +287,7 @@ function ModalConfiguracionContenido({
             }`}
           >
             {loading ? (
-              <IconoSpinner className="h-4 w-4" />
+              <IconoSpinner className="h-4 w-4" label={tc("cargando")} />
             ) : suscrito ? (
               t("desactivar")
             ) : (

@@ -4,7 +4,8 @@
     "volver": "Back",
     "entendido": "Got it",
     "ahoraNo": "Not now",
-    "guardar": "Save"
+    "guardar": "Save",
+    "cargando": "Loading"
   },
   "menu": {
     "titulo": "Menu",

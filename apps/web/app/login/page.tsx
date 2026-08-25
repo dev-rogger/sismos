@@ -155,7 +155,7 @@ function LoginForm() {
             className="mt-1 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border border-sky-500 bg-sky-500/10 px-3 text-sm font-medium text-sky-400 transition active:scale-[0.97] active:brightness-95 disabled:opacity-50"
           >
             {cargando ? (
-              <IconoSpinner className="h-4 w-4" />
+              <IconoSpinner className="h-4 w-4" label={tc("cargando")} />
             ) : modoRegistro ? (
               t("crearCuenta")
             ) : (
