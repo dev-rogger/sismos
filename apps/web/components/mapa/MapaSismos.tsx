@@ -532,8 +532,15 @@ export default function MapaSismos({
       }
       if (map.getSource(FUENTE_ONDA)) map.removeSource(FUENTE_ONDA);
     };
+    // El texto visible de la fecha en el popup (no solo el aria-label) sale
+    // de acá (construirHtmlPopup usa localeFecha), así que `locale` va en
+    // el array de deps: si el usuario cambia de idioma con un popup ya
+    // abierto, el efecto se vuelve a correr y el cleanup de arriba
+    // desmonta marker/popup/fuentes antes de recrearlos con el idioma
+    // nuevo. `t` (referencia inestable de useTranslations) sigue fuera del
+    // array a propósito, de ahí el disable puntual.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sismoSeleccionado]);
+  }, [sismoSeleccionado, locale]);
 
   useEffect(() => {
     const map = mapRef.current;
