@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { usePushNotifications } from "../../lib/use-push-notifications";
 import IconoSpinner from "../IconoSpinner";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
@@ -29,6 +30,7 @@ export default function ModalConfiguracion({
 }: ModalConfiguracionProps) {
   const contenedorRef = useRef<HTMLDivElement>(null);
   useOverlayAccesible(abierto, onCerrar, contenedorRef);
+  const t = useTranslations("configuracion");
 
   // El contenido se remonta (vía `key`) cada vez que el modal pasa de
   // cerrado a abierto, para que sus useState nazcan ya con el valor
@@ -56,7 +58,7 @@ export default function ModalConfiguracion({
         ref={contenedorRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Notificaciones"
+        aria-label={t("titulo")}
         onClick={(e) => e.stopPropagation()}
         className={`w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
           abierto ? "scale-100" : "scale-95"
@@ -119,6 +121,8 @@ function ModalConfiguracionContenido({
   onPedirUbicacion,
   onSetRadioKm,
 }: ModalConfiguracionProps) {
+  const t = useTranslations("configuracion");
+  const tc = useTranslations("comun");
   const {
     permission,
     suscrito,
@@ -226,12 +230,12 @@ function ModalConfiguracionContenido({
     <>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-base font-semibold text-neutral-100">
-          Notificaciones
+          {t("titulo")}
         </h2>
         <button
           type="button"
           onClick={onCerrar}
-          aria-label="Cerrar"
+          aria-label={tc("cerrar")}
           className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
         >
           ✕
@@ -239,17 +243,11 @@ function ModalConfiguracionContenido({
       </div>
 
       {permission === "unsupported" && (
-        <p className="text-sm text-neutral-400">
-          Tu navegador o dispositivo no soporta notificaciones push. En iPhone,
-          primero agrega esta app a la pantalla de inicio.
-        </p>
+        <p className="text-sm text-neutral-400">{t("noSoportado")}</p>
       )}
 
       {permission === "denied" && (
-        <p className="text-sm text-neutral-400">
-          Bloqueaste las notificaciones para este sitio. Para activarlas, cambia
-          el permiso desde la configuración de notificaciones de tu navegador.
-        </p>
+        <p className="text-sm text-neutral-400">{t("bloqueado")}</p>
       )}
 
       {(permission === "default" || permission === "granted") && (
@@ -291,15 +289,13 @@ function ModalConfiguracionContenido({
             {loading ? (
               <IconoSpinner className="h-4 w-4" />
             ) : suscrito ? (
-              "Desactivar notificaciones"
+              t("desactivar")
             ) : (
-              "Activar con esta configuración"
+              t("activar")
             )}
           </button>
           {errorActivar && (
-            <p className="mt-2 text-xs text-red-400">
-              No pudimos activar las notificaciones. Prueba de nuevo.
-            </p>
+            <p className="mt-2 text-xs text-red-400">{t("errorActivar")}</p>
           )}
 
           {/* El panel de umbral/radio/alcance se muestra siempre, esté
@@ -314,7 +310,7 @@ function ModalConfiguracionContenido({
               htmlFor="umbral-push"
               className="mb-2 block text-xs text-neutral-400"
             >
-              Avisar desde M{umbralLocal}+
+              {t("avisarDesde", { umbral: umbralLocal })}
             </label>
             <input
               id="umbral-push"
@@ -341,12 +337,12 @@ function ModalConfiguracionContenido({
                 mundialLocal. */}
             <div className="mt-4 border-t border-neutral-800 pt-4">
               <span className="mb-2 block text-xs text-neutral-400">
-                Alcance
+                {t("alcance")}
               </span>
 
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-neutral-400">
-                  Sin límite de distancia (dentro de Chile)
+                  {t("sinLimiteDistancia")}
                 </span>
                 <SwitchToggle
                   checked={mundialLocal}
@@ -414,8 +410,7 @@ function ModalConfiguracionContenido({
 
               <div className="mt-3 flex items-center justify-between gap-3 border-t border-neutral-800 pt-3">
                 <span className="text-xs text-neutral-400">
-                  Avisarme también de terremotos M7+ en cualquier país, sin
-                  importar la distancia
+                  {t("avisarM7Global")}
                 </span>
                 <SwitchToggle
                   checked={alcanceMundialLocal}
@@ -465,12 +460,12 @@ function ModalConfiguracionContenido({
                   {guardando
                     ? "Guardando…"
                     : estadoGuardado === "guardado"
-                      ? "Guardado ✓"
-                      : "Guardar"}
+                      ? t("guardado")
+                      : tc("guardar")}
                 </button>
                 {estadoGuardado === "error" && (
                   <p className="mt-2 text-xs text-red-400">
-                    No pudimos guardar los cambios. Prueba de nuevo.
+                    {t("errorGuardar")}
                   </p>
                 )}
               </>

@@ -63,5 +63,19 @@
       "top10anios": "Top 10 últimos 10 años",
       "historico": "Los más poderosos de la historia"
     }
+  },
+  "configuracion": {
+    "titulo": "Notificaciones",
+    "activar": "Activar con esta configuración",
+    "desactivar": "Desactivar notificaciones",
+    "avisarDesde": "Avisar desde M{umbral}+",
+    "alcance": "Alcance",
+    "sinLimiteDistancia": "Sin límite de distancia (dentro de Chile)",
+    "avisarM7Global": "Avisarme también de terremotos M7+ en cualquier país, sin importar la distancia",
+    "guardado": "Guardado ✓",
+    "errorActivar": "No pudimos activar las notificaciones. Prueba de nuevo.",
+    "errorGuardar": "No pudimos guardar los cambios. Prueba de nuevo.",
+    "noSoportado": "Tu navegador o dispositivo no soporta notificaciones push. En iPhone, primero agrega esta app a la pantalla de inicio.",
+    "bloqueado": "Bloqueaste las notificaciones para este sitio. Para activarlas, cambia el permiso desde la configuración de notificaciones de tu navegador."
   }
 }
