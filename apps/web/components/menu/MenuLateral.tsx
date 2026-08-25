@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useSession, signOut } from "next-auth/react";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 import { marcarLogout } from "../../lib/auth-toast-marker";
@@ -129,6 +130,7 @@ export default function MenuLateral({
   onAbrirInstalarApp,
   onAbiertoChange,
 }: MenuLateralProps) {
+  const t = useTranslations("menu");
   const [abierto, setAbierto] = useState(false);
   const { compartir, enlaceCopiado } = useCompartir();
   const [adminAbierto, setAdminAbierto] = useState(false);
@@ -158,7 +160,7 @@ export default function MenuLateral({
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        aria-label="Abrir menú"
+        aria-label={t("abrirMenu")}
         style={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
         className="fixed left-3 z-10 flex min-h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
       >
@@ -188,7 +190,7 @@ export default function MenuLateral({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Menú"
+        aria-label={t("titulo")}
         style={{
           paddingTop: "env(safe-area-inset-top)",
           paddingBottom: "env(safe-area-inset-bottom)",
@@ -198,11 +200,13 @@ export default function MenuLateral({
         }`}
       >
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <h2 className="text-base font-semibold text-neutral-100">Menú</h2>
+          <h2 className="text-base font-semibold text-neutral-100">
+            {t("titulo")}
+          </h2>
           <button
             type="button"
             onClick={() => setAbierto(false)}
-            aria-label="Cerrar menú"
+            aria-label={t("cerrarMenu")}
             className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
           >
             ✕
@@ -216,7 +220,7 @@ export default function MenuLateral({
             className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95 lg:hidden"
           >
             <IconoHistorial />
-            Sismos
+            {t("sismos")}
           </button>
           <button
             type="button"
@@ -224,7 +228,7 @@ export default function MenuLateral({
             className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
           >
             <IconoFallas />
-            Fallas
+            {t("fallas")}
           </button>
           <button
             type="button"
@@ -232,7 +236,7 @@ export default function MenuLateral({
             className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
           >
             <IconoNotificaciones />
-            Notificaciones
+            {t("notificaciones")}
           </button>
           <button
             type="button"
@@ -251,7 +255,7 @@ export default function MenuLateral({
                 className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
               >
                 <IconoAdmin />
-                Admin
+                {t("admin")}
                 <IconoChevron
                   className={`ml-auto h-4 w-4 shrink-0 text-neutral-500 transition-transform duration-150 ${
                     adminAbierto ? "rotate-180" : ""
@@ -265,14 +269,14 @@ export default function MenuLateral({
                     onClick={() => elegir(() => router.push("/admin/usuarios"))}
                     className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
                   >
-                    Usuarios
+                    {t("usuarios")}
                   </button>
                   <button
                     type="button"
                     onClick={() => elegir(() => router.push("/admin/reportes"))}
                     className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
                   >
-                    Reportes
+                    {t("reportes")}
                   </button>
                 </div>
               )}
@@ -288,7 +292,7 @@ export default function MenuLateral({
               className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
             >
               <IconoInstalar />
-              Instalar app
+              {t("instalarApp")}
             </button>
           )}
           {session ? (
@@ -343,7 +347,7 @@ export default function MenuLateral({
                       }
                       className="flex min-h-11 w-full touch-manipulation items-center px-3 text-left text-sm font-medium text-neutral-200 transition duration-150 hover:bg-neutral-700 active:scale-[0.97] active:bg-neutral-700 active:brightness-95"
                     >
-                      Cerrar sesión
+                      {t("cerrarSesion")}
                     </button>
                   </div>
                 </>
@@ -356,7 +360,7 @@ export default function MenuLateral({
               className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
             >
               <IconoUsuario />
-              Iniciar sesión
+              {t("iniciarSesion")}
             </button>
           )}
         </div>

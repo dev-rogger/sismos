@@ -5,5 +5,19 @@
     "entendido": "Entendido",
     "ahoraNo": "Ahora no",
     "guardar": "Guardar"
+  },
+  "menu": {
+    "titulo": "Menú",
+    "abrirMenu": "Abrir menú",
+    "cerrarMenu": "Cerrar menú",
+    "sismos": "Sismos",
+    "fallas": "Fallas",
+    "notificaciones": "Notificaciones",
+    "admin": "Admin",
+    "usuarios": "Usuarios",
+    "reportes": "Reportes",
+    "instalarApp": "Instalar app",
+    "iniciarSesion": "Iniciar sesión",
+    "cerrarSesion": "Cerrar sesión"
   }
 }
