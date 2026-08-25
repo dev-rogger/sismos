@@ -23,6 +23,7 @@ export default function ModalFiltroMapa({
   const contenedorRef = useRef<HTMLDivElement>(null);
   useOverlayAccesible(abierto, onCerrar, contenedorRef);
   const t = useTranslations("filtro");
+  const tc = useTranslations("comun");
 
   return (
     <div
@@ -51,7 +52,7 @@ export default function ModalFiltroMapa({
           <button
             type="button"
             onClick={onCerrar}
-            aria-label="Cerrar"
+            aria-label={tc("cerrar")}
             className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
           >
             ✕
