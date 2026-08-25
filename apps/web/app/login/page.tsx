@@ -3,20 +3,21 @@
 import { Suspense, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { marcarLogin } from "../../lib/auth-toast-marker";
 import IconoSpinner from "../../components/IconoSpinner";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("login");
+  const tc = useTranslations("comun");
   const [modoRegistro, setModoRegistro] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nombre, setNombre] = useState("");
   const [error, setError] = useState<string | null>(() =>
-    searchParams.get("error")
-      ? "No se pudo iniciar sesión con Google. Intenta de nuevo."
-      : null,
+    searchParams.get("error") ? t("errorGoogle") : null,
   );
   const [cargando, setCargando] = useState(false);
 
@@ -34,7 +35,7 @@ function LoginForm() {
         });
         if (!res.ok) {
           const data = (await res.json()) as { error?: string };
-          setError(data.error ?? "No se pudo crear la cuenta");
+          setError(data.error ?? t("errorCrearCuenta"));
           return;
         }
       }
@@ -46,12 +47,12 @@ function LoginForm() {
         redirect: false,
       });
       if (resultado?.error) {
-        setError("Email o contraseña incorrectos");
+        setError(t("credencialesIncorrectas"));
         return;
       }
       router.push("/");
     } catch {
-      setError("Ocurrió un error, intenta de nuevo");
+      setError(t("errorGenerico"));
     } finally {
       setCargando(false);
     }
@@ -62,21 +63,18 @@ function LoginForm() {
       <div className="w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-6 shadow-lg">
         <div className="mb-1 flex items-center justify-between gap-2">
           <h1 className="text-lg font-semibold text-neutral-100">
-            {modoRegistro ? "Crear cuenta" : "Iniciar sesión"}
+            {modoRegistro ? t("crearCuenta") : t("iniciarSesion")}
           </h1>
           <button
             type="button"
             onClick={() => router.push("/")}
-            aria-label="Cerrar"
+            aria-label={tc("cerrar")}
             className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
           >
             ✕
           </button>
         </div>
-        <p className="mb-5 text-xs text-neutral-400">
-          Opcional — sirve para que tus notificaciones no se pierdan al
-          cambiar de dispositivo.
-        </p>
+        <p className="mb-5 text-xs text-neutral-400">{t("subtitulo")}</p>
 
         <button
           type="button"
@@ -104,12 +102,12 @@ function LoginForm() {
               d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
             />
           </svg>
-          Continuar con Google
+          {t("continuarGoogle")}
         </button>
 
         <div className="my-4 flex items-center gap-3 text-xs text-neutral-500">
           <div className="h-px flex-1 bg-neutral-800" />
-          o
+          {t("o")}
           <div className="h-px flex-1 bg-neutral-800" />
         </div>
 
@@ -117,7 +115,7 @@ function LoginForm() {
           {modoRegistro && (
             <input
               type="text"
-              placeholder="Nombre (opcional)"
+              placeholder={t("nombrePlaceholder")}
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-sky-500 focus:outline-none"
@@ -126,7 +124,7 @@ function LoginForm() {
           <input
             type="email"
             required
-            placeholder="Email"
+            placeholder={t("emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-sky-500 focus:outline-none"
@@ -134,7 +132,7 @@ function LoginForm() {
           <input
             type="password"
             required
-            placeholder="Contraseña"
+            placeholder={t("contrasenaPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-sky-500 focus:outline-none"
@@ -150,9 +148,9 @@ function LoginForm() {
             {cargando ? (
               <IconoSpinner className="h-4 w-4" />
             ) : modoRegistro ? (
-              "Crear cuenta"
+              t("crearCuenta")
             ) : (
-              "Iniciar sesión"
+              t("iniciarSesion")
             )}
           </button>
         </form>
@@ -165,9 +163,7 @@ function LoginForm() {
           }}
           className="mt-4 w-full touch-manipulation text-center text-xs text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:text-neutral-200"
         >
-          {modoRegistro
-            ? "¿Ya tienes cuenta? Iniciar sesión"
-            : "¿No tienes cuenta? Regístrate"}
+          {modoRegistro ? t("yaTienesCuenta") : t("noTienesCuenta")}
         </button>
       </div>
     </main>

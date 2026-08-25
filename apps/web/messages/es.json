@@ -111,5 +111,21 @@
     "mensaje": "🌎📍 Sismos de Chile y el mundo en tiempo real. Míralo acá:",
     "enlaceCopiado": "Enlace copiado",
     "errorCompartir": "No se pudo compartir"
+  },
+  "login": {
+    "iniciarSesion": "Iniciar sesión",
+    "crearCuenta": "Crear cuenta",
+    "subtitulo": "Opcional — sirve para que tus notificaciones no se pierdan al cambiar de dispositivo.",
+    "continuarGoogle": "Continuar con Google",
+    "o": "o",
+    "nombrePlaceholder": "Nombre (opcional)",
+    "emailPlaceholder": "Email",
+    "contrasenaPlaceholder": "Contraseña",
+    "errorGoogle": "No se pudo iniciar sesión con Google. Intenta de nuevo.",
+    "errorCrearCuenta": "No se pudo crear la cuenta",
+    "credencialesIncorrectas": "Email o contraseña incorrectos",
+    "errorGenerico": "Ocurrió un error, intenta de nuevo",
+    "yaTienesCuenta": "¿Ya tienes cuenta? Iniciar sesión",
+    "noTienesCuenta": "¿No tienes cuenta? Regístrate"
   }
 }
