@@ -62,6 +62,15 @@ export function useInstalarApp(bloqueado = false) {
   const [visible, setVisible] = useState(false);
   const [pendiente, setPendiente] = useState(false);
   const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
+  // `plataforma === "android"` no garantiza que instalar() pueda completar
+  // algo: el navegador entrega el evento beforeinstallprompt una sola vez y
+  // lo consumimos (o lo perdemos si el usuario ya lo descartó) en
+  // deferredPromptRef, una ref que no re-renderiza. Este estado espeja si
+  // ese ref tiene contenido ahora mismo, para que el modal pueda elegir
+  // entre el botón "Instalar" real o instrucciones manuales cuando alguien
+  // reabre el aviso (p. ej. desde el ítem "Instalar app" del menú) después
+  // de que el prompt nativo ya se usó o nunca llegó a dispararse.
+  const [promptDisponible, setPromptDisponible] = useState(false);
 
   useEffect(() => {
     if (estaStandalone()) return;
@@ -76,12 +85,14 @@ export function useInstalarApp(bloqueado = false) {
       deferredPromptRef.current = event as BeforeInstallPromptEvent;
       setPlataforma("android");
       setPuedeInstalar(true);
+      setPromptDisponible(true);
     };
 
     const manejarAppInstalled = () => {
       marcarInstalada();
       setVisible(false);
       setPuedeInstalar(false);
+      setPromptDisponible(false);
     };
 
     window.addEventListener("beforeinstallprompt", manejarBeforeInstallPrompt);
@@ -139,6 +150,7 @@ export function useInstalarApp(bloqueado = false) {
       descartar();
     } finally {
       deferredPromptRef.current = null;
+      setPromptDisponible(false);
     }
   }, [descartar]);
 
@@ -146,5 +158,13 @@ export function useInstalarApp(bloqueado = false) {
     setVisible(true);
   }, []);
 
-  return { puedeInstalar, plataforma, visible, instalar, descartar, abrirManual };
+  return {
+    puedeInstalar,
+    plataforma,
+    promptDisponible,
+    visible,
+    instalar,
+    descartar,
+    abrirManual,
+  };
 }

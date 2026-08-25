@@ -44,6 +44,7 @@ export default function MapaConHistorial({
   const {
     puedeInstalar,
     plataforma,
+    promptDisponible,
     visible: instalarVisible,
     instalar,
     descartar,
@@ -133,6 +134,7 @@ export default function MapaConHistorial({
       <ModalInstalarApp
         visible={instalarVisible}
         plataforma={plataforma}
+        promptDisponible={promptDisponible}
         onInstalar={instalar}
         onDescartar={descartar}
       />

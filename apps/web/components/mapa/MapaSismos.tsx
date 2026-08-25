@@ -10,6 +10,8 @@ import {
 } from "./marcador";
 import BotonFiltroMapa from "./BotonFiltroMapa";
 import BotonFallasMapa from "./BotonFallasMapa";
+import IconoCompartir from "../IconoCompartir";
+import { useCompartir } from "../../lib/use-compartir";
 import { magnitudPasaRangos, fechaPasaVentana } from "../../lib/filtro-tipos";
 import type { FiltroMapa } from "../../lib/filtro-tipos";
 import { colorPorMagnitud, colorTextoPorMagnitud } from "../../lib/magnitud";
@@ -153,6 +155,7 @@ export default function MapaSismos({
   const onSeleccionarFallaRef = useRef(onSeleccionarFalla);
   onSeleccionarFallaRef.current = onSeleccionarFalla;
   const [errorConexion, setErrorConexion] = useState(false);
+  const { compartir } = useCompartir();
 
   function crearMarcador(
     map: maplibregl.Map,
@@ -650,8 +653,16 @@ export default function MapaSismos({
       </div>
       <div
         style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
-        className="absolute right-3 z-10 flex items-center gap-2"
+        className="absolute right-3 z-10 flex flex-col items-end gap-2"
       >
+        <button
+          type="button"
+          onClick={compartir}
+          aria-label="Compartir"
+          className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
+        >
+          <IconoCompartir />
+        </button>
         <button
           type="button"
           onClick={async () => {
