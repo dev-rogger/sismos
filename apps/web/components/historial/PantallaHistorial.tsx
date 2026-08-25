@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import ListaHistorial from "./ListaHistorial";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 import type { SismoSeleccionado } from "../../lib/tipos-sismo";
@@ -18,6 +19,8 @@ export default function PantallaHistorial({
   onSeleccionar,
   onCerrar,
 }: PantallaHistorialProps) {
+  const t = useTranslations("historial");
+  const tc = useTranslations("comun");
   useOverlayAccesible(abierto, onCerrar);
 
   // Queda montada permanentemente (para poder animar su cierre en vez de
@@ -42,7 +45,7 @@ export default function PantallaHistorial({
         <button
           type="button"
           onClick={onCerrar}
-          aria-label="Volver"
+          aria-label={tc("volver")}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-300 hover:bg-neutral-800"
         >
           <svg
@@ -58,7 +61,7 @@ export default function PantallaHistorial({
           </svg>
         </button>
         <h1 className="text-base font-semibold text-neutral-100">
-          Historial de sismos
+          {t("titulo")}
         </h1>
       </div>
 

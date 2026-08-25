@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { formatearCoordenadas } from "../../lib/coordenadas";
 import { colorPorMagnitud } from "../../lib/magnitud";
 import { regionChilePorLatitud } from "@sismos/shared";
@@ -43,6 +44,7 @@ export default function ListaHistorial({
   sismoSeleccionado,
   onSeleccionar,
 }: ListaHistorialProps) {
+  const t = useTranslations("historial");
   const [filtro, setFiltro] = useState<FiltroHistorial>(
     FILTRO_HISTORIAL_DEFAULT,
   );
@@ -70,7 +72,7 @@ export default function ListaHistorial({
           >
             {OPCIONES_TIPO.map((opcion) => (
               <option key={opcion.valor} value={opcion.valor}>
-                {opcion.etiqueta}
+                {t(`tipo.${opcion.valor}`)}
               </option>
             ))}
           </select>
@@ -89,7 +91,7 @@ export default function ListaHistorial({
               : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
           }`}
         >
-          🇨🇱 Solo Chile
+          {t("soloChile")}
         </button>
 
         <div className="mt-2">
@@ -102,28 +104,28 @@ export default function ListaHistorial({
 
       {loading ? (
         <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-neutral-500">
-          Cargando sismos…
+          {t("cargando")}
         </div>
       ) : error ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center text-sm text-neutral-500">
-          <p>No se pudo cargar el historial de sismos.</p>
+          <p>{t("errorCarga")}</p>
           <button
             type="button"
             onClick={reintentar}
             className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
           >
-            Reintentar
+            {t("reintentar")}
           </button>
         </div>
       ) : eventosFiltrados.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center text-sm text-neutral-500">
-          <p>Sin sismos para estos filtros</p>
+          <p>{t("sinResultados")}</p>
           <button
             type="button"
             onClick={() => setFiltro(FILTRO_HISTORIAL_DEFAULT)}
             className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
           >
-            Quitar filtros
+            {t("quitarFiltros")}
           </button>
         </div>
       ) : (
@@ -164,11 +166,14 @@ export default function ListaHistorial({
                     {formatearCoordenadas(evento.latitud, evento.longitud)}
                   </div>
                   <div className="text-neutral-400">
-                    M{evento.magnitud} —{" "}
-                    {new Date(evento.fecha).toLocaleString("es-CL")}
+                    {t("magnitudFecha", {
+                      magnitud: evento.magnitud,
+                      // TODO Tarea 12: usar el locale actual
+                      fecha: new Date(evento.fecha).toLocaleString("es-CL"),
+                    })}
                   </div>
                   <div className="text-xs text-neutral-500">
-                    {Math.round(evento.profundidadKm)} km de profundidad
+                    {t("profundidad", { n: Math.round(evento.profundidadKm) })}
                   </div>
                 </button>
               </li>

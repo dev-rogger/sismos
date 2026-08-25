@@ -47,5 +47,21 @@
       "5d": "Últimos 5 días",
       "10d": "Últimos 10 días"
     }
+  },
+  "historial": {
+    "titulo": "Historial de sismos",
+    "soloChile": "🇨🇱 Solo Chile",
+    "cargando": "Cargando sismos…",
+    "errorCarga": "No se pudo cargar el historial de sismos.",
+    "reintentar": "Reintentar",
+    "sinResultados": "Sin sismos para estos filtros",
+    "quitarFiltros": "Quitar filtros",
+    "profundidad": "{n} km de profundidad",
+    "magnitudFecha": "M{magnitud} — {fecha}",
+    "tipo": {
+      "ultimos10dias": "Últimos 10 días",
+      "top10anios": "Top 10 últimos 10 años",
+      "historico": "Los más poderosos de la historia"
+    }
   }
 }
