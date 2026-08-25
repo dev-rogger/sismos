@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { listUsers } from "@sismos/db";
+import { getTranslations } from "next-intl/server";
 
 export default async function AdminUsuariosPage() {
   const usuarios = await listUsers();
+  const t = await getTranslations("admin");
+  const tc = await getTranslations("comun");
 
   return (
     <main className="pantalla-entrada min-h-screen bg-neutral-950 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
@@ -10,7 +13,7 @@ export default async function AdminUsuariosPage() {
         <div className="mb-4 flex items-center gap-2">
           <Link
             href="/"
-            aria-label="Volver"
+            aria-label={tc("volver")}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100"
           >
             <svg
@@ -26,21 +29,23 @@ export default async function AdminUsuariosPage() {
             </svg>
           </Link>
           <h1 className="text-lg font-semibold text-neutral-100">
-            Usuarios registrados
+            {t("usuariosRegistrados")}
           </h1>
         </div>
 
         {usuarios.length === 0 ? (
-          <p className="text-sm text-neutral-500">Sin usuarios registrados</p>
+          <p className="text-sm text-neutral-500">{t("sinUsuarios")}</p>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-neutral-800">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-neutral-800 bg-neutral-900 text-neutral-400">
-                  <th className="px-3 py-2 font-medium">Email</th>
-                  <th className="px-3 py-2 font-medium">Nombre</th>
-                  <th className="px-3 py-2 font-medium">Rol</th>
-                  <th className="px-3 py-2 font-medium">Registrado</th>
+                  <th className="px-3 py-2 font-medium">{t("colEmail")}</th>
+                  <th className="px-3 py-2 font-medium">{t("colNombre")}</th>
+                  <th className="px-3 py-2 font-medium">{t("colRol")}</th>
+                  <th className="px-3 py-2 font-medium">
+                    {t("colRegistrado")}
+                  </th>
                 </tr>
               </thead>
               <tbody>

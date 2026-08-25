@@ -127,5 +127,15 @@
     "errorGenerico": "Ocurrió un error, intenta de nuevo",
     "yaTienesCuenta": "¿Ya tienes cuenta? Iniciar sesión",
     "noTienesCuenta": "¿No tienes cuenta? Regístrate"
+  },
+  "admin": {
+    "usuariosRegistrados": "Usuarios registrados",
+    "sinUsuarios": "Sin usuarios registrados",
+    "colEmail": "Email",
+    "colNombre": "Nombre",
+    "colRol": "Rol",
+    "colRegistrado": "Registrado",
+    "reportes": "Reportes",
+    "proximamente": "Próximamente"
   }
 }
