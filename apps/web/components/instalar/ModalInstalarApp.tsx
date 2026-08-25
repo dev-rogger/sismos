@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 
 interface ModalInstalarAppProps {
@@ -61,6 +62,7 @@ export default function ModalInstalarApp({
   onDescartar,
 }: ModalInstalarAppProps) {
   useOverlayAccesible(visible, onDescartar);
+  const t = useTranslations("instalar");
 
   // Mismo patrón que ModalConfiguracion: el contenido se remonta (vía
   // `key`) cada vez que el modal pasa de cerrado a abierto, para que
@@ -86,7 +88,7 @@ export default function ModalInstalarApp({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Instalar app"
+        aria-label={t("ariaLabel")}
         onClick={(e) => e.stopPropagation()}
         className={`w-full max-w-sm overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
           visible ? "scale-100" : "scale-95"
@@ -117,6 +119,8 @@ function ModalInstalarAppContenido({
 }) {
   const [vista, setVista] = useState<Vista>("picker");
   const [mostrarInfoPwa, setMostrarInfoPwa] = useState(false);
+  const t = useTranslations("instalar");
+  const tc = useTranslations("comun");
 
   if (vista === "picker") {
     return (
@@ -124,12 +128,12 @@ function ModalInstalarAppContenido({
         <div className="mb-1 flex items-center justify-between">
           <div className="relative flex items-center gap-1">
             <h2 className="text-base font-semibold text-neutral-100">
-              Instala la app
+              {t("titulo")}
             </h2>
             <button
               type="button"
               onClick={() => setMostrarInfoPwa((v) => !v)}
-              aria-label="¿Qué es una PWA?"
+              aria-label={t("queEsPwaLabel")}
               aria-expanded={mostrarInfoPwa}
               className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-500 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-300"
             >
@@ -152,22 +156,21 @@ function ModalInstalarAppContenido({
                 role="tooltip"
                 className="absolute top-full left-0 z-10 mt-1 w-52 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-xs text-neutral-300 shadow-lg"
               >
-                Una PWA es una app web que se instala como una app normal:
-                ícono propio, pantalla completa y notificaciones.
+                {t("queEsPwaTexto")}
               </div>
             )}
           </div>
           <button
             type="button"
             onClick={onDescartar}
-            aria-label="Cerrar"
+            aria-label={tc("cerrar")}
             className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
           >
             ✕
           </button>
         </div>
         <p className="mb-4 text-center text-sm text-neutral-400">
-          ¿Qué estás usando? Te mostramos los pasos para tu dispositivo.
+          {t("queUsas")}
         </p>
         <div className="grid grid-cols-2 gap-3">
           <button
@@ -179,7 +182,7 @@ function ModalInstalarAppContenido({
               <IconoAndroid />
             </span>
             <span className="text-sm font-semibold text-neutral-100">
-              Android
+              {t("android")}
             </span>
           </button>
           <button
@@ -191,7 +194,7 @@ function ModalInstalarAppContenido({
               <IconoManzana />
             </span>
             <span className="text-sm font-semibold text-neutral-100">
-              iPhone
+              {t("iphone")}
             </span>
           </button>
         </div>
@@ -215,37 +218,33 @@ function ModalInstalarAppContenido({
         <button
           type="button"
           onClick={() => setVista("picker")}
-          aria-label="Volver"
+          aria-label={tc("volver")}
           className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
         >
           <IconoVolver />
         </button>
         <h2 className="text-base font-semibold text-neutral-100">
-          Instala la app
+          {t("titulo")}
         </h2>
       </div>
 
       {vista === "ios" ? (
         <>
           <p className="text-center text-sm text-neutral-400">
-            Toca el ícono Compartir (⬆️) en la barra del navegador y elige
-            &quot;Agregar a inicio&quot;. En iPhone las notificaciones de
-            sismos solo funcionan así — y en general se siente como una app
-            real, a pantalla completa.
+            {t("iosInstrucciones")}
           </p>
           <button
             type="button"
             onClick={onDescartar}
             className="mt-4 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
           >
-            Entendido
+            {tc("entendido")}
           </button>
         </>
       ) : puedeInstalarNativo ? (
         <>
           <p className="text-center text-sm text-neutral-400">
-            Agrega Sismos a tu pantalla de inicio: se abre a pantalla
-            completa, con su propio ícono, y se siente como una app real.
+            {t("androidNativoInstrucciones")}
           </p>
           <div className="mt-4 flex gap-2">
             <button
@@ -253,29 +252,28 @@ function ModalInstalarAppContenido({
               onClick={onDescartar}
               className="flex min-h-11 flex-1 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
             >
-              Ahora no
+              {tc("ahoraNo")}
             </button>
             <button
               type="button"
               onClick={onInstalar}
               className="flex min-h-11 flex-1 touch-manipulation items-center justify-center rounded-lg border border-sky-500 bg-sky-500/10 px-3 text-sm font-medium text-sky-400 transition active:scale-[0.97] active:brightness-95 hover:bg-sky-500/20"
             >
-              Instalar
+              {t("instalar")}
             </button>
           </div>
         </>
       ) : (
         <>
           <p className="text-center text-sm text-neutral-400">
-            Abre el menú ⋮ del navegador y elige &quot;Instalar app&quot; o
-            &quot;Agregar a pantalla de inicio&quot;.
+            {t("androidManualInstrucciones")}
           </p>
           <button
             type="button"
             onClick={onDescartar}
             className="mt-4 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
           >
-            Entendido
+            {tc("entendido")}
           </button>
         </>
       )}
