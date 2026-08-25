@@ -2,12 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { leerYLimpiarMarca } from "../../lib/auth-toast-marker";
 
 export default function AuthToastWatcher() {
   const { data: session, status } = useSession();
   const disparadoRef = useRef(false);
+  const t = useTranslations("auth");
 
   useEffect(() => {
     if (status === "loading" || disparadoRef.current) return;
@@ -44,7 +46,7 @@ export default function AuthToastWatcher() {
           </span>
           <div className="min-w-0">
             <p className="text-sm font-medium text-neutral-100">
-              Sesión iniciada
+              {t("sesionIniciada")}
             </p>
             {nombre && (
               <p className="truncate text-xs text-neutral-400">{nombre}</p>
@@ -73,14 +75,14 @@ export default function AuthToastWatcher() {
           </span>
           <div>
             <p className="text-sm font-medium text-neutral-100">
-              Sesión cerrada
+              {t("sesionCerrada")}
             </p>
-            <p className="text-xs text-neutral-400">Vuelve pronto 👋</p>
+            <p className="text-xs text-neutral-400">{t("vuelvePronto")}</p>
           </div>
         </div>
       ));
     }
-  }, [status, session]);
+  }, [status, session, t]);
 
   return null;
 }
