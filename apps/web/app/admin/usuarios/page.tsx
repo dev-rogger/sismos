@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { listUsers } from "@sismos/db";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 
 export default async function AdminUsuariosPage() {
   const usuarios = await listUsers();
   const t = await getTranslations("admin");
   const tc = await getTranslations("comun");
+  const locale = await getLocale();
+  const localeFecha = locale === "en" ? "en-US" : "es-CL";
 
   return (
     <main className="pantalla-entrada min-h-screen bg-neutral-950 p-4 pt-[calc(1rem+env(safe-area-inset-top))]">
@@ -64,7 +66,7 @@ export default async function AdminUsuariosPage() {
                       {usuario.role}
                     </td>
                     <td className="px-3 py-2 text-neutral-400">
-                      {usuario.createdAt.toLocaleDateString("es-CL")}
+                      {usuario.createdAt.toLocaleDateString(localeFecha)}
                     </td>
                   </tr>
                 ))}
