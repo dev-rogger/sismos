@@ -9,6 +9,13 @@ export function crearElementoMarcador(
     lugar: string;
     fecha: string;
     ubicacionAproximada?: boolean;
+    // Este módulo no es un componente React (arma elementos DOM para los
+    // marcadores de MapLibre) y no tiene acceso a hooks — el caller
+    // (MapaSismos.tsx, que sí usa useTranslations/useLocale) arma el texto
+    // ya traducido del aria-label (incluyendo el sufijo de ubicación
+    // aproximada si corresponde) y el locale para formatear la fecha.
+    ariaLabelBase: string;
+    localeFecha: string;
   },
 ): HTMLDivElement {
   const size = tamanoPorMagnitud(magnitud);
@@ -24,7 +31,7 @@ export function crearElementoMarcador(
   wrapper.setAttribute("role", "button");
   wrapper.setAttribute(
     "aria-label",
-    `Sismo M${magnitud} en ${opciones.lugar}${opciones.ubicacionAproximada ? " (ubicación aproximada)" : ""}, ${new Date(opciones.fecha).toLocaleString("es-CL")}`,
+    `${opciones.ariaLabelBase}, ${new Date(opciones.fecha).toLocaleString(opciones.localeFecha)}`,
   );
 
   const dot = document.createElement("div");
@@ -47,22 +54,23 @@ export function crearElementoSeleccion(opciones: {
   magnitud: number;
   lugar: string;
   fecha?: string;
+  // Mismo motivo que en crearElementoMarcador: texto y locale ya resueltos
+  // por el caller.
+  ariaLabelBase: string;
+  localeFecha: string;
 }): HTMLDivElement {
   const el = document.createElement("div");
   el.className = "marcador-seleccion";
   const fechaTexto = opciones.fecha
-    ? `, ${new Date(opciones.fecha).toLocaleString("es-CL")}`
+    ? `, ${new Date(opciones.fecha).toLocaleString(opciones.localeFecha)}`
     : "";
-  el.setAttribute(
-    "aria-label",
-    `Sismo seleccionado: M${opciones.magnitud} en ${opciones.lugar}${fechaTexto}`,
-  );
+  el.setAttribute("aria-label", `${opciones.ariaLabelBase}${fechaTexto}`);
   return el;
 }
 
-export function crearElementoUbicacion(): HTMLDivElement {
+export function crearElementoUbicacion(ariaLabel: string): HTMLDivElement {
   const el = document.createElement("div");
   el.className = "marcador-ubicacion";
-  el.setAttribute("aria-label", "Tu ubicación");
+  el.setAttribute("aria-label", ariaLabel);
   return el;
 }

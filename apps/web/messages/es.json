@@ -25,7 +25,11 @@
   "mapa": {
     "miUbicacion": "Mi ubicación",
     "verTodoChile": "Ver todo Chile",
-    "sinConexion": "Sin conexión, reintentando…"
+    "sinConexion": "Sin conexión, reintentando…",
+    "tuUbicacion": "Tu ubicación",
+    "marcadorAriaLabel": "Sismo M{magnitud} en {lugar}",
+    "marcadorSeleccionadoAriaLabel": "Sismo seleccionado: M{magnitud} en {lugar}",
+    "ubicacionAproximada": "(ubicación aproximada)"
   },
   "filtro": {
     "titulo": "Filtrar mapa",

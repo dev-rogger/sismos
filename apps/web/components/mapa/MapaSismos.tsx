@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -74,11 +74,14 @@ function pasaFiltro(sismo: SismoMapa, filtro: FiltroMapa): boolean {
   return true;
 }
 
-function construirHtmlPopup(sismo: SismoSeleccionado): string {
+function construirHtmlPopup(
+  sismo: SismoSeleccionado,
+  localeFecha: string,
+): string {
   const region =
     sismo.bandera === "🇨🇱" ? regionChilePorLatitud(sismo.latitud) : null;
   const fechaTexto = sismo.fecha
-    ? new Date(sismo.fecha).toLocaleString("es-CL", {
+    ? new Date(sismo.fecha).toLocaleString(localeFecha, {
         day: "2-digit",
         month: "short",
         hour: "2-digit",
@@ -164,17 +167,24 @@ export default function MapaSismos({
   const { compartir } = useCompartir();
   const t = useTranslations("mapa");
   const tCompartir = useTranslations("compartir");
+  const locale = useLocale();
+  const localeFecha = locale === "en" ? "en-US" : "es-CL";
 
   function crearMarcador(
     map: maplibregl.Map,
     sismo: SismoMapa,
     pulsando: boolean,
   ): maplibregl.Marker {
+    const ariaLabelBase = sismo.ubicacionAproximada
+      ? `${t("marcadorAriaLabel", { magnitud: sismo.magnitud, lugar: sismo.lugar })} ${t("ubicacionAproximada")}`
+      : t("marcadorAriaLabel", { magnitud: sismo.magnitud, lugar: sismo.lugar });
     const el = crearElementoMarcador(sismo.magnitud, {
       pulsando,
       lugar: sismo.lugar,
       fecha: sismo.fecha,
       ubicacionAproximada: sismo.ubicacionAproximada,
+      ariaLabelBase,
+      localeFecha,
     });
     el.addEventListener("click", () => {
       if (sismoSeleccionadoRef.current?.externalId === sismo.externalId) {
@@ -361,10 +371,11 @@ export default function MapaSismos({
     }
 
     marcadorUbicacionRef.current = new maplibregl.Marker({
-      element: crearElementoUbicacion(),
+      element: crearElementoUbicacion(t("tuUbicacion")),
     })
       .setLngLat([ubicacion.centro.lon, ubicacion.centro.lat])
       .addTo(map);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ubicacion.centro]);
 
   useEffect(() => {
@@ -381,12 +392,17 @@ export default function MapaSismos({
       magnitud: sismoSeleccionado.magnitud,
       lugar: sismoSeleccionado.lugar,
       fecha: sismoSeleccionado.fecha,
+      ariaLabelBase: t("marcadorSeleccionadoAriaLabel", {
+        magnitud: sismoSeleccionado.magnitud,
+        lugar: sismoSeleccionado.lugar,
+      }),
+      localeFecha,
     });
     const popup = new maplibregl.Popup({
       offset: 12,
       className: "popup-sismo",
       closeOnClick: false,
-    }).setHTML(construirHtmlPopup(sismoSeleccionado));
+    }).setHTML(construirHtmlPopup(sismoSeleccionado, localeFecha));
     const marker = new maplibregl.Marker({ element: el })
       .setLngLat([sismoSeleccionado.longitud, sismoSeleccionado.latitud])
       .setPopup(popup)
@@ -516,6 +532,7 @@ export default function MapaSismos({
       }
       if (map.getSource(FUENTE_ONDA)) map.removeSource(FUENTE_ONDA);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sismoSeleccionado]);
 
   useEffect(() => {

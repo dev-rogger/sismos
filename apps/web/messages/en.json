@@ -25,7 +25,11 @@
   "mapa": {
     "miUbicacion": "My location",
     "verTodoChile": "View all of Chile",
-    "sinConexion": "No connection, retrying…"
+    "sinConexion": "No connection, retrying…",
+    "tuUbicacion": "Your location",
+    "marcadorAriaLabel": "M{magnitud} earthquake in {lugar}",
+    "marcadorSeleccionadoAriaLabel": "Selected earthquake: M{magnitud} in {lugar}",
+    "ubicacionAproximada": "(approximate location)"
   },
   "filtro": {
     "titulo": "Filter map",

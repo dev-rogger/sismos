@@ -165,7 +165,11 @@ export default function ListaHistorial({
                     <div className="text-xs text-neutral-500">{region}</div>
                   )}
                   <div className="text-xs text-neutral-500">
-                    {formatearCoordenadas(evento.latitud, evento.longitud)}
+                    {formatearCoordenadas(
+                      evento.latitud,
+                      evento.longitud,
+                      locale,
+                    )}
                   </div>
                   <div className="text-neutral-400">
                     {t("magnitudFecha", {
