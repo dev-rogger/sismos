@@ -11,6 +11,7 @@ import { useCompartir } from "../../lib/use-compartir";
 import { cambiarIdioma } from "../../lib/actions/cambiar-idioma";
 import IconoCompartir from "../IconoCompartir";
 import IconoChevron from "../IconoChevron";
+import IconoCheck from "../IconoCheck";
 
 interface MenuLateralProps {
   onAbrirHistorial: () => void;
@@ -156,6 +157,7 @@ export default function MenuLateral({
   const [abierto, setAbierto] = useState(false);
   const { compartir, enlaceCopiado } = useCompartir();
   const [adminAbierto, setAdminAbierto] = useState(false);
+  const [idiomaAbierto, setIdiomaAbierto] = useState(false);
   const [cuentaAbierta, setCuentaAbierta] = useState(false);
   const cuentaMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -317,25 +319,69 @@ export default function MenuLateral({
               {t("instalarApp")}
             </button>
           )}
-          <button
-            type="button"
-            onClick={() =>
-              elegir(() =>
-                iniciarCambioIdioma(async () => {
-                  await cambiarIdioma(locale === "es" ? "en" : "es");
-                  router.refresh();
-                }),
-              )
-            }
-            aria-label={`${t("idioma")}: ${locale === "es" ? "English" : "Español"}`}
-            className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
-          >
-            <IconoIdioma />
-            <span className="min-w-0 flex-1 truncate">{t("idioma")}</span>
-            <span className="shrink-0 text-xs text-neutral-500">
-              {locale === "es" ? "Español" : "English"}
-            </span>
-          </button>
+          <div>
+            <button
+              type="button"
+              onClick={() => setIdiomaAbierto((v) => !v)}
+              aria-expanded={idiomaAbierto}
+              aria-label={t("idioma")}
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+            >
+              <IconoIdioma />
+              <span className="min-w-0 flex-1 truncate">{t("idioma")}</span>
+              <IconoChevron
+                className={`ml-auto h-4 w-4 shrink-0 text-neutral-500 transition-transform duration-150 ${
+                  idiomaAbierto ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+            {idiomaAbierto && (
+              <div className="flex flex-col gap-1 pl-9">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (locale === "es") {
+                      setIdiomaAbierto(false);
+                      return;
+                    }
+                    elegir(() =>
+                      iniciarCambioIdioma(async () => {
+                        await cambiarIdioma("es");
+                        router.refresh();
+                      }),
+                    );
+                  }}
+                  className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+                >
+                  <span className="min-w-0 flex-1 truncate">Español</span>
+                  {locale === "es" && (
+                    <IconoCheck className="h-4 w-4 shrink-0 text-sky-400" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (locale === "en") {
+                      setIdiomaAbierto(false);
+                      return;
+                    }
+                    elegir(() =>
+                      iniciarCambioIdioma(async () => {
+                        await cambiarIdioma("en");
+                        router.refresh();
+                      }),
+                    );
+                  }}
+                  className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+                >
+                  <span className="min-w-0 flex-1 truncate">English</span>
+                  {locale === "en" && (
+                    <IconoCheck className="h-4 w-4 shrink-0 text-sky-400" />
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
           {session ? (
             <div className="relative">
               <button
