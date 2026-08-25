@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import SessionProviderWrapper from "../components/SessionProviderWrapper";
 import SplashPWA from "../components/SplashPWA";
 
@@ -22,16 +24,21 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <SplashPWA />
-        <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        <NextIntlClientProvider messages={messages}>
+          <SplashPWA />
+          <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
