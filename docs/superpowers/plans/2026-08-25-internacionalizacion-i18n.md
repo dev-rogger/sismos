@@ -279,7 +279,7 @@ git commit -m "feat(web): migra MenuLateral a next-intl (namespace menu)"
 
 - [ ] **Step 1: Leer los cinco archivos completos**
 
-Confirma el texto exacto de: `MapaSismos.tsx` ("Mi ubicación", "Ver todo Chile", "Compartir" — este último aria-label duplica el de `compartir.boton`, usa la clave de `compartir` acá igual, no la repitas en `mapa`, "Sin conexión, reintentando…"), `BotonFiltroMapa.tsx` ("Filtro", aria-labels "Filtrar mapa"/"Filtrar mapa (filtro activo)"), `BotonFallasMapa.tsx` ("Fallas", aria-labels "Mostrar fallas geológicas"/"Ocultar fallas geológicas"), `ModalFiltroMapa.tsx` ("Filtrar mapa", "Solo Chile", "Magnitud", "Ocurridos en", y las opciones del select de ventana de tiempo), `SelectorMagnitudRangos.tsx` ("Leve (M2–4)", "Moderado (M4–6)", "Fuerte (M6+)", el `title` de bloqueo "Debe quedar al menos un rango de magnitud activo").
+Confirma el texto exacto de: `MapaSismos.tsx` ("Mi ubicación", "Ver todo Chile", "Sin conexión, reintentando…" — **no migres el aria-label "Compartir" del botón flotante en esta tarea**, el namespace `compartir` todavía no existe; déjalo tal cual está hoy, hardcodeado, la Tarea 8 lo termina), `BotonFiltroMapa.tsx` ("Filtro", aria-labels "Filtrar mapa"/"Filtrar mapa (filtro activo)"), `BotonFallasMapa.tsx` ("Fallas", aria-labels "Mostrar fallas geológicas"/"Ocultar fallas geológicas"), `ModalFiltroMapa.tsx` ("Filtrar mapa", "Solo Chile", "Magnitud", "Ocurridos en", y las opciones del select de ventana de tiempo), `SelectorMagnitudRangos.tsx` ("Leve (M2–4)", "Moderado (M4–6)", "Fuerte (M6+)", el `title` de bloqueo "Debe quedar al menos un rango de magnitud activo").
 
 - [ ] **Step 2: Agregar los namespaces a `apps/web/messages/es.json`**
 
@@ -807,6 +807,7 @@ git commit -m "feat(web): migra toasts de sesión a next-intl"
 - Create: `apps/web/lib/actions/cambiar-idioma.ts`
 - Modify: `apps/web/i18n/request.ts`
 - Modify: `apps/web/components/menu/MenuLateral.tsx`
+- Modify: `apps/web/components/historial/ListaHistorial.tsx` (resuelve el TODO de la Tarea 4)
 - Modify: `apps/web/messages/es.json` (agregar `menu.idioma`)
 
 **Interfaces:**
@@ -936,18 +937,36 @@ const t = useTranslations("menu");
 
 (`router` ya debería existir en este componente — confirma el import de `useRouter` de `next/navigation`; si no existe, agrégalo.)
 
-- [ ] **Step 7: Verificar todo el flujo bilingüe**
+- [ ] **Step 7: Resolver el TODO de fecha en español fijo dejado por la Tarea 4**
+
+`apps/web/components/historial/ListaHistorial.tsx` tiene, desde la Tarea 4, un `toLocaleString("es-CL")` fijo con un comentario `// TODO Tarea 12: usar el locale actual`. Ahora que existe `useLocale()`, resuélvelo:
+
+```tsx
+"use client";
+import { useLocale, useTranslations } from "next-intl";
+// ...dentro del componente:
+const locale = useLocale();
+// ...
+t("magnitudFecha", {
+  magnitud: evento.magnitud,
+  fecha: new Date(evento.fecha).toLocaleString(locale === "en" ? "en-US" : "es-CL"),
+})
+```
+
+Quita el comentario `// TODO Tarea 12` una vez resuelto.
+
+- [ ] **Step 8: Verificar todo el flujo bilingüe**
 
 ```bash
 cd apps/web && npx tsc --noEmit && npx eslint --max-warnings 0
 ```
 
-En el navegador: cambia a inglés desde el menú, recorre **todas** las pantallas migradas (mapa, menú, filtro, historial, configuración, instalar, fallas, login, compartir) confirmando que todo está en inglés y no hay ninguna clave sin resolver ni mezcla de idiomas. Cambia de vuelta a español y confirma lo mismo. Prueba también que, en una pestaña nueva sin cookie todavía, con el navegador configurado en inglés (`Accept-Language: en`), la primera carga ya viene en inglés.
+En el navegador: cambia a inglés desde el menú, recorre **todas** las pantallas migradas (mapa, menú, filtro, historial, configuración, instalar, fallas, login, compartir) confirmando que todo está en inglés y no hay ninguna clave sin resolver ni mezcla de idiomas — incluida la fecha de cada sismo en el historial, que debe verse en formato inglés. Cambia de vuelta a español y confirma lo mismo. Prueba también que, en una pestaña nueva sin cookie todavía, con el navegador configurado en inglés (`Accept-Language: en`), la primera carga ya viene en inglés.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
-git add apps/web/messages/en.json apps/web/messages/es.json apps/web/i18n/request.ts apps/web/lib/actions/cambiar-idioma.ts apps/web/components/menu/MenuLateral.tsx
+git add apps/web/messages/en.json apps/web/messages/es.json apps/web/i18n/request.ts apps/web/lib/actions/cambiar-idioma.ts apps/web/components/menu/MenuLateral.tsx apps/web/components/historial/ListaHistorial.tsx
 git commit -m "feat(web): agrega inglés completo, detección de idioma y selector en el menú"
 ```
 
