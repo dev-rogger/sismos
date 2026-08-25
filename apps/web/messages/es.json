@@ -105,5 +105,11 @@
     "errorCarga": "No se pudo cargar la lista de fallas.",
     "reintentar": "Reintentar",
     "sinResultados": "Sin resultados para \"{busqueda}\""
+  },
+  "compartir": {
+    "boton": "Compartir",
+    "mensaje": "🌎📍 Sismos de Chile y el mundo en tiempo real. Míralo acá:",
+    "enlaceCopiado": "Enlace copiado",
+    "errorCompartir": "No se pudo compartir"
   }
 }

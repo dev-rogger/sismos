@@ -131,6 +131,7 @@ export default function MenuLateral({
   onAbiertoChange,
 }: MenuLateralProps) {
   const t = useTranslations("menu");
+  const tCompartir = useTranslations("compartir");
   const [abierto, setAbierto] = useState(false);
   const { compartir, enlaceCopiado } = useCompartir();
   const [adminAbierto, setAdminAbierto] = useState(false);
@@ -244,7 +245,7 @@ export default function MenuLateral({
             className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
           >
             <IconoCompartir />
-            {enlaceCopiado ? "Enlace copiado" : "Compartir"}
+            {enlaceCopiado ? tCompartir("enlaceCopiado") : tCompartir("boton")}
           </button>
           {session?.user?.role === "admin" && (
             <div>

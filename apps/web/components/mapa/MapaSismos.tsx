@@ -163,6 +163,7 @@ export default function MapaSismos({
   const [errorConexion, setErrorConexion] = useState(errorCargaInicial ?? false);
   const { compartir } = useCompartir();
   const t = useTranslations("mapa");
+  const tCompartir = useTranslations("compartir");
 
   function crearMarcador(
     map: maplibregl.Map,
@@ -684,7 +685,7 @@ export default function MapaSismos({
         <button
           type="button"
           onClick={compartir}
-          aria-label="Compartir"
+          aria-label={tCompartir("boton")}
           className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
         >
           <IconoCompartir />
