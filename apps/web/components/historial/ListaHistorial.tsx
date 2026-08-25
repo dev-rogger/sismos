@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { formatearCoordenadas } from "../../lib/coordenadas";
 import { colorPorMagnitud } from "../../lib/magnitud";
 import { regionChilePorLatitud } from "@sismos/shared";
@@ -45,6 +45,8 @@ export default function ListaHistorial({
   onSeleccionar,
 }: ListaHistorialProps) {
   const t = useTranslations("historial");
+  const locale = useLocale();
+  const localeFecha = locale === "en" ? "en-US" : "es-CL";
   const [filtro, setFiltro] = useState<FiltroHistorial>(
     FILTRO_HISTORIAL_DEFAULT,
   );
@@ -67,7 +69,7 @@ export default function ListaHistorial({
             onChange={(e) =>
               setTipo(e.target.value as (typeof OPCIONES_TIPO)[number]["valor"])
             }
-            aria-label="Tipo de historial"
+            aria-label={t("tipoAria")}
             className="w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
           >
             {OPCIONES_TIPO.map((opcion) => (
@@ -168,8 +170,7 @@ export default function ListaHistorial({
                   <div className="text-neutral-400">
                     {t("magnitudFecha", {
                       magnitud: evento.magnitud,
-                      // TODO Tarea 12: usar el locale actual
-                      fecha: new Date(evento.fecha).toLocaleString("es-CL"),
+                      fecha: new Date(evento.fecha).toLocaleString(localeFecha),
                     })}
                   </div>
                   <div className="text-xs text-neutral-500">

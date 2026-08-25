@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSession, signOut } from "next-auth/react";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 import { marcarLogout } from "../../lib/auth-toast-marker";
 import { useCompartir } from "../../lib/use-compartir";
+import { cambiarIdioma } from "../../lib/actions/cambiar-idioma";
 import IconoCompartir from "../IconoCompartir";
 import IconoChevron from "../IconoChevron";
 
@@ -89,6 +90,24 @@ function IconoInstalar() {
   );
 }
 
+function IconoIdioma() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18Z" />
+    </svg>
+  );
+}
+
 function IconoUsuario() {
   return (
     <svg
@@ -132,6 +151,8 @@ export default function MenuLateral({
 }: MenuLateralProps) {
   const t = useTranslations("menu");
   const tCompartir = useTranslations("compartir");
+  const locale = useLocale();
+  const [, iniciarCambioIdioma] = useTransition();
   const [abierto, setAbierto] = useState(false);
   const { compartir, enlaceCopiado } = useCompartir();
   const [adminAbierto, setAdminAbierto] = useState(false);
@@ -296,6 +317,24 @@ export default function MenuLateral({
               {t("instalarApp")}
             </button>
           )}
+          <button
+            type="button"
+            onClick={() =>
+              elegir(() =>
+                iniciarCambioIdioma(async () => {
+                  await cambiarIdioma(locale === "es" ? "en" : "es");
+                  router.refresh();
+                }),
+              )
+            }
+            className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+          >
+            <IconoIdioma />
+            <span className="min-w-0 flex-1 truncate">{t("idioma")}</span>
+            <span className="shrink-0 text-xs text-neutral-500">
+              {locale === "es" ? "Español" : "English"}
+            </span>
+          </button>
           {session ? (
             <div className="relative">
               <button
