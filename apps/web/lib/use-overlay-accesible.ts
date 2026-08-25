@@ -11,6 +11,20 @@ function obtenerFocusables(contenedor: HTMLElement): HTMLElement[] {
   ).filter((el) => el.offsetParent !== null);
 }
 
+// Pila compartida por TODAS las instancias del hook en la app: representa
+// qué overlays están abiertos ahora mismo, del más antiguo al más
+// reciente. Solo empujamos una entrada de historial cuando la pila pasa de
+// vacía a tener algo (el primer overlay que se abre), y solo la
+// consumimos cuando vuelve a vaciarse del todo. Así, cuando un overlay
+// reemplaza a otro en el mismo click (p.ej. el menú lateral se cierra al
+// elegir "Sismos", que abre la pantalla de historial en el mismo gesto),
+// no hace falta tocar el historial del navegador en absoluto: ambos
+// representan igual "hay un overlay abierto". Sin esto, un
+// `history.back()` asíncrono (al cerrar el que sale) puede competir con el
+// `pushState` síncrono del que entra y terminar cerrando el overlay
+// equivocado.
+const pilaOverlays: symbol[] = [];
+
 // Comportamiento compartido entre menú, modales y pantallas overlay: cerrar
 // con Escape, bloquear el scroll del fondo mientras están abiertos, atrapar
 // el foco de teclado dentro del overlay (autofocus al abrir + ciclado con
@@ -60,15 +74,29 @@ export function useOverlayAccesible(
     };
     document.addEventListener("keydown", manejarTecla);
 
-    // Empujamos una entrada de historial liviana al abrir, así el botón
-    // atrás del navegador (o el gesto equivalente en Android/iOS) cierra el
-    // overlay en vez de sacar al usuario de la app.
-    let cerradoPorNavegacion = false;
-    window.history.pushState({ overlayAccesible: true }, "");
+    // Nos anotamos en la pila compartida; solo el primer overlay de la
+    // pila empuja una entrada real de historial (ver comentario arriba).
+    const miToken = Symbol("overlay");
+    pilaOverlays.push(miToken);
+    if (pilaOverlays.length === 1) {
+      window.history.pushState({ overlayAccesible: true }, "");
+    }
 
+    let cerradoPorNavegacion = false;
     const manejarPopState = () => {
+      // Solo reaccionamos si somos el overlay más reciente: si ya no lo
+      // somos, otro overlay tomó nuestro lugar (reemplazo en el mismo
+      // click) y es su responsabilidad reaccionar al próximo "atrás".
+      if (pilaOverlays[pilaOverlays.length - 1] !== miToken) return;
       cerradoPorNavegacion = true;
+      pilaOverlays.pop();
       onCerrarRef.current();
+      if (pilaOverlays.length > 0) {
+        // Todavía queda un overlay "padre" abierto (p.ej. el menú, con un
+        // submenú propio recién cerrado): reponemos la entrada para que
+        // el próximo "atrás" también pueda cerrarlo a él.
+        window.history.pushState({ overlayAccesible: true }, "");
+      }
     };
     window.addEventListener("popstate", manejarPopState);
 
@@ -76,13 +104,23 @@ export function useOverlayAccesible(
       document.body.style.overflow = original;
       document.removeEventListener("keydown", manejarTecla);
       window.removeEventListener("popstate", manejarPopState);
-      // Si el overlay se cerró por otra vía (Escape, click afuera, botón de
-      // cerrar) la entrada que empujamos sigue en el historial: la
-      // retrocedemos para que el próximo "atrás" navegue de verdad en vez
-      // de quedar "vacío" cerrando un overlay que ya está cerrado.
-      if (!cerradoPorNavegacion) {
-        window.history.back();
-      }
+      if (cerradoPorNavegacion) return;
+
+      // Diferimos la decisión de consumir la entrada de historial a un
+      // microtask: si este cierre es en realidad un reemplazo (otro
+      // overlay abriéndose en el mismo commit de React, p.ej. el menú
+      // cerrándose al elegir un ítem), el efecto de ese overlay ya habrá
+      // corrido para cuando el microtask se ejecute, y encontraremos que
+      // ya no somos parte de la pila — ahí no tocamos el historial, la
+      // entrada pasa a ser responsabilidad del reemplazo.
+      queueMicrotask(() => {
+        const idx = pilaOverlays.lastIndexOf(miToken);
+        if (idx === -1) return;
+        pilaOverlays.splice(idx, 1);
+        if (pilaOverlays.length === 0) {
+          window.history.back();
+        }
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [abierto]);
