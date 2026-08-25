@@ -357,8 +357,8 @@ function ModalConfiguracionContenido({
                   }}
                   label={
                     mundialLocal
-                      ? "Sin límite de distancia dentro de Chile (activado)"
-                      : "Sin límite de distancia dentro de Chile (desactivado)"
+                      ? t("sinLimiteDistanciaActivado")
+                      : t("sinLimiteDistanciaDesactivado")
                   }
                   disabled={loading}
                 />
@@ -368,7 +368,7 @@ function ModalConfiguracionContenido({
                 <div className="mt-3">
                   {pidiendoUbicacion && !ubicacion.centro && (
                     <div className="flex h-40 items-center justify-center rounded-xl border border-neutral-800 bg-neutral-800/50 text-xs text-neutral-400">
-                      Buscando tu ubicación…
+                      {t("buscandoUbicacion")}
                     </div>
                   )}
 
@@ -382,7 +382,7 @@ function ModalConfiguracionContenido({
                         htmlFor="radio-push"
                         className="mt-3 block text-xs text-neutral-400"
                       >
-                        Avisar hasta a {radioKmLocal} km de tu ubicación
+                        {t("avisarHastaKm", { km: radioKmLocal })}
                       </label>
                       <input
                         id="radio-push"
@@ -401,8 +401,7 @@ function ModalConfiguracionContenido({
 
                   {!pidiendoUbicacion && !ubicacion.centro && ubicacionFallo && (
                     <p className="text-xs text-neutral-400">
-                      No pudimos acceder a tu ubicación, así que las
-                      notificaciones quedan sin límite de distancia.
+                      {t("errorUbicacion")}
                     </p>
                   )}
                 </div>
@@ -415,7 +414,7 @@ function ModalConfiguracionContenido({
                 <SwitchToggle
                   checked={alcanceMundialLocal}
                   onChange={() => setAlcanceMundialLocal((v) => !v)}
-                  label="Avisarme también de terremotos M7+ en cualquier país"
+                  label={t("avisarM7GlobalLabel")}
                   disabled={loading}
                 />
               </div>
@@ -458,7 +457,7 @@ function ModalConfiguracionContenido({
                   }`}
                 >
                   {guardando
-                    ? "Guardando…"
+                    ? t("guardando")
                     : estadoGuardado === "guardado"
                       ? t("guardado")
                       : tc("guardar")}
