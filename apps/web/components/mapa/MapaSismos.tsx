@@ -321,6 +321,7 @@ export default function MapaSismos({
               lugar: masSignificativo.lugar,
               fecha: masSignificativo.fecha,
               bandera: masSignificativo.bandera,
+              profundidadKm: masSignificativo.profundidadKm,
               ubicacionAproximada: masSignificativo.ubicacionAproximada,
             });
           }
@@ -406,7 +407,10 @@ export default function MapaSismos({
       lat: sismoSeleccionado.latitud,
       lon: sismoSeleccionado.longitud,
     };
-    const radioFinalKm = radioPercepcionKm(sismoSeleccionado.magnitud);
+    const radioFinalKm = radioPercepcionKm(
+      sismoSeleccionado.magnitud,
+      sismoSeleccionado.profundidadKm ?? NaN,
+    );
     const color = colorPorMagnitud(sismoSeleccionado.magnitud);
     map.addSource(FUENTE_ONDA, {
       type: "geojson",

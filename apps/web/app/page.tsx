@@ -16,6 +16,9 @@ function parseSismoDesdeQuery(params: {
   const lat = typeof params.lat === "string" ? Number(params.lat) : NaN;
   const lon = typeof params.lon === "string" ? Number(params.lon) : NaN;
   const mag = typeof params.mag === "string" ? Number(params.mag) : NaN;
+  // La profundidad es opcional: alimenta el radio de percepción, pero un
+  // deep link viejo (o de otra fuente) puede no traerla.
+  const prof = typeof params.prof === "string" ? Number(params.prof) : NaN;
 
   if (
     !externalId ||
@@ -26,7 +29,14 @@ function parseSismoDesdeQuery(params: {
   ) {
     return null;
   }
-  return { externalId, latitud: lat, longitud: lon, magnitud: mag, lugar };
+  return {
+    externalId,
+    latitud: lat,
+    longitud: lon,
+    magnitud: mag,
+    lugar,
+    ...(Number.isNaN(prof) ? {} : { profundidadKm: prof }),
+  };
 }
 
 export default async function Home({ searchParams }: HomeProps) {
