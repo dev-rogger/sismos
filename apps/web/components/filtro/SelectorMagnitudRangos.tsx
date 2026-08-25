@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { RANGOS_MAGNITUD, type RangoMagnitud } from "../../lib/filtro-tipos";
 
 interface SelectorMagnitudRangosProps {
@@ -11,6 +12,8 @@ export default function SelectorMagnitudRangos({
   seleccionados,
   onChange,
 }: SelectorMagnitudRangosProps) {
+  const t = useTranslations("filtro");
+
   const alternar = (valor: RangoMagnitud) => {
     if (seleccionados.includes(valor)) {
       // Nunca deseleccionar el último chip activo: si quedara
@@ -38,11 +41,7 @@ export default function SelectorMagnitudRangos({
             onClick={() => alternar(rango.valor)}
             aria-pressed={activo}
             aria-disabled={bloqueado || undefined}
-            title={
-              bloqueado
-                ? "Debe quedar al menos un rango de magnitud activo"
-                : undefined
-            }
+            title={bloqueado ? t("rangoBloqueado") : undefined}
             className={`flex min-h-11 touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:brightness-95 ${
               bloqueado
                 ? "cursor-not-allowed opacity-50"
@@ -53,7 +52,7 @@ export default function SelectorMagnitudRangos({
                 : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
             }`}
           >
-            {rango.etiqueta}
+            {t(rango.valor)}
           </button>
         );
       })}

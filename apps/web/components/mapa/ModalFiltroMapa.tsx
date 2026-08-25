@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useTranslations } from "next-intl";
 import SelectorMagnitudRangos from "../filtro/SelectorMagnitudRangos";
 import IconoChevron from "../IconoChevron";
 import { VENTANAS_TIEMPO, type FiltroMapa } from "../../lib/filtro-tipos";
@@ -21,6 +22,7 @@ export default function ModalFiltroMapa({
 }: ModalFiltroMapaProps) {
   const contenedorRef = useRef<HTMLDivElement>(null);
   useOverlayAccesible(abierto, onCerrar, contenedorRef);
+  const t = useTranslations("filtro");
 
   return (
     <div
@@ -36,7 +38,7 @@ export default function ModalFiltroMapa({
         ref={contenedorRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Filtrar mapa"
+        aria-label={t("titulo")}
         onClick={(e) => e.stopPropagation()}
         className={`w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
           abierto ? "scale-100" : "scale-95"
@@ -44,7 +46,7 @@ export default function ModalFiltroMapa({
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold text-neutral-100">
-            Filtrar mapa
+            {t("titulo")}
           </h2>
           <button
             type="button"
@@ -68,11 +70,11 @@ export default function ModalFiltroMapa({
               : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
           }`}
         >
-          🇨🇱 Solo Chile
+          🇨🇱 {t("soloChile")}
         </button>
 
         <div className="mt-4">
-          <p className="mb-2 text-xs text-neutral-400">Magnitud</p>
+          <p className="mb-2 text-xs text-neutral-400">{t("magnitud")}</p>
           <SelectorMagnitudRangos
             seleccionados={filtro.rangos}
             onChange={(rangos) => onFiltroChange({ ...filtro, rangos })}
@@ -84,7 +86,7 @@ export default function ModalFiltroMapa({
             htmlFor="ventana-tiempo"
             className="mb-2 block text-xs text-neutral-400"
           >
-            Ocurridos en
+            {t("ocurridosEn")}
           </label>
           <div className="relative">
             <select
@@ -100,7 +102,7 @@ export default function ModalFiltroMapa({
             >
               {VENTANAS_TIEMPO.map((v) => (
                 <option key={v.valor} value={v.valor}>
-                  {v.etiqueta}
+                  {t(`ventana.${v.valor}`)}
                 </option>
               ))}
             </select>

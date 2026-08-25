@@ -19,5 +19,33 @@
     "instalarApp": "Instalar app",
     "iniciarSesion": "Iniciar sesión",
     "cerrarSesion": "Cerrar sesión"
+  },
+  "mapa": {
+    "miUbicacion": "Mi ubicación",
+    "verTodoChile": "Ver todo Chile",
+    "sinConexion": "Sin conexión, reintentando…"
+  },
+  "filtro": {
+    "titulo": "Filtrar mapa",
+    "boton": "Filtro",
+    "abrir": "Filtrar mapa",
+    "abrirActivo": "Filtrar mapa (filtro activo)",
+    "soloChile": "Solo Chile",
+    "magnitud": "Magnitud",
+    "ocurridosEn": "Ocurridos en",
+    "leve": "Leve (M2–4)",
+    "moderado": "Moderado (M4–6)",
+    "fuerte": "Fuerte (M6+)",
+    "rangoBloqueado": "Debe quedar al menos un rango de magnitud activo",
+    "mostrarFallas": "Mostrar fallas geológicas",
+    "ocultarFallas": "Ocultar fallas geológicas",
+    "fallas": "Fallas",
+    "ventana": {
+      "6h": "Últimas 6 horas",
+      "24h": "Últimas 24 horas",
+      "3d": "Últimos 3 días",
+      "5d": "Últimos 5 días",
+      "10d": "Últimos 10 días"
+    }
   }
 }

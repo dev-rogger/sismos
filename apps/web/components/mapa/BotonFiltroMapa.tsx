@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import ModalFiltroMapa from "./ModalFiltroMapa";
 import { filtroMapaEsDefault, type FiltroMapa } from "../../lib/filtro-tipos";
 
@@ -15,15 +16,14 @@ export default function BotonFiltroMapa({
 }: BotonFiltroMapaProps) {
   const [abierto, setAbierto] = useState(false);
   const filtroActivo = !filtroMapaEsDefault(filtro);
+  const t = useTranslations("filtro");
 
   return (
     <>
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        aria-label={
-          filtroActivo ? "Filtrar mapa (filtro activo)" : "Filtrar mapa"
-        }
+        aria-label={filtroActivo ? t("abrirActivo") : t("abrir")}
         className={`relative flex min-h-11 touch-manipulation items-center gap-2 rounded-lg border px-3 text-xs font-medium shadow-lg transition active:scale-[0.97] active:brightness-95 ${
           filtroActivo
             ? "border-sky-500 bg-neutral-900/90 text-sky-400 hover:bg-neutral-800"
@@ -43,7 +43,7 @@ export default function BotonFiltroMapa({
           <path d="M7 12h10" />
           <path d="M10 19h4" />
         </svg>
-        Filtro
+        {t("boton")}
         <span
           aria-hidden="true"
           className={`absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-sky-500 transition-[scale,opacity] duration-150 motion-reduce:transition-none ${

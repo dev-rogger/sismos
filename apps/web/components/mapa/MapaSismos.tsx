@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -161,6 +162,7 @@ export default function MapaSismos({
   onSeleccionarFallaRef.current = onSeleccionarFalla;
   const [errorConexion, setErrorConexion] = useState(errorCargaInicial ?? false);
   const { compartir } = useCompartir();
+  const t = useTranslations("mapa");
 
   function crearMarcador(
     map: maplibregl.Map,
@@ -628,7 +630,7 @@ export default function MapaSismos({
           style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
           className="absolute left-1/2 z-10 -translate-x-1/2 rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 py-2 text-xs font-medium text-neutral-300 shadow-lg"
         >
-          Sin conexión, reintentando…
+          {t("sinConexion")}
         </div>
       )}
       <div
@@ -651,7 +653,7 @@ export default function MapaSismos({
               speed: 1.2,
             })
           }
-          aria-label="Ver todo Chile"
+          aria-label={t("verTodoChile")}
           className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
         >
           <svg
@@ -668,7 +670,7 @@ export default function MapaSismos({
             <path d="M3 16v3a2 2 0 0 0 2 2h3" />
             <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
           </svg>
-          <span className="hidden sm:inline">Ver todo Chile</span>
+          <span className="hidden sm:inline">{t("verTodoChile")}</span>
         </button>
       </div>
       <div
@@ -698,7 +700,7 @@ export default function MapaSismos({
               });
             }
           }}
-          aria-label="Mi ubicación"
+          aria-label={t("miUbicacion")}
           className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
         >
           <svg

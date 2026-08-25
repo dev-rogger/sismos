@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 interface BotonFallasMapaProps {
   fallasVisibles: boolean;
   onFallasVisiblesChange: (visibles: boolean) => void;
@@ -9,16 +11,14 @@ export default function BotonFallasMapa({
   fallasVisibles,
   onFallasVisiblesChange,
 }: BotonFallasMapaProps) {
+  const t = useTranslations("filtro");
+
   return (
     <button
       type="button"
       onClick={() => onFallasVisiblesChange(!fallasVisibles)}
       aria-pressed={fallasVisibles}
-      aria-label={
-        fallasVisibles
-          ? "Ocultar fallas geológicas"
-          : "Mostrar fallas geológicas"
-      }
+      aria-label={fallasVisibles ? t("ocultarFallas") : t("mostrarFallas")}
       className={`flex min-h-11 touch-manipulation items-center gap-2 rounded-lg border px-3 text-xs font-medium shadow-lg transition active:scale-[0.97] active:brightness-95 ${
         fallasVisibles
           ? "border-sky-500 bg-sky-500/10 text-sky-400"
@@ -36,7 +36,7 @@ export default function BotonFallasMapa({
       >
         <path d="M3 12l4-7 4 9 4-9 4 9 2-4" />
       </svg>
-      Fallas
+      {t("fallas")}
     </button>
   );
 }
