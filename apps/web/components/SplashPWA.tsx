@@ -10,32 +10,33 @@ const DURACION_MINIMA_MS = 1800;
 const DURACION_MAXIMA_MS = 6000;
 const DURACION_SALIDA_MS = 450;
 
-function esStandalone(): boolean {
+// Fallback para iOS viejo, que no soporta la media query
+// `(display-mode: standalone)` que usa el CSS para mostrar el splash
+// desde el primer paint sin esperar a que cargue el JS.
+function esStandaloneLegacyIOS(): boolean {
   if (typeof window === "undefined") return false;
-  const porMediaQuery = window.matchMedia?.(
-    "(display-mode: standalone)",
-  ).matches;
-  const porIosLegacy =
-    (window.navigator as { standalone?: boolean }).standalone === true;
-  return Boolean(porMediaQuery || porIosLegacy);
+  return (window.navigator as { standalone?: boolean }).standalone === true;
 }
 
 export default function SplashPWA() {
-  const [mostrar, setMostrar] = useState(false);
+  // El splash se muestra por CSS (media query en globals.css), no por este
+  // estado: así aparece en el primer paint en vez de recién tras hidratar.
+  // Este componente solo decide CUÁNDO se va y agrega el fallback iOS.
+  const [terminado, setTerminado] = useState(false);
   const [saliendo, setSaliendo] = useState(false);
+  const [standaloneLegacy, setStandaloneLegacy] = useState(false);
   const yaSalioRef = useRef(false);
 
   useEffect(() => {
-    if (!esStandalone()) return;
+    setStandaloneLegacy(esStandaloneLegacyIOS());
 
-    setMostrar(true);
     const inicio = Date.now();
 
     function salir() {
       if (yaSalioRef.current) return;
       yaSalioRef.current = true;
       setSaliendo(true);
-      setTimeout(() => setMostrar(false), DURACION_SALIDA_MS);
+      setTimeout(() => setTerminado(true), DURACION_SALIDA_MS);
     }
 
     function alMapaListo() {
@@ -53,10 +54,14 @@ export default function SplashPWA() {
     };
   }, []);
 
-  if (!mostrar) return null;
+  if (terminado) return null;
 
   return (
-    <div className="splash-pwa" data-saliendo={saliendo}>
+    <div
+      className="splash-pwa"
+      data-saliendo={saliendo}
+      data-standalone-legacy={standaloneLegacy}
+    >
       <div className="flex flex-col items-center">
         <div className="splash-epicentro">
           <span className="splash-resplandor" />

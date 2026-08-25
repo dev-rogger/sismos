@@ -250,11 +250,26 @@ body {
   position: fixed;
   inset: 0;
   z-index: 100;
-  display: flex;
+  /* Oculto por defecto: el splash solo tiene sentido dentro de la PWA
+     instalada. Se muestra por CSS puro (media query abajo), no por JS,
+     para que aparezca en el primer paint sin esperar hidratación. */
+  display: none;
   align-items: center;
   justify-content: center;
   background: var(--color-background);
   transition: opacity 0.45s ease;
+}
+
+@media (display-mode: standalone) {
+  .splash-pwa {
+    display: flex;
+  }
+}
+
+/* Fallback para iOS viejo, que no soporta la media query de arriba.
+   Este atributo lo agrega JS después de hidratar. */
+.splash-pwa[data-standalone-legacy="true"] {
+  display: flex;
 }
 
 .splash-pwa[data-saliendo="true"] {
