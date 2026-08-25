@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import SelectorMagnitudRangos from "../filtro/SelectorMagnitudRangos";
+import IconoChevron from "../IconoChevron";
 import { VENTANAS_TIEMPO, type FiltroMapa } from "../../lib/filtro-tipos";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 
@@ -104,7 +105,7 @@ export default function ModalFiltroMapa({
               ))}
             </select>
             <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400">
-              ▾
+              <IconoChevron className="h-4 w-4" />
             </span>
           </div>
         </div>

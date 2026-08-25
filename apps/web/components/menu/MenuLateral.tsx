@@ -8,6 +8,7 @@ import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 import { marcarLogout } from "../../lib/auth-toast-marker";
 import { useCompartir } from "../../lib/use-compartir";
 import IconoCompartir from "../IconoCompartir";
+import IconoChevron from "../IconoChevron";
 
 interface MenuLateralProps {
   onAbrirHistorial: () => void;
@@ -251,13 +252,11 @@ export default function MenuLateral({
               >
                 <IconoAdmin />
                 Admin
-                <span
-                  className={`ml-auto text-neutral-500 transition-transform duration-150 ${
+                <IconoChevron
+                  className={`ml-auto h-4 w-4 shrink-0 text-neutral-500 transition-transform duration-150 ${
                     adminAbierto ? "rotate-180" : ""
                   }`}
-                >
-                  ▾
-                </span>
+                />
               </button>
               {adminAbierto && (
                 <div className="flex flex-col gap-1 pl-9">
@@ -315,13 +314,11 @@ export default function MenuLateral({
                 <span className="min-w-0 flex-1 truncate">
                   {session.user?.name ?? session.user?.email}
                 </span>
-                <span
-                  className={`ml-auto shrink-0 text-neutral-500 transition-transform duration-150 ${
+                <IconoChevron
+                  className={`ml-auto h-4 w-4 shrink-0 text-neutral-500 transition-transform duration-150 ${
                     cuentaAbierta ? "rotate-180" : ""
                   }`}
-                >
-                  ▾
-                </span>
+                />
               </button>
               {cuentaAbierta && (
                 <>

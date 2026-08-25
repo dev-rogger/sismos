@@ -18,11 +18,18 @@ import type { FallaSeleccionada } from "../lib/tipos-falla";
 interface MapaConHistorialProps {
   sismosIniciales: SismoMapa[];
   sismoInicial: SismoSeleccionado | null;
+  // Si el fetch inicial de sismos falló en el servidor (ver app/page.tsx),
+  // el mapa arranca con sismosIniciales vacío sin que eso signifique
+  // realmente "no hay sismos" — se le pasa a MapaSismos para que muestre el
+  // mismo banner de "Sin conexión" desde el primer render en vez de recién
+  // tras el primer fallo del polling.
+  errorCargaInicial?: boolean;
 }
 
 export default function MapaConHistorial({
   sismosIniciales,
   sismoInicial,
+  errorCargaInicial,
 }: MapaConHistorialProps) {
   const [sismoSeleccionado, setSismoSeleccionado] =
     useState<SismoSeleccionado | null>(sismoInicial);
@@ -88,6 +95,7 @@ export default function MapaConHistorial({
       <div className="relative flex-1">
         <MapaSismos
           sismosIniciales={sismosIniciales}
+          errorCargaInicial={errorCargaInicial}
           sismoSeleccionado={sismoSeleccionado}
           onSeleccionarDesdeMapa={seleccionarDesdeMapa}
           onActualizarSismoSeleccionado={setSismoSeleccionado}

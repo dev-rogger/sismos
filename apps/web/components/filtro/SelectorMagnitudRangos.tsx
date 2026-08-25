@@ -27,13 +27,27 @@ export default function SelectorMagnitudRangos({
     <div className="flex flex-wrap gap-2">
       {RANGOS_MAGNITUD.map((rango) => {
         const activo = seleccionados.includes(rango.valor);
+        // Mismo caso que el `return` temprano de `alternar`: si este es el
+        // último chip activo, el clic no hace nada — se atenúa visualmente
+        // para que se entienda que está bloqueado, no roto.
+        const bloqueado = activo && seleccionados.length === 1;
         return (
           <button
             key={rango.valor}
             type="button"
             onClick={() => alternar(rango.valor)}
             aria-pressed={activo}
-            className={`flex min-h-11 touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:scale-[0.97] active:brightness-95 ${
+            aria-disabled={bloqueado || undefined}
+            title={
+              bloqueado
+                ? "Debe quedar al menos un rango de magnitud activo"
+                : undefined
+            }
+            className={`flex min-h-11 touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:brightness-95 ${
+              bloqueado
+                ? "cursor-not-allowed opacity-50"
+                : "active:scale-[0.97]"
+            } ${
               activo
                 ? "border-sky-500 bg-sky-500/10 text-sky-400"
                 : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"

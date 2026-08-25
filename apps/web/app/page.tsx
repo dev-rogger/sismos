@@ -34,6 +34,7 @@ export default async function Home({ searchParams }: HomeProps) {
   const sismoInicial = parseSismoDesdeQuery(params);
 
   let sismosIniciales: SismoMapa[] = [];
+  let errorCargaInicial = false;
   try {
     const sismos = await getUltimos10Dias();
     sismosIniciales = sismos.map((s) => ({
@@ -50,6 +51,7 @@ export default async function Home({ searchParams }: HomeProps) {
     }));
   } catch (error) {
     console.error("[page] failed to load initial sismos:", error);
+    errorCargaInicial = true;
   }
 
   return (
@@ -57,6 +59,7 @@ export default async function Home({ searchParams }: HomeProps) {
       <MapaConHistorial
         sismosIniciales={sismosIniciales}
         sismoInicial={sismoInicial}
+        errorCargaInicial={errorCargaInicial}
       />
     </main>
   );

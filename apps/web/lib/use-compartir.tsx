@@ -6,6 +6,34 @@ import { toast } from "sonner";
 const MENSAJE_COMPARTIR =
   "🌎📍 Sismos de Chile y el mundo en tiempo real. Míralo acá:";
 
+// Mismo toast que el de éxito (mismo layout/estilo), pero con ícono y texto
+// de error — única confirmación visual disponible para el botón flotante
+// del mapa, que no tiene label visible (solo ícono).
+function mostrarErrorCompartir() {
+  toast.custom(() => (
+    <div className="flex items-center gap-3 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-3 shadow-lg shadow-black/40">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-red-400">
+        <svg
+          viewBox="0 0 24 24"
+          className="h-5 w-5"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8v5" />
+          <path d="M12 16h.01" />
+        </svg>
+      </span>
+      <p className="text-sm font-medium text-neutral-100">
+        No se pudo compartir
+      </p>
+    </div>
+  ));
+}
+
 // Extraído de MenuLateral para que también lo use el botón flotante de
 // "Compartir" sobre el mapa (MapaSismos): misma lógica compartir/share con
 // fallback a portapapeles, sin duplicarla entre los dos triggers.
@@ -21,6 +49,7 @@ export function useCompartir() {
       } catch (error) {
         if ((error as Error).name !== "AbortError") {
           console.error("[useCompartir] compartir error:", error);
+          mostrarErrorCompartir();
         }
       }
       return;
@@ -57,6 +86,7 @@ export function useCompartir() {
       setTimeout(() => setEnlaceCopiado(false), 2000);
     } catch (error) {
       console.error("[useCompartir] clipboard error:", error);
+      mostrarErrorCompartir();
     }
   }, []);
 

@@ -14,6 +14,7 @@ import {
   type FiltroHistorial,
 } from "../../lib/filtro-tipos";
 import SelectorMagnitudRangos from "../filtro/SelectorMagnitudRangos";
+import IconoChevron from "../IconoChevron";
 import type { SismoSeleccionado } from "../../lib/tipos-sismo";
 
 function sismoDesdeEvento(evento: ItemHistorial): SismoSeleccionado {
@@ -64,6 +65,7 @@ export default function ListaHistorial({
             onChange={(e) =>
               setTipo(e.target.value as (typeof OPCIONES_TIPO)[number]["valor"])
             }
+            aria-label="Tipo de historial"
             className="w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
           >
             {OPCIONES_TIPO.map((opcion) => (
@@ -73,7 +75,7 @@ export default function ListaHistorial({
             ))}
           </select>
           <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-neutral-400">
-            ▾
+            <IconoChevron className="h-4 w-4" />
           </span>
         </div>
 
@@ -114,8 +116,15 @@ export default function ListaHistorial({
           </button>
         </div>
       ) : eventosFiltrados.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-neutral-500">
-          Sin sismos para estos filtros
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center text-sm text-neutral-500">
+          <p>Sin sismos para estos filtros</p>
+          <button
+            type="button"
+            onClick={() => setFiltro(FILTRO_HISTORIAL_DEFAULT)}
+            className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
+          >
+            Quitar filtros
+          </button>
         </div>
       ) : (
         <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">

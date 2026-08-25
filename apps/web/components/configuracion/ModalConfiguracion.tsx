@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePushNotifications } from "../../lib/use-push-notifications";
+import IconoSpinner from "../IconoSpinner";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 import SelectorRadioMapa from "./SelectorRadioMapa";
 import {
@@ -287,11 +288,13 @@ function ModalConfiguracionContenido({
                 : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
             }`}
           >
-            {loading
-              ? "..."
-              : suscrito
-                ? "Desactivar notificaciones"
-                : "Activar con esta configuración"}
+            {loading ? (
+              <IconoSpinner className="h-4 w-4" />
+            ) : suscrito ? (
+              "Desactivar notificaciones"
+            ) : (
+              "Activar con esta configuración"
+            )}
           </button>
           {errorActivar && (
             <p className="mt-2 text-xs text-red-400">

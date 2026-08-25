@@ -26,6 +26,10 @@ export type { SismoMapa, SismoSeleccionado };
 
 interface MapaSismosProps {
   sismosIniciales: SismoMapa[];
+  // Ver comentario en MapaConHistorial: si el fetch SSR inicial falló, el
+  // banner de "Sin conexión" debe mostrarse desde el primer render, no solo
+  // tras el primer fallo del polling (que corre recién a los 15s).
+  errorCargaInicial?: boolean;
   sismoSeleccionado: SismoSeleccionado | null;
   onSeleccionarDesdeMapa: (sismo: SismoSeleccionado | null) => void;
   onActualizarSismoSeleccionado: (sismo: SismoSeleccionado) => void;
@@ -115,6 +119,7 @@ function construirHtmlPopup(sismo: SismoSeleccionado): string {
 
 export default function MapaSismos({
   sismosIniciales,
+  errorCargaInicial,
   sismoSeleccionado,
   onSeleccionarDesdeMapa,
   onActualizarSismoSeleccionado,
@@ -154,7 +159,7 @@ export default function MapaSismos({
   const fallasCargadasRef = useRef(false);
   const onSeleccionarFallaRef = useRef(onSeleccionarFalla);
   onSeleccionarFallaRef.current = onSeleccionarFalla;
-  const [errorConexion, setErrorConexion] = useState(false);
+  const [errorConexion, setErrorConexion] = useState(errorCargaInicial ?? false);
   const { compartir } = useCompartir();
 
   function crearMarcador(
@@ -646,9 +651,24 @@ export default function MapaSismos({
               speed: 1.2,
             })
           }
-          className="flex min-h-11 touch-manipulation items-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
+          aria-label="Ver todo Chile"
+          className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
         >
-          Ver todo Chile
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5 shrink-0"
+          >
+            <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+            <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+            <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+            <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+          </svg>
+          <span className="hidden sm:inline">Ver todo Chile</span>
         </button>
       </div>
       <div

@@ -27,6 +27,22 @@ body {
   }
 }
 
+/* Spinner reutilizable (IconoSpinner) para estados de carga de botones —
+   reemplaza el texto "..." plano. Sin animación bajo reduced-motion, el
+   círculo queda estático pero sigue comunicando "cargando" por su forma
+   (arco incompleto), no solo por el movimiento. */
+@media (prefers-reduced-motion: no-preference) {
+  .spinner-girando {
+    animation: spinner-girar 0.8s linear infinite;
+  }
+}
+
+@keyframes spinner-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .marcador-sismo {
   position: relative;
 }
@@ -45,7 +61,7 @@ body {
     animation-name: pulso-sismo;
     animation-duration: 1.5s;
     animation-timing-function: ease-out;
-    animation-iteration-count: 8;
+    animation-iteration-count: 4;
     animation-fill-mode: forwards;
   }
 }

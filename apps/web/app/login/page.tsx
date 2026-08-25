@@ -4,6 +4,7 @@ import { Suspense, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { marcarLogin } from "../../lib/auth-toast-marker";
+import IconoSpinner from "../../components/IconoSpinner";
 
 function LoginForm() {
   const router = useRouter();
@@ -146,11 +147,13 @@ function LoginForm() {
             disabled={cargando}
             className="mt-1 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border border-sky-500 bg-sky-500/10 px-3 text-sm font-medium text-sky-400 transition active:scale-[0.97] active:brightness-95 disabled:opacity-50"
           >
-            {cargando
-              ? "..."
-              : modoRegistro
-                ? "Crear cuenta"
-                : "Iniciar sesión"}
+            {cargando ? (
+              <IconoSpinner className="h-4 w-4" />
+            ) : modoRegistro ? (
+              "Crear cuenta"
+            ) : (
+              "Iniciar sesión"
+            )}
           </button>
         </form>
 
