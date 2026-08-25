@@ -18,7 +18,8 @@
     "reportes": "Reportes",
     "instalarApp": "Instalar app",
     "iniciarSesion": "Iniciar sesión",
-    "cerrarSesion": "Cerrar sesión"
+    "cerrarSesion": "Cerrar sesión",
+    "idioma": "Idioma"
   },
   "mapa": {
     "miUbicacion": "Mi ubicación",
@@ -50,6 +51,7 @@
   },
   "historial": {
     "titulo": "Historial de sismos",
+    "tipoAria": "Tipo de historial",
     "soloChile": "🇨🇱 Solo Chile",
     "cargando": "Cargando sismos…",
     "errorCarga": "No se pudo cargar el historial de sismos.",

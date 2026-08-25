@@ -1,0 +1,148 @@
+{
+  "comun": {
+    "cerrar": "Close",
+    "volver": "Back",
+    "entendido": "Got it",
+    "ahoraNo": "Not now",
+    "guardar": "Save"
+  },
+  "menu": {
+    "titulo": "Menu",
+    "abrirMenu": "Open menu",
+    "cerrarMenu": "Close menu",
+    "sismos": "Sismos",
+    "fallas": "Faults",
+    "notificaciones": "Notifications",
+    "admin": "Admin",
+    "usuarios": "Users",
+    "reportes": "Reports",
+    "instalarApp": "Install app",
+    "iniciarSesion": "Sign in",
+    "cerrarSesion": "Sign out",
+    "idioma": "Language"
+  },
+  "mapa": {
+    "miUbicacion": "My location",
+    "verTodoChile": "View all of Chile",
+    "sinConexion": "No connection, retrying…"
+  },
+  "filtro": {
+    "titulo": "Filter map",
+    "boton": "Filter",
+    "abrir": "Filter map",
+    "abrirActivo": "Filter map (filter active)",
+    "soloChile": "Chile only",
+    "magnitud": "Magnitude",
+    "ocurridosEn": "Time range",
+    "leve": "Light (M2–4)",
+    "moderado": "Moderate (M4–6)",
+    "fuerte": "Strong (M6+)",
+    "rangoBloqueado": "At least one magnitude range must stay active",
+    "mostrarFallas": "Show geological faults",
+    "ocultarFallas": "Hide geological faults",
+    "fallas": "Faults",
+    "ventana": {
+      "6h": "Last 6 hours",
+      "24h": "Last 24 hours",
+      "3d": "Last 3 days",
+      "5d": "Last 5 days",
+      "10d": "Last 10 days"
+    }
+  },
+  "historial": {
+    "titulo": "Earthquake history",
+    "tipoAria": "History type",
+    "soloChile": "🇨🇱 Chile only",
+    "cargando": "Loading earthquakes…",
+    "errorCarga": "We couldn't load the earthquake history.",
+    "reintentar": "Try again",
+    "sinResultados": "No earthquakes match these filters",
+    "quitarFiltros": "Clear filters",
+    "profundidad": "{n} km deep",
+    "magnitudFecha": "M{magnitud} — {fecha}",
+    "tipo": {
+      "ultimos10dias": "Last 10 days",
+      "top10anios": "Top 10 of the last 10 years",
+      "historico": "The most powerful in history"
+    }
+  },
+  "configuracion": {
+    "titulo": "Notifications",
+    "activar": "Turn on with these settings",
+    "desactivar": "Turn off notifications",
+    "avisarDesde": "Notify me from M{umbral}+",
+    "alcance": "Range",
+    "sinLimiteDistancia": "No distance limit (within Chile)",
+    "avisarM7Global": "Notify me about M7+ earthquakes in any country too, no matter the distance",
+    "avisarM7GlobalLabel": "Notify me about M7+ earthquakes in any country too",
+    "guardando": "Saving…",
+    "guardado": "Saved ✓",
+    "errorActivar": "We couldn't turn on notifications. Please try again.",
+    "errorGuardar": "We couldn't save your changes. Please try again.",
+    "noSoportado": "Your browser or device doesn't support push notifications. On iPhone, add this app to your home screen first.",
+    "bloqueado": "You blocked notifications for this site. To turn them on, change the permission in your browser's notification settings.",
+    "sinLimiteDistanciaActivado": "No distance limit within Chile (on)",
+    "sinLimiteDistanciaDesactivado": "No distance limit within Chile (off)",
+    "buscandoUbicacion": "Finding your location…",
+    "avisarHastaKm": "Notify me up to {km} km from your location",
+    "errorUbicacion": "We couldn't access your location, so notifications will have no distance limit."
+  },
+  "instalar": {
+    "titulo": "Install the app",
+    "ariaLabel": "Install app",
+    "queEsPwaLabel": "What is a PWA?",
+    "queEsPwaTexto": "A PWA is a web app that installs like a regular app: its own icon, full screen and notifications.",
+    "queUsas": "What are you using? We'll show you the steps for your device.",
+    "android": "Android",
+    "iphone": "iPhone",
+    "iosInstrucciones": "Tap the Share icon (⬆️) in the browser bar and choose \"Add to Home Screen\". On iPhone that's the only way earthquake notifications work — and it feels like a real app, full screen.",
+    "androidNativoInstrucciones": "Add Sismos to your home screen: it opens full screen, with its own icon, and feels like a real app.",
+    "androidManualInstrucciones": "Open the browser's ⋮ menu and choose \"Install app\" or \"Add to Home screen\".",
+    "instalar": "Install"
+  },
+  "fallas": {
+    "titulo": "Geological faults",
+    "buscarPlaceholder": "Search faults by name…",
+    "cargando": "Loading faults…",
+    "errorCarga": "We couldn't load the list of faults.",
+    "reintentar": "Try again",
+    "sinResultados": "No results for \"{busqueda}\""
+  },
+  "compartir": {
+    "boton": "Share",
+    "mensaje": "🌎📍 Earthquakes in Chile and around the world, in real time. See it here:",
+    "enlaceCopiado": "Link copied",
+    "errorCompartir": "Couldn't share"
+  },
+  "login": {
+    "iniciarSesion": "Sign in",
+    "crearCuenta": "Create account",
+    "subtitulo": "Optional — it keeps your notifications from getting lost when you switch devices.",
+    "continuarGoogle": "Continue with Google",
+    "o": "or",
+    "nombrePlaceholder": "Name (optional)",
+    "emailPlaceholder": "Email",
+    "contrasenaPlaceholder": "Password",
+    "errorGoogle": "We couldn't sign you in with Google. Please try again.",
+    "errorCrearCuenta": "We couldn't create the account",
+    "credencialesIncorrectas": "Incorrect email or password",
+    "errorGenerico": "Something went wrong, please try again",
+    "yaTienesCuenta": "Already have an account? Sign in",
+    "noTienesCuenta": "Don't have an account? Sign up"
+  },
+  "auth": {
+    "sesionIniciada": "Signed in",
+    "sesionCerrada": "Signed out",
+    "vuelvePronto": "See you soon 👋"
+  },
+  "admin": {
+    "usuariosRegistrados": "Registered users",
+    "sinUsuarios": "No registered users",
+    "colEmail": "Email",
+    "colNombre": "Name",
+    "colRol": "Role",
+    "colRegistrado": "Registered",
+    "reportes": "Reports",
+    "proximamente": "Coming soon"
+  }
+}

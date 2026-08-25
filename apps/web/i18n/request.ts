@@ -1,11 +1,26 @@
 import { getRequestConfig } from "next-intl/server";
+import { cookies, headers } from "next/headers";
 
-// El locale queda fijo en "es" hasta que la migración completa (Tarea 12)
-// agregue detección real de idioma + cookie. Ver "Global Constraints" en
-// el plan: así cada tarea intermedia se puede deployar sin riesgo de que
-// un visitante en inglés reciba una mezcla de idiomas.
+const LOCALES = ["es", "en"] as const;
+export type Locale = (typeof LOCALES)[number];
+const LOCALE_DEFAULT: Locale = "es";
+export const CLAVE_COOKIE_IDIOMA = "NEXT_LOCALE";
+
+// Sin cookie todavía: se mira el Accept-Language del navegador. Solo el inglés
+// desvía del default, cualquier otro idioma cae en español.
+function detectarLocaleInicial(acceptLanguage: string | null): Locale {
+  if (!acceptLanguage) return LOCALE_DEFAULT;
+  return acceptLanguage.toLowerCase().startsWith("en") ? "en" : LOCALE_DEFAULT;
+}
+
 export default getRequestConfig(async () => {
-  const locale = "es";
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get(CLAVE_COOKIE_IDIOMA)?.value;
+  const locale: Locale =
+    cookieLocale && LOCALES.includes(cookieLocale as Locale)
+      ? (cookieLocale as Locale)
+      : detectarLocaleInicial((await headers()).get("accept-language"));
+
   return {
     locale,
     messages: (await import(`../messages/${locale}.json`)).default,
