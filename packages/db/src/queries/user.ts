@@ -86,10 +86,14 @@ export async function upsertUsuarioGoogle(input: {
     })
     .onConflictDoUpdate({
       target: users.email,
+      // El rol NO se pisa acá — solo se define al crear el usuario la
+      // primera vez (arriba, en `values`). Si se recalculara en cada
+      // login, un admin promovido manualmente en la base (o cuyo email
+      // ya no matchea ADMIN_EMAIL por el motivo que sea) perdería el rol
+      // en su siguiente inicio de sesión con Google.
       set: {
         name: input.name ?? undefined,
         image: input.image ?? undefined,
-        role,
         updatedAt: now,
       },
     })
