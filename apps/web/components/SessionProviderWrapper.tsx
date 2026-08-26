@@ -19,7 +19,14 @@ export default function SessionProviderWrapper({
       <Toaster
         position="top-center"
         gap={8}
+        // sonner usa variables CSS distintas para el offset según el ancho
+        // de pantalla: `offset` solo llena --offset-top, que se usa arriba
+        // de 600px. Debajo de eso (cualquier celular) usa --mobile-offset-*
+        // en su lugar — sin `mobileOffset`, ese caso cae al default de la
+        // librería e ignora el safe-area, quedando pegado al notch/status
+        // bar. Van los dos con el mismo valor.
         offset={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
+        mobileOffset={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
         // Por defecto sonner solo deja deslizar hacia arriba en toasts
         // centrados arriba ("top-center" se parsea como direcciones
         // ["top", "center"], y "center" no es una dirección real). Se
