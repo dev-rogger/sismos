@@ -143,6 +143,10 @@
     "sesionCerrada": "Signed out",
     "vuelvePronto": "See you soon 👋"
   },
+  "actualizacion": {
+    "nuevaVersion": "A new version is available",
+    "actualizar": "Update"
+  },
   "admin": {
     "usuariosRegistrados": "Registered users",
     "sinUsuarios": "No registered users",

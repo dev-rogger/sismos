@@ -143,6 +143,10 @@
     "sesionCerrada": "Sesión cerrada",
     "vuelvePronto": "Vuelve pronto 👋"
   },
+  "actualizacion": {
+    "nuevaVersion": "Hay una nueva versión disponible",
+    "actualizar": "Actualizar"
+  },
   "admin": {
     "usuariosRegistrados": "Usuarios registrados",
     "sinUsuarios": "Sin usuarios registrados",
