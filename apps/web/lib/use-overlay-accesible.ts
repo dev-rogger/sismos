@@ -25,6 +25,23 @@ function obtenerFocusables(contenedor: HTMLElement): HTMLElement[] {
 // equivocado.
 const pilaOverlays: symbol[] = [];
 
+// Bandera compartida: cualquier acción que cierre un overlay para navegar
+// de verdad a otra ruta (router.push) debe llamar a esto ANTES de disparar
+// la navegación. El "deshacer" del pushState sintético (más abajo) usa
+// `history.back()`, y eso es una navegación real desde el punto de vista
+// del router de Next — si compite con un router.push en curso, Next aborta
+// el fetch de esa navegación con "AbortError: signal is aborted without
+// reason" y la app se queda pegada en la página actual (bug real: tocar
+// "Iniciar sesión" en el menú no llevaba a /login). No alcanza con revisar
+// si la URL ya cambió para detectar esto, porque el App Router recién
+// actualiza la URL cuando termina de traer los datos de la ruta nueva, no
+// al invocar `router.push` — hace falta una señal explícita puesta ANTES.
+let proximoCierreEsNavegacion = false;
+
+export function marcarProximoCierreComoNavegacion() {
+  proximoCierreEsNavegacion = true;
+}
+
 // Comportamiento compartido entre menú, modales y pantallas overlay: cerrar
 // con Escape, bloquear el scroll del fondo mientras están abiertos, atrapar
 // el foco de teclado dentro del overlay (autofocus al abrir + ciclado con
@@ -106,21 +123,36 @@ export function useOverlayAccesible(
       window.removeEventListener("popstate", manejarPopState);
       if (cerradoPorNavegacion) return;
 
-      // Diferimos la decisión de consumir la entrada de historial a un
-      // microtask: si este cierre es en realidad un reemplazo (otro
-      // overlay abriéndose en el mismo commit de React, p.ej. el menú
-      // cerrándose al elegir un ítem), el efecto de ese overlay ya habrá
-      // corrido para cuando el microtask se ejecute, y encontraremos que
-      // ya no somos parte de la pila — ahí no tocamos el historial, la
-      // entrada pasa a ser responsabilidad del reemplazo.
-      queueMicrotask(() => {
+      // Si nos están cerrando para navegar de verdad (marcarProximoCierreComoNavegacion),
+      // no tocamos el historial: `history.back()` competiría con el
+      // router.push ya disparado y Next aborta esa navegación (ver
+      // comentario de la bandera, arriba).
+      if (proximoCierreEsNavegacion) {
+        proximoCierreEsNavegacion = false;
+        const idx = pilaOverlays.lastIndexOf(miToken);
+        if (idx !== -1) pilaOverlays.splice(idx, 1);
+        return;
+      }
+
+      const hrefAlCerrar = window.location.href;
+
+      // Diferimos la decisión de consumir la entrada de historial con
+      // `setTimeout` (macrotask), no un microtask: si este cierre es en
+      // realidad un reemplazo (otro overlay abriéndose en el mismo commit
+      // de React, p.ej. el menú cerrándose al elegir "Sismos", que abre la
+      // pantalla de historial en el mismo gesto), el efecto de ese overlay
+      // ya habrá corrido para cuando el setTimeout se ejecute, y
+      // encontraremos que ya no somos parte de la pila. El chequeo de
+      // `href` es una segunda red de seguridad, por si algún llamador
+      // futuro navega sin pasar por la bandera de arriba.
+      setTimeout(() => {
         const idx = pilaOverlays.lastIndexOf(miToken);
         if (idx === -1) return;
         pilaOverlays.splice(idx, 1);
-        if (pilaOverlays.length === 0) {
-          window.history.back();
-        }
-      });
+        if (pilaOverlays.length !== 0) return;
+        if (window.location.href !== hrefAlCerrar) return;
+        window.history.back();
+      }, 0);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [abierto]);

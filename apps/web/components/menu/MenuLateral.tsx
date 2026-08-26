@@ -5,7 +5,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useSession, signOut } from "next-auth/react";
-import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
+import {
+  useOverlayAccesible,
+  marcarProximoCierreComoNavegacion,
+} from "../../lib/use-overlay-accesible";
 import { useAlturaViewportReal } from "../../lib/use-altura-viewport-real";
 import { marcarLogout } from "../../lib/auth-toast-marker";
 import { useCompartir } from "../../lib/use-compartir";
@@ -185,6 +188,16 @@ export default function MenuLateral({
     setTimeout(accion, 0);
   };
 
+  // Como elegir(), pero para ítems que navegan de verdad con el router en
+  // vez de abrir otro overlay: avisa al hook del drawer que no deshaga su
+  // pushState sintético con history.back(), porque eso compite con el
+  // router.push y Next aborta esa navegación (ver use-overlay-accesible.ts).
+  const navegarA = (ruta: string) => {
+    marcarProximoCierreComoNavegacion();
+    setAbierto(false);
+    setTimeout(() => router.push(ruta), 0);
+  };
+
   return (
     <>
       <button
@@ -301,14 +314,14 @@ export default function MenuLateral({
                 <div className="flex flex-col gap-1 pl-9">
                   <button
                     type="button"
-                    onClick={() => elegir(() => router.push("/admin/usuarios"))}
+                    onClick={() => navegarA("/admin/usuarios")}
                     className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
                   >
                     {t("usuarios")}
                   </button>
                   <button
                     type="button"
-                    onClick={() => elegir(() => router.push("/admin/reportes"))}
+                    onClick={() => navegarA("/admin/reportes")}
                     className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
                   >
                     {t("reportes")}
@@ -454,7 +467,7 @@ export default function MenuLateral({
           ) : (
             <button
               type="button"
-              onClick={() => elegir(() => router.push("/login"))}
+              onClick={() => navegarA("/login")}
               className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
             >
               <IconoUsuario />
