@@ -162,6 +162,10 @@ export default function MenuLateral({
   const cuentaMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { data: session } = useSession();
+  // NODE_ENV solo es "production" en builds/deploys reales; en `next dev`
+  // local queda "development", así que esto no aplica en prod — solo evita
+  // necesitar sesión de admin para trabajar en el panel localmente.
+  const esDevLocal = process.env.NODE_ENV !== "production";
 
   useOverlayAccesible(abierto, () => setAbierto(false));
   useOverlayAccesible(
@@ -176,7 +180,7 @@ export default function MenuLateral({
 
   const elegir = (accion: () => void) => {
     setAbierto(false);
-    accion();
+    setTimeout(accion, 0);
   };
 
   return (
@@ -270,7 +274,7 @@ export default function MenuLateral({
             <IconoCompartir />
             {enlaceCopiado ? tCompartir("enlaceCopiado") : tCompartir("boton")}
           </button>
-          {session?.user?.role === "admin" && (
+          {(esDevLocal || session?.user?.role === "admin") && (
             <div>
               <button
                 type="button"

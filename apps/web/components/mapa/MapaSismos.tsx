@@ -520,17 +520,31 @@ export default function MapaSismos({
       if (pulsoAnimacionId !== undefined) cancelAnimationFrame(pulsoAnimacionId);
       popup.off("close", manejarCierre);
       marker.remove();
-      if (map.getLayer(`${FUENTE_ONDA_PULSO}-linea`)) {
-        map.removeLayer(`${FUENTE_ONDA_PULSO}-linea`);
+      // Si el componente se desmonta (navegar fuera del mapa), el efecto
+      // dueño de `map` puede haber corrido su propio cleanup (map.remove())
+      // antes que este: `map` sigue siendo un objeto real acá, pero sus
+      // internals ya están destruidos, así que CUALQUIER método (getLayer,
+      // getSource, etc.) tira TypeError. No hay forma pública de chequear
+      // "¿ya te removieron?" en maplibre, así que hay que asumir que puede
+      // pasar y no dejar que reviente toda la navegación (no hay error.tsx
+      // en la app que lo contenga — sin este try/catch, un solo click en
+      // "Usuarios" o "Sign in" tiraba abajo el árbol de React entero).
+      try {
+        if (map.getLayer(`${FUENTE_ONDA_PULSO}-linea`)) {
+          map.removeLayer(`${FUENTE_ONDA_PULSO}-linea`);
+        }
+        if (map.getSource(FUENTE_ONDA_PULSO)) map.removeSource(FUENTE_ONDA_PULSO);
+        if (map.getLayer(`${FUENTE_ONDA}-borde`)) {
+          map.removeLayer(`${FUENTE_ONDA}-borde`);
+        }
+        if (map.getLayer(`${FUENTE_ONDA}-relleno`)) {
+          map.removeLayer(`${FUENTE_ONDA}-relleno`);
+        }
+        if (map.getSource(FUENTE_ONDA)) map.removeSource(FUENTE_ONDA);
+      } catch {
+        // El mapa ya fue removido por el efecto dueño de mapRef; no hay
+        // nada que limpiar (la instancia completa se está destruyendo).
       }
-      if (map.getSource(FUENTE_ONDA_PULSO)) map.removeSource(FUENTE_ONDA_PULSO);
-      if (map.getLayer(`${FUENTE_ONDA}-borde`)) {
-        map.removeLayer(`${FUENTE_ONDA}-borde`);
-      }
-      if (map.getLayer(`${FUENTE_ONDA}-relleno`)) {
-        map.removeLayer(`${FUENTE_ONDA}-relleno`);
-      }
-      if (map.getSource(FUENTE_ONDA)) map.removeSource(FUENTE_ONDA);
     };
     // El texto visible de la fecha en el popup (no solo el aria-label) sale
     // de acá (construirHtmlPopup usa localeFecha), así que `locale` va en

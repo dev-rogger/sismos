@@ -2,6 +2,7 @@
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
   "globalEnv": [
+    "NODE_ENV",
     "DATABASE_URL",
     "CRON_SECRET",
     "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
