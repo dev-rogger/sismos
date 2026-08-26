@@ -84,11 +84,19 @@ export async function enviarPushParaSismo(
     severo: esTerremoto,
   });
 
+  // "high" le pide a los servicios de push (FCM/APNs/Mozilla) que entreguen
+  // de inmediato en vez de demorar por ahorro de batería del dispositivo —
+  // para un terremoto (M8+) esa demora le hace perder el propósito al
+  // aviso. Los sismos regulares usan "normal" para no saturar de avisos
+  // urgentes por eventos menores.
+  const opciones = { urgency: esTerremoto ? "high" : "normal" } as const;
+
   const resultados = await Promise.allSettled(
     suscripciones.map((sub) =>
       webpush.sendNotification(
         { endpoint: sub.endpoint, keys: sub.keys },
         payload,
+        opciones,
       ),
     ),
   );

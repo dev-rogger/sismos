@@ -342,10 +342,10 @@ function ModalConfiguracionContenido({
 
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-neutral-400">
-                  {t("sinLimiteDistancia")}
+                  {t("limitarPorDistancia")}
                 </span>
                 <SwitchToggle
-                  checked={mundialLocal}
+                  checked={!mundialLocal}
                   onChange={() => {
                     setMundialLocal((v) => !v);
                     setUbicacionFallo(false);
@@ -356,9 +356,9 @@ function ModalConfiguracionContenido({
                     yaPidioRef.current = false;
                   }}
                   label={
-                    mundialLocal
-                      ? t("sinLimiteDistanciaActivado")
-                      : t("sinLimiteDistanciaDesactivado")
+                    !mundialLocal
+                      ? t("limitarPorDistanciaActivado")
+                      : t("limitarPorDistanciaDesactivado")
                   }
                   disabled={loading}
                 />
