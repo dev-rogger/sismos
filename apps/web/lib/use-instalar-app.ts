@@ -73,7 +73,15 @@ export function useInstalarApp(bloqueado = false) {
   const [promptDisponible, setPromptDisponible] = useState(false);
 
   useEffect(() => {
-    if (estaStandalone()) return;
+    if (estaStandalone()) {
+      // iOS no tiene evento "appinstalled" — "Agregar a inicio" es manual
+      // desde el share sheet y el navegador nunca nos avisa. Si ya estamos
+      // corriendo en modo standalone, es la única señal disponible de que
+      // la persona la instaló; lo marcamos acá para que la próxima vez que
+      // entre por Safari normal no le insistamos con el aviso de instalar.
+      marcarInstalada();
+      return;
+    }
 
     if (esIOS()) {
       setPlataforma("ios");
