@@ -4,6 +4,10 @@ import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { usePushNotifications } from "../lib/use-push-notifications";
+import {
+  pedirMostrarToast,
+  avisarToastCerrado,
+} from "../lib/coordinador-toasts-app";
 
 const CLAVE_STORAGE = "sismos:notificaciones-invitacion-vista";
 const TRES_DIAS_MS = 3 * 24 * 60 * 60 * 1000;
@@ -50,53 +54,64 @@ export default function InvitacionNotificacionesToastWatcher() {
     if (permission === "denied" || permission === "unsupported") return;
     if (yaSeMostroRecientemente()) return;
 
-    // Mostrarse ya cuenta como "visto", se marque o no una interacción.
+    // Mostrarse ya cuenta como "visto", se marque o no una interacción —
+    // aunque haya que esperar turno detrás del toast de actualización, va a
+    // aparecer en cuanto ese se cierre.
     marcarComoVista();
 
-    toast.custom(
-      (id) => (
-        <div className="flex w-full flex-col gap-3 rounded-xl border border-neutral-700 bg-neutral-900 p-4 shadow-lg shadow-black/40">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-800">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5 text-sky-400"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+    pedirMostrarToast("invitacion-notificaciones", () =>
+      mostrarToastInvitacion(),
+    );
+
+    function mostrarToastInvitacion() {
+      toast.custom(
+        (id) => (
+          <div className="flex w-full flex-col gap-3 rounded-xl border border-neutral-700 bg-neutral-900 p-4 shadow-lg shadow-black/40">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-800">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5 text-sky-400"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 8a6 6 0 0 1 12 0c0 4.5 1.5 6 1.5 6h-15S6 12.5 6 8Z" />
+                  <path d="M10.5 19a1.5 1.5 0 0 0 3 0" />
+                </svg>
+              </span>
+              <p className="flex-1 text-sm font-medium text-neutral-100">
+                {t("titulo")}
+              </p>
+              <button
+                type="button"
+                onClick={() => toast.dismiss(id)}
+                aria-label={tc("cerrar")}
+                className="flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-800 hover:text-neutral-300"
               >
-                <path d="M6 8a6 6 0 0 1 12 0c0 4.5 1.5 6 1.5 6h-15S6 12.5 6 8Z" />
-                <path d="M10.5 19a1.5 1.5 0 0 0 3 0" />
-              </svg>
-            </span>
-            <p className="flex-1 text-sm font-medium text-neutral-100">
-              {t("titulo")}
-            </p>
+                ✕
+              </button>
+            </div>
             <button
               type="button"
-              onClick={() => toast.dismiss(id)}
-              aria-label={tc("cerrar")}
-              className="flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-800 hover:text-neutral-300"
+              onClick={() => {
+                toast.dismiss(id);
+                window.dispatchEvent(new Event("sismos:abrir-notificaciones"));
+              }}
+              className="min-h-11 w-full touch-manipulation rounded-lg bg-sky-500 text-sm font-semibold text-neutral-950 transition active:scale-[0.97] active:brightness-95 hover:bg-sky-400"
             >
-              ✕
+              {t("activar")}
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              toast.dismiss(id);
-              window.dispatchEvent(new Event("sismos:abrir-notificaciones"));
-            }}
-            className="min-h-11 w-full touch-manipulation rounded-lg bg-sky-500 text-sm font-semibold text-neutral-950 transition active:scale-[0.97] active:brightness-95 hover:bg-sky-400"
-          >
-            {t("activar")}
-          </button>
-        </div>
-      ),
-      { duration: Infinity },
-    );
+        ),
+        {
+          duration: Infinity,
+          onDismiss: () => avisarToastCerrado("invitacion-notificaciones"),
+        },
+      );
+    }
   }, [loading, suscrito, permission, t, tc]);
 
   return null;

@@ -3,6 +3,10 @@
 import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import {
+  pedirMostrarToast,
+  avisarToastCerrado,
+} from "../lib/coordinador-toasts-app";
 
 // Solo tiene sentido en la PWA instalada (standalone): en una pestaña
 // normal de navegador, cualquier recarga real (F5, cerrar/reabrir,
@@ -42,6 +46,10 @@ export default function ActualizacionToastWatcher() {
     let yaTeniaControlador = Boolean(navigator.serviceWorker.controller);
 
     function avisarNuevaVersion() {
+      pedirMostrarToast("actualizacion", () => mostrarToastActualizacion());
+    }
+
+    function mostrarToastActualizacion() {
       toast.custom(
         (id) => (
           <div className="flex w-full flex-col gap-3 rounded-xl border border-neutral-700 bg-neutral-900 p-4 shadow-lg shadow-black/40">
@@ -84,7 +92,10 @@ export default function ActualizacionToastWatcher() {
             </button>
           </div>
         ),
-        { duration: Infinity },
+        {
+          duration: Infinity,
+          onDismiss: () => avisarToastCerrado("actualizacion"),
+        },
       );
     }
 
