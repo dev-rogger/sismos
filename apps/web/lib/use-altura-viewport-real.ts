@@ -35,29 +35,43 @@ export function useAlturaViewportReal(): number | null {
   const [alturaPx, setAlturaPx] = useState<number | null>(null);
 
   useEffect(() => {
-    function actualizarAltura() {
+    function medirAhora() {
       const base = window.visualViewport?.height ?? window.innerHeight;
       setAlturaPx(base + medirSafeAreaInferiorPx());
     }
-    actualizarAltura();
+    medirAhora();
 
-    window.visualViewport?.addEventListener("resize", actualizarAltura);
-    window.addEventListener("resize", actualizarAltura);
-    window.addEventListener("orientationchange", actualizarAltura);
-    // En un cold-launch de la PWA instalada, SplashPWA tapa la pantalla ~2s
-    // mientras WebKit termina de asentar las métricas reales del WKWebView
-    // recién abierto — la medición de arriba, hecha al montar, puede
-    // quedarse con un valor viejo/corto de ese instante inicial, y como no
-    // es un "resize" real desde la perspectiva del navegador, ningún
-    // listener de los de arriba la corrige después. Remedimos también
-    // cuando el splash se va (mismo evento que usa SplashPWA para salir),
-    // que es cuando esas métricas ya están asentadas.
-    window.addEventListener("sismos:mapa-listo", actualizarAltura);
+    // En un cold-launch de la PWA instalada, WebKit tarda en asentar las
+    // métricas reales del WKWebView recién abierto (primeros cientos de
+    // ms) — la medición de arriba, hecha al montar, puede quedarse con un
+    // valor viejo. Antes esto se re-medía en el evento "sismos:mapa-listo"
+    // (cuando el mapa termina de cargar), pero eso hace que la remedición
+    // coincida justo con el instante en que SplashPWA empieza a
+    // desvanecerse y revela el mapa: un cambio de alto justo ahí dispara
+    // el ResizeObserver de MapLibre, que limpia y repinta el canvas WebGL
+    // — un parpadeo real, no solo percibido. Un timer fijo temprano cae
+    // bien adentro de los ~2.1s que el splash tapa igual, sin depender de
+    // cuánto tarde la red en cargar el mapa.
+    const timerInicial = setTimeout(medirAhora, 400);
+
+    // iOS dispara varios eventos de resize seguidos mientras asienta la
+    // barra/safe-area — sin debounce, cada uno dispara su propio ciclo de
+    // resize+redraw del mapa. Colapsamos las ráfagas en una sola medición.
+    let debounceId: ReturnType<typeof setTimeout> | undefined;
+    function medirConDebounce() {
+      if (debounceId !== undefined) clearTimeout(debounceId);
+      debounceId = setTimeout(medirAhora, 120);
+    }
+
+    window.visualViewport?.addEventListener("resize", medirConDebounce);
+    window.addEventListener("resize", medirConDebounce);
+    window.addEventListener("orientationchange", medirConDebounce);
     return () => {
-      window.visualViewport?.removeEventListener("resize", actualizarAltura);
-      window.removeEventListener("resize", actualizarAltura);
-      window.removeEventListener("orientationchange", actualizarAltura);
-      window.removeEventListener("sismos:mapa-listo", actualizarAltura);
+      clearTimeout(timerInicial);
+      if (debounceId !== undefined) clearTimeout(debounceId);
+      window.visualViewport?.removeEventListener("resize", medirConDebounce);
+      window.removeEventListener("resize", medirConDebounce);
+      window.removeEventListener("orientationchange", medirConDebounce);
     };
   }, []);
 
