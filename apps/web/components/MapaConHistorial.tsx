@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MapaSismos from "./mapa/MapaSismos";
 import PanelHistorial from "./historial/PanelHistorial";
 import PantallaHistorial from "./historial/PantallaHistorial";
@@ -48,6 +48,27 @@ export default function MapaConHistorial({
   const [pantallaFallasAbierta, setPantallaFallasAbierta] = useState(false);
   const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
+
+  // El toast de invitación a notificaciones vive más arriba en el árbol
+  // (junto a SessionProviderWrapper), fuera de este componente — este evento
+  // es el puente para que su botón "Activar" pueda abrir este panel, igual
+  // que "sismos:mapa-listo" conecta MapaSismos con SplashPWA.
+  useEffect(() => {
+    function alPedirAbrirNotificaciones() {
+      setNotificacionesAbiertas(true);
+    }
+    window.addEventListener(
+      "sismos:abrir-notificaciones",
+      alPedirAbrirNotificaciones,
+    );
+    return () => {
+      window.removeEventListener(
+        "sismos:abrir-notificaciones",
+        alPedirAbrirNotificaciones,
+      );
+    };
+  }, []);
+
   const {
     puedeInstalar,
     plataforma,

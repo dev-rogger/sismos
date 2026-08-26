@@ -148,6 +148,10 @@
     "nuevaVersion": "A new version is available",
     "actualizar": "Update"
   },
+  "invitacionNotificaciones": {
+    "titulo": "Get instant earthquake alerts",
+    "activar": "Enable notifications"
+  },
   "admin": {
     "usuariosRegistrados": "Registered users",
     "sinUsuarios": "No registered users",

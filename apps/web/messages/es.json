@@ -148,6 +148,10 @@
     "nuevaVersion": "Hay una nueva versión disponible",
     "actualizar": "Actualizar"
   },
+  "invitacionNotificaciones": {
+    "titulo": "Entérate al instante cuando tiembla",
+    "activar": "Activar notificaciones"
+  },
   "admin": {
     "usuariosRegistrados": "Usuarios registrados",
     "sinUsuarios": "Sin usuarios registrados",

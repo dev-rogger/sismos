@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sonner";
 import AuthToastWatcher from "./auth/AuthToastWatcher";
 import ActualizacionToastWatcher from "./ActualizacionToastWatcher";
+import InvitacionNotificacionesToastWatcher from "./InvitacionNotificacionesToastWatcher";
 
 export default function SessionProviderWrapper({
   children,
@@ -14,6 +15,7 @@ export default function SessionProviderWrapper({
     <SessionProvider>
       <AuthToastWatcher />
       <ActualizacionToastWatcher />
+      <InvitacionNotificacionesToastWatcher />
       <Toaster
         position="top-center"
         gap={8}
