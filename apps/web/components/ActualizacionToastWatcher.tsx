@@ -43,31 +43,33 @@ export default function ActualizacionToastWatcher() {
     function avisarNuevaVersion() {
       toast.custom(
         (id) => (
-          <div className="flex items-center gap-3 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-3 shadow-lg shadow-black/40">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-800">
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5 text-emerald-400"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-                <path d="M21 3v6h-6" />
-              </svg>
-            </span>
-            <p className="flex-1 text-sm font-medium text-neutral-100">
-              {t("nuevaVersion")}
-            </p>
+          <div className="flex w-full flex-col gap-3 rounded-xl border border-neutral-700 bg-neutral-900 p-4 shadow-lg shadow-black/40">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-800">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5 text-emerald-400"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+                  <path d="M21 3v6h-6" />
+                </svg>
+              </span>
+              <p className="flex-1 text-sm font-medium text-neutral-100">
+                {t("nuevaVersion")}
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => {
                 toast.dismiss(id);
                 window.location.reload();
               }}
-              className="shrink-0 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-neutral-950 transition active:scale-[0.97] hover:bg-emerald-400"
+              className="min-h-11 w-full touch-manipulation rounded-lg bg-emerald-500 text-sm font-semibold text-neutral-950 transition active:scale-[0.97] active:brightness-95 hover:bg-emerald-400"
             >
               {t("actualizar")}
             </button>

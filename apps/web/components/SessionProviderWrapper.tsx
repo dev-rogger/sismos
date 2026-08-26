@@ -14,7 +14,11 @@ export default function SessionProviderWrapper({
     <SessionProvider>
       <AuthToastWatcher />
       <ActualizacionToastWatcher />
-      <Toaster position="top-center" gap={8} />
+      <Toaster
+        position="top-center"
+        gap={8}
+        offset={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
+      />
       {children}
     </SessionProvider>
   );
