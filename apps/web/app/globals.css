@@ -334,7 +334,11 @@ body {
   .splash-sismografo {
     animation:
       splash-sismografo-mostrar 0.01s linear forwards,
-      splash-sismografo-desvanecer 0.3s ease-in 0.62s forwards;
+      /* ease-out (no ease-in): así la traza empieza a apagarse de
+         inmediato en cuanto el ícono/anillos toman protagonismo, en vez
+         de quedar "pegada" a opacidad plena mientras el resto ya avanzó
+         (fue visible probando la coreografía en tiempo real). */
+      splash-sismografo-desvanecer 0.22s ease-out 0.6s forwards;
   }
 }
 
