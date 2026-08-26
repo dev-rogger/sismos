@@ -1,6 +1,7 @@
 import { getUltimos10Dias } from "../lib/fetch-sismos";
 import type { SismoMapa, SismoSeleccionado } from "../lib/tipos-sismo";
 import MapaConHistorial from "../components/MapaConHistorial";
+import PantallaPrincipal from "../components/PantallaPrincipal";
 
 export const dynamic = "force-dynamic";
 
@@ -65,12 +66,12 @@ export default async function Home({ searchParams }: HomeProps) {
   }
 
   return (
-    <main className="flex h-dvh w-screen flex-col lg:flex-row">
+    <PantallaPrincipal>
       <MapaConHistorial
         sismosIniciales={sismosIniciales}
         sismoInicial={sismoInicial}
         errorCargaInicial={errorCargaInicial}
       />
-    </main>
+    </PantallaPrincipal>
   );
 }
