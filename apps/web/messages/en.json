@@ -104,7 +104,8 @@
     "iosInstrucciones": "Tap the Share icon (⬆️) in the browser bar and choose \"Add to Home Screen\". On iPhone that's the only way earthquake notifications work — and it feels like a real app, full screen.",
     "androidNativoInstrucciones": "Add Sismos to your home screen: it opens full screen, with its own icon, and feels like a real app.",
     "androidManualInstrucciones": "Open the browser's ⋮ menu and choose \"Install app\" or \"Add to Home screen\".",
-    "instalar": "Install"
+    "instalar": "Install",
+    "tuDispositivo": "Your device"
   },
   "fallas": {
     "titulo": "Geological faults",

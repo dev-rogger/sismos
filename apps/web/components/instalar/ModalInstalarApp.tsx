@@ -176,7 +176,11 @@ function ModalInstalarAppContenido({
           <button
             type="button"
             onClick={() => setVista("android")}
-            className="flex min-h-11 flex-col items-center gap-2 rounded-xl border border-neutral-700 bg-neutral-800/60 px-3 py-5 text-center touch-manipulation transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600 hover:bg-neutral-800"
+            className={`flex min-h-11 flex-col items-center gap-2 rounded-xl border px-3 py-5 text-center touch-manipulation transition active:scale-[0.97] active:brightness-95 ${
+              plataformaDetectada === "android"
+                ? "border-sky-500 bg-sky-500/10 hover:bg-sky-500/15"
+                : "border-neutral-700 bg-neutral-800/60 hover:border-neutral-600 hover:bg-neutral-800"
+            }`}
           >
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-emerald-400">
               <IconoAndroid />
@@ -184,11 +188,20 @@ function ModalInstalarAppContenido({
             <span className="text-sm font-semibold text-neutral-100">
               {t("android")}
             </span>
+            {plataformaDetectada === "android" && (
+              <span className="text-xs font-medium text-sky-400">
+                {t("tuDispositivo")}
+              </span>
+            )}
           </button>
           <button
             type="button"
             onClick={() => setVista("ios")}
-            className="flex min-h-11 flex-col items-center gap-2 rounded-xl border border-neutral-700 bg-neutral-800/60 px-3 py-5 text-center touch-manipulation transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600 hover:bg-neutral-800"
+            className={`flex min-h-11 flex-col items-center gap-2 rounded-xl border px-3 py-5 text-center touch-manipulation transition active:scale-[0.97] active:brightness-95 ${
+              plataformaDetectada === "ios"
+                ? "border-sky-500 bg-sky-500/10 hover:bg-sky-500/15"
+                : "border-neutral-700 bg-neutral-800/60 hover:border-neutral-600 hover:bg-neutral-800"
+            }`}
           >
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-neutral-100">
               <IconoManzana />
@@ -196,6 +209,11 @@ function ModalInstalarAppContenido({
             <span className="text-sm font-semibold text-neutral-100">
               {t("iphone")}
             </span>
+            {plataformaDetectada === "ios" && (
+              <span className="text-xs font-medium text-sky-400">
+                {t("tuDispositivo")}
+              </span>
+            )}
           </button>
         </div>
       </div>

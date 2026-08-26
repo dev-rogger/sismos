@@ -104,7 +104,8 @@
     "iosInstrucciones": "Toca el ícono Compartir (⬆️) en la barra del navegador y elige \"Agregar a inicio\". En iPhone las notificaciones de sismos solo funcionan así — y en general se siente como una app real, a pantalla completa.",
     "androidNativoInstrucciones": "Agrega Sismos a tu pantalla de inicio: se abre a pantalla completa, con su propio ícono, y se siente como una app real.",
     "androidManualInstrucciones": "Abre el menú ⋮ del navegador y elige \"Instalar app\" o \"Agregar a pantalla de inicio\".",
-    "instalar": "Instalar"
+    "instalar": "Instalar",
+    "tuDispositivo": "Tu dispositivo"
   },
   "fallas": {
     "titulo": "Fallas geológicas",
