@@ -27,6 +27,7 @@ function esStandalone(): boolean {
 // por eso avisamos en vez de asumir que ya se actualizó.
 export default function ActualizacionToastWatcher() {
   const t = useTranslations("actualizacion");
+  const tc = useTranslations("comun");
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
@@ -62,6 +63,14 @@ export default function ActualizacionToastWatcher() {
               <p className="flex-1 text-sm font-medium text-neutral-100">
                 {t("nuevaVersion")}
               </p>
+              <button
+                type="button"
+                onClick={() => toast.dismiss(id)}
+                aria-label={tc("cerrar")}
+                className="flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-800 hover:text-neutral-300"
+              >
+                ✕
+              </button>
             </div>
             <button
               type="button"
@@ -110,7 +119,7 @@ export default function ActualizacionToastWatcher() {
       );
       document.removeEventListener("visibilitychange", alVolverAPrimerPlano);
     };
-  }, [t]);
+  }, [t, tc]);
 
   return null;
 }

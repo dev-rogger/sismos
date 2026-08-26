@@ -18,6 +18,12 @@ export default function SessionProviderWrapper({
         position="top-center"
         gap={8}
         offset={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
+        // Por defecto sonner solo deja deslizar hacia arriba en toasts
+        // centrados arriba ("top-center" se parsea como direcciones
+        // ["top", "center"], y "center" no es una dirección real). Se
+        // agrega deslizar a los costados como forma más natural de
+        // descartar cualquier toast de la app con el pulgar.
+        swipeDirections={["top", "left", "right"]}
       />
       {children}
     </SessionProvider>
