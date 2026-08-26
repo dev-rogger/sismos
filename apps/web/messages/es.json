@@ -85,6 +85,8 @@
     "guardando": "Guardando…",
     "guardado": "Guardado ✓",
     "errorActivar": "No pudimos activar las notificaciones. Prueba de nuevo.",
+    "notificacionPruebaTitulo": "Notificaciones activadas",
+    "notificacionPruebaCuerpo": "Así se van a ver los avisos de sismos.",
     "errorGuardar": "No pudimos guardar los cambios. Prueba de nuevo.",
     "noSoportado": "Tu navegador o dispositivo no soporta notificaciones push. En iPhone, primero agrega esta app a la pantalla de inicio.",
     "bloqueado": "Bloqueaste las notificaciones para este sitio. Para activarlas, cambia el permiso desde la configuración de notificaciones de tu navegador.",

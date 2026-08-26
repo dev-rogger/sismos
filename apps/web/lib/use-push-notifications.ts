@@ -120,6 +120,7 @@ export function usePushNotifications() {
       nuevaMagnitudMinima: number,
       preferenciaRadio: PreferenciaRadio,
       nuevoAlcanceMundial: boolean,
+      mensajePrueba?: { titulo: string; cuerpo: string },
     ) => {
       setLoading(true);
       try {
@@ -153,6 +154,23 @@ export function usePushNotifications() {
         setCentro(preferenciaRadio.centro);
         setAlcanceMundial(nuevoAlcanceMundial);
         setSuscrito(true);
+
+        // El permiso del navegador, una vez concedido, no se puede volver a
+        // pedir por API — si el usuario ya lo había aceptado antes (aunque
+        // haya desactivado y reactivado dentro de la app), este flujo no
+        // muestra ningún diálogo del sistema y activar "no hace nada"
+        // visible. Esta notificación de prueba es la confirmación de que sí
+        // funcionó, independiente de si hubo diálogo de permiso o no.
+        if (mensajePrueba) {
+          registration
+            .showNotification(mensajePrueba.titulo, {
+              body: mensajePrueba.cuerpo,
+              icon: "/icons/icon-192.png",
+              badge: "/icons/icon-192.png",
+            })
+            .catch(() => {});
+        }
+
         return true;
       } finally {
         setLoading(false);

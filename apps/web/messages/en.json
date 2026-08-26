@@ -85,6 +85,8 @@
     "guardando": "Saving…",
     "guardado": "Saved ✓",
     "errorActivar": "We couldn't turn on notifications. Please try again.",
+    "notificacionPruebaTitulo": "Notifications turned on",
+    "notificacionPruebaCuerpo": "This is what earthquake alerts will look like.",
     "errorGuardar": "We couldn't save your changes. Please try again.",
     "noSoportado": "Your browser or device doesn't support push notifications. On iPhone, add this app to your home screen first.",
     "bloqueado": "You blocked notifications for this site. To turn them on, change the permission in your browser's notification settings.",

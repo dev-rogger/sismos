@@ -284,7 +284,10 @@ function ModalConfiguracionContenido({
               }
               setErrorActivar(false);
               const preferencia = preferenciaRadio();
-              activar(umbralLocal, preferencia, alcanceMundialLocal)
+              activar(umbralLocal, preferencia, alcanceMundialLocal, {
+                titulo: t("notificacionPruebaTitulo"),
+                cuerpo: t("notificacionPruebaCuerpo"),
+              })
                 .then((exito) => {
                   if (exito) {
                     onSetRadioKm(preferencia.radioKm);
