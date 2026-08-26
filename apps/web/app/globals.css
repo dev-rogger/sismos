@@ -297,6 +297,28 @@ body {
   opacity: 0;
 }
 
+/* Van tres variantes distintas de "algo del mapa se ve por encima del
+   splash" (franja abajo por safe-area, ídem en el propio splash, y el
+   control de atribución de MapLibre sin estilo asomando arriba antes de
+   que cargue maplibre-gl.css) — cada una con un mecanismo distinto de
+   fondo. En vez de perseguir la próxima variante, se elimina la categoría
+   completa: mientras el splash exista y no esté saliendo, el contenido
+   real (<main>, en cualquier ruta) queda con visibility:hidden — no
+   depende de que el z-index/stacking se comporte como se espera, así que
+   no importa CÓMO se filtre algo, no hay nada que pintar. Al empezar a
+   salir (data-saliendo) se vuelve visible para el crossfade con el splash
+   desvaneciéndose. */
+@media (display-mode: standalone) {
+  .splash-pwa:not([data-saliendo="true"]) ~ main {
+    visibility: hidden;
+  }
+}
+
+.splash-pwa[data-standalone-legacy="true"]:not([data-saliendo="true"])
+  ~ main {
+  visibility: hidden;
+}
+
 .splash-epicentro {
   position: relative;
   display: flex;
