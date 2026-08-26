@@ -717,7 +717,7 @@ export default function MapaSismos({
         </button>
       </div>
       <div
-        style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        style={{ bottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
         className="absolute right-3 z-10 flex flex-col items-end gap-2"
       >
         <button
