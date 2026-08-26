@@ -89,6 +89,7 @@
     "noSoportado": "Your browser or device doesn't support push notifications. On iPhone, add this app to your home screen first.",
     "bloqueado": "You blocked notifications for this site. To turn them on, change the permission in your browser's notification settings.",
     "buscandoUbicacion": "Finding your location…",
+    "actualizarUbicacion": "Update location",
     "avisarHastaKm": "Notify me up to {km} km from your location",
     "errorUbicacion": "We couldn't access your location, so notifications will have no distance limit."
   },

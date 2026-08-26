@@ -89,6 +89,7 @@
     "noSoportado": "Tu navegador o dispositivo no soporta notificaciones push. En iPhone, primero agrega esta app a la pantalla de inicio.",
     "bloqueado": "Bloqueaste las notificaciones para este sitio. Para activarlas, cambia el permiso desde la configuración de notificaciones de tu navegador.",
     "buscandoUbicacion": "Buscando tu ubicación…",
+    "actualizarUbicacion": "Actualizar ubicación",
     "avisarHastaKm": "Avisar hasta a {km} km de tu ubicación",
     "errorUbicacion": "No pudimos acceder a tu ubicación, así que las notificaciones quedan sin límite de distancia."
   },

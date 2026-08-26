@@ -186,10 +186,14 @@ function ModalConfiguracionContenido({
     setAlcanceMundialLocal(alcanceMundial);
   }, [loading, magnitudMinima, alcanceMundial]);
 
-  // Pide una ubicación fresca una vez cada vez que el modal se abre en modo
-  // no "Mundial" — no solo la primera vez que existió, para que un
-  // dispositivo que se movió refleje su posición actual y no una guardada
-  // de otra sesión. `yaPidioRef` evita que un fetch exitoso (que hace pasar
+  // Pide ubicación automáticamente solo si todavía no tenemos ninguna
+  // guardada (primera vez que la persona activa "Limitar por distancia").
+  // Antes se pedía una ubicación fresca en CADA apertura del modal, lo que
+  // se sentía como si el permiso de geolocalización se estuviera pidiendo
+  // de nuevo cada vez — una vez que la persona da su consentimiento, la
+  // idea es tomarlo siempre sin volver a interrumpirla. Quien se haya
+  // movido de lugar puede refrescarla a mano con el botón de abajo.
+  // `yaPidioRef` evita que un fetch exitoso (que hace pasar
   // `pidiendoUbicacion` de true a false) dispare este efecto de nuevo y
   // genere un loop de pedidos mientras el modal siga abierto — el ref vive
   // por montaje, y cada apertura real remonta este componente (ver `key`
@@ -201,6 +205,7 @@ function ModalConfiguracionContenido({
     if (
       !abierto ||
       mundialLocal ||
+      ubicacion.centro ||
       pidiendoUbicacion ||
       ubicacionFallo ||
       yaPidioRef.current
@@ -213,7 +218,23 @@ function ModalConfiguracionContenido({
       setPidiendoUbicacion(false);
       setUbicacionFallo(centro === null);
     });
-  }, [abierto, mundialLocal, pidiendoUbicacion, ubicacionFallo, onPedirUbicacion]);
+  }, [
+    abierto,
+    mundialLocal,
+    ubicacion.centro,
+    pidiendoUbicacion,
+    ubicacionFallo,
+    onPedirUbicacion,
+  ]);
+
+  function actualizarUbicacionManual() {
+    setPidiendoUbicacion(true);
+    setUbicacionFallo(false);
+    onPedirUbicacion().then((centro) => {
+      setPidiendoUbicacion(false);
+      setUbicacionFallo(centro === null);
+    });
+  }
 
   const preferenciaRadio = () =>
     mundialLocal || !ubicacion.centro
@@ -396,6 +417,16 @@ function ModalConfiguracionContenido({
                         }
                         className="mt-2 w-full accent-sky-500"
                       />
+                      <button
+                        type="button"
+                        onClick={actualizarUbicacionManual}
+                        disabled={pidiendoUbicacion}
+                        className="mt-2 text-xs font-medium text-sky-400 underline-offset-2 hover:underline disabled:opacity-50"
+                      >
+                        {pidiendoUbicacion
+                          ? t("buscandoUbicacion")
+                          : t("actualizarUbicacion")}
+                      </button>
                     </div>
                   )}
 
