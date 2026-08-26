@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useAlturaViewportReal } from "../lib/use-altura-viewport-real";
 
 // Piso: la coreografía (traza → impacto → ícono → título) tarda ~1.5s en
 // asentarse; si el mapa está listo antes, igual esperamos a que termine el
@@ -28,13 +27,6 @@ export default function SplashPWA() {
   const [saliendo, setSaliendo] = useState(false);
   const [standaloneLegacy, setStandaloneLegacy] = useState(false);
   const yaSalioRef = useRef(false);
-  // `.splash-pwa` usa `position:fixed;inset:0` en el CSS (globals.css) para
-  // aparecer en el primer paint sin depender de JS. Pero igual que el
-  // drawer de MenuLateral, `inset:0` en iOS no cubre el área del home
-  // indicator, así que se alcanza a ver una franja del mapa asomando abajo
-  // durante toda la intro. En cuanto React hidrata, sobreescribimos con el
-  // alto medido — antes de eso, `inset:0` sigue siendo el fallback.
-  const alturaPx = useAlturaViewportReal();
 
   useEffect(() => {
     setStandaloneLegacy(esStandaloneLegacyIOS());
@@ -70,7 +62,6 @@ export default function SplashPWA() {
       className="splash-pwa"
       data-saliendo={saliendo}
       data-standalone-legacy={standaloneLegacy}
-      style={alturaPx !== null ? { height: `${alturaPx}px` } : undefined}
     >
       <div className="flex flex-col items-center">
         <div className="splash-epicentro">

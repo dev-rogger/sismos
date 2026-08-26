@@ -262,6 +262,26 @@ body {
   transition: opacity 0.28s cubic-bezier(0.4, 0, 1, 1);
 }
 
+.splash-pwa::after {
+  /* `inset: 0` en iOS no cubre el área del home indicator (mismo bug que
+     tuvieron PantallaPrincipal y MenuLateral) — acá se veía el mapa (y su
+     control de atribución de MapLibre) asomando un instante por esa
+     franja. En vez de medir el alto real con JS y aplicarlo en vivo (lo
+     que se probó y causó el problema real: cada recálculo mientras el
+     splash está visible reflowea un elemento de pantalla completa y eso
+     SE VE, aparezca o no una franja), esto extiende el fondo del splash
+     bastante más allá del borde inferior real por CSS puro — nunca
+     necesita recalcularse, así que no hay nada que pueda parpadear.
+  */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -120px;
+  height: 120px;
+  background: var(--color-background);
+}
+
 @media (display-mode: standalone) {
   .splash-pwa {
     display: flex;
