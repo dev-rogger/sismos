@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useSession, signOut } from "next-auth/react";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
+import { useAlturaViewportReal } from "../../lib/use-altura-viewport-real";
 import { marcarLogout } from "../../lib/auth-toast-marker";
 import { useCompartir } from "../../lib/use-compartir";
 import { cambiarIdioma } from "../../lib/actions/cambiar-idioma";
@@ -162,6 +163,7 @@ export default function MenuLateral({
   const cuentaMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { data: session } = useSession();
+  const alturaPx = useAlturaViewportReal();
   // NODE_ENV solo es "production" en builds/deploys reales; en `next dev`
   // local queda "development", así que esto no aplica en prod — solo evita
   // necesitar sesión de admin para trabajar en el panel localmente.
@@ -222,8 +224,13 @@ export default function MenuLateral({
         style={{
           paddingTop: "env(safe-area-inset-top)",
           paddingBottom: "env(safe-area-inset-bottom)",
+          // `inset-y-0` (top:0/bottom:0) dependía de que el navegador mida
+          // bien el viewport — en Safari mobile eso a veces deja una franja
+          // del fondo negro del body visible abajo (mismo bug de PantallaPrincipal).
+          // Medimos el alto real con JS en vez de confiar en esa cuenta.
+          height: alturaPx !== null ? `${alturaPx}px` : "100dvh",
         }}
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[80vw] flex-col border-r border-neutral-800 bg-neutral-900 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
+        className={`fixed top-0 left-0 z-50 flex w-72 max-w-[80vw] flex-col border-r border-neutral-800 bg-neutral-900 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
           abierto ? "translate-x-0" : "-translate-x-full"
         }`}
       >
