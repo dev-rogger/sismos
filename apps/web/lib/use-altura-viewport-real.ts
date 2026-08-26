@@ -41,22 +41,20 @@ export function useAlturaViewportReal(): number | null {
     }
     medirAhora();
 
-    // En un cold-launch de la PWA instalada, WebKit tarda en asentar las
-    // métricas reales del WKWebView recién abierto (primeros cientos de
-    // ms) — la medición de arriba, hecha al montar, puede quedarse con un
-    // valor viejo. Antes esto se re-medía en el evento "sismos:mapa-listo"
-    // (cuando el mapa termina de cargar), pero eso hace que la remedición
-    // coincida justo con el instante en que SplashPWA empieza a
-    // desvanecerse y revela el mapa: un cambio de alto justo ahí dispara
-    // el ResizeObserver de MapLibre, que limpia y repinta el canvas WebGL
-    // — un parpadeo real, no solo percibido. Un timer fijo temprano cae
-    // bien adentro de los ~2.1s que el splash tapa igual, sin depender de
-    // cuánto tarde la red en cargar el mapa.
-    const timerInicial = setTimeout(medirAhora, 400);
-
     // iOS dispara varios eventos de resize seguidos mientras asienta la
     // barra/safe-area — sin debounce, cada uno dispara su propio ciclo de
     // resize+redraw del mapa. Colapsamos las ráfagas en una sola medición.
+    //
+    // A propósito NO hay un timer "por si acaso" re-midiendo unos cientos
+    // de ms después del mount: la altura base (visualViewport.height) y el
+    // alto del safe-area (env(), constante) ya son correctos en la primera
+    // medición síncrona de arriba. Un timer así se probó (pensando en que
+    // WebKit tardaría en asentar las métricas del WKWebView recién
+    // abierto) y causó un salto de alto visible en pleno splash — cada
+    // cambio de `alturaPx` reflowea un elemento fixed de pantalla completa
+    // con z-index alto, y eso se ve como un parpadeo real, no solo
+    // percibido. Si algo cambia de verdad después del mount, ya lo cubren
+    // los listeners de resize/orientationchange de abajo.
     let debounceId: ReturnType<typeof setTimeout> | undefined;
     function medirConDebounce() {
       if (debounceId !== undefined) clearTimeout(debounceId);
@@ -67,7 +65,6 @@ export function useAlturaViewportReal(): number | null {
     window.addEventListener("resize", medirConDebounce);
     window.addEventListener("orientationchange", medirConDebounce);
     return () => {
-      clearTimeout(timerInicial);
       if (debounceId !== undefined) clearTimeout(debounceId);
       window.visualViewport?.removeEventListener("resize", medirConDebounce);
       window.removeEventListener("resize", medirConDebounce);
