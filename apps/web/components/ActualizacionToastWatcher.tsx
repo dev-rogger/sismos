@@ -4,6 +4,22 @@ import { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+// Solo tiene sentido en la PWA instalada (standalone): en una pestaña
+// normal de navegador, cualquier recarga real (F5, cerrar/reabrir,
+// clickear un link) ya pide el HTML fresco de la red y queda al día sola.
+// La PWA en cambio se trata como una app nativa — la gente la deja abierta
+// o la cambia de foco, pero casi nunca la "recarga" a mano — así que ahí sí
+// hace falta avisar.
+function esStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  const porMediaQuery = window.matchMedia?.(
+    "(display-mode: standalone)",
+  ).matches;
+  const porIosLegacy =
+    (window.navigator as { standalone?: boolean }).standalone === true;
+  return Boolean(porMediaQuery || porIosLegacy);
+}
+
 // Con skipWaiting + clientsClaim (ver app/sw.ts), un service worker nuevo
 // activa y toma control de las pestañas abiertas SOLO, sin esperar a que se
 // cierren. Eso dispara "controllerchange" acá, pero el JS/HTML que ya está
@@ -16,6 +32,7 @@ export default function ActualizacionToastWatcher() {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
       return;
     }
+    if (!esStandalone()) return;
 
     // Si la pestaña ya tenía un controlador al montar, cualquier cambio
     // posterior es una actualización real. Si todavía no tenía ninguno
