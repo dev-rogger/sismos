@@ -65,7 +65,7 @@ export default async function Home({ searchParams }: HomeProps) {
   }
 
   return (
-    <main className="flex h-screen w-screen flex-col lg:flex-row">
+    <main className="flex h-dvh w-screen flex-col lg:flex-row">
       <MapaConHistorial
         sismosIniciales={sismosIniciales}
         sismoInicial={sismoInicial}
