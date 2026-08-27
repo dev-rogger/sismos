@@ -361,24 +361,26 @@ body {
 /* Fondo con profundidad: dos vignettes radiales suaves (cálida cerca del
    centro de la composición, fría hacia el borde inferior) en vez de negro
    plano — de lejos sigue leyéndose oscuro, de cerca tiene textura. Va
-   detrás de todo el contenido (z-index propio, capa nueva) sin tocar el
-   fondo de .splash-pwa ni su ::after (fix de safe-area ya validado).
-   `inset` extiende -120px abajo, igual que .splash-pwa::after: si este
-   fondo terminara en el borde real (inset:0) y el ::after de abajo sigue
-   120px más, se nota la costura entre la viñeta y el relleno plano —
-   exactamente el "espacio negro raro abajo" que se reportó.
+   detrás de todo el contenido (z-index propio, capa nueva).
 
-   OJO: al extender la caja, los porcentajes de posición del gradiente
-   pasan a ser relativos a la caja EXTENDIDA, no al viewport real — "at 50%
-   100%" ya no apunta al borde visible de abajo, apunta 120px más abajo
-   (fuera de pantalla). Eso corrió la viñeta fría y dejó una banda de tono
-   distinto visible cerca del borde real (bug real, reportado con captura:
-   "se ve un rectángulo... abajo de la pantalla"). Se ancla con
-   calc(100% - 120px) para que el centro del gradiente quede exactamente en
-   el borde real, sin importar cuánto se extienda la caja debajo. */
+   A propósito NO se extiende hacia el área del home indicator (a
+   diferencia de .splash-pwa::after, que sí lo hace): se probaron dos
+   variantes de "extender la caja y reposicionar el gradiente para que
+   siga apuntando al borde real" y ambas dejaron una banda de tono
+   distinto visible cerca del borde (el gradiente tiene su propio punto
+   donde termina de desvanecerse, y ese punto siempre queda visible en
+   algún lado si se fuerza la caja a ser más alta que el viewport real).
+   La solución robusta es más simple: este fondo cubre EXACTAMENTE el
+   viewport real (inset:0, sin extender), así el gradiente siempre
+   termina justo en el borde real, donde se desvanece a
+   rgba(10,10,10,0) — el mismo var(--color-background) plano que ya
+   tiene .splash-pwa por debajo. El área del home indicator, más abajo,
+   la cubre solo .splash-pwa::after con ESE MISMO color plano — como
+   ambos lados de la costura son idénticos (el mismo color base), no
+   hace falta que ningún punto de referencia coincida con precisión. */
 .splash-fondo {
   position: absolute;
-  inset: 0 0 -120px 0;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   background:
@@ -388,19 +390,20 @@ body {
       rgba(10, 10, 10, 0) 60%
     ),
     radial-gradient(
-      140% 120% at 50% calc(100% - 120px),
+      140% 120% at 50% 100%,
       rgba(14, 22, 34, 0.4) 0%,
       rgba(10, 10, 10, 0) 55%
     );
 }
 
 /* Grano sutil (estático, no anima): evita que el negro se vea "plano de
-   sistema" y le da una textura fílmica discreta. Mismo -120px que
-   .splash-fondo — que el grano cubra exactamente lo mismo que la viñeta. */
+   sistema" y le da una textura fílmica discreta. Tampoco se extiende —
+   mismo motivo que .splash-fondo: el área del home indicator nunca se ve,
+   texturarla no aporta nada y solo suma otro punto donde desalinear. */
 .splash-fondo::after {
   content: "";
   position: absolute;
-  inset: 0 0 -120px 0;
+  inset: 0;
   opacity: 0.05;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
