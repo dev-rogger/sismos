@@ -366,7 +366,16 @@ body {
    `inset` extiende -120px abajo, igual que .splash-pwa::after: si este
    fondo terminara en el borde real (inset:0) y el ::after de abajo sigue
    120px más, se nota la costura entre la viñeta y el relleno plano —
-   exactamente el "espacio negro raro abajo" que se reportó. */
+   exactamente el "espacio negro raro abajo" que se reportó.
+
+   OJO: al extender la caja, los porcentajes de posición del gradiente
+   pasan a ser relativos a la caja EXTENDIDA, no al viewport real — "at 50%
+   100%" ya no apunta al borde visible de abajo, apunta 120px más abajo
+   (fuera de pantalla). Eso corrió la viñeta fría y dejó una banda de tono
+   distinto visible cerca del borde real (bug real, reportado con captura:
+   "se ve un rectángulo... abajo de la pantalla"). Se ancla con
+   calc(100% - 120px) para que el centro del gradiente quede exactamente en
+   el borde real, sin importar cuánto se extienda la caja debajo. */
 .splash-fondo {
   position: absolute;
   inset: 0 0 -120px 0;
@@ -379,7 +388,7 @@ body {
       rgba(10, 10, 10, 0) 60%
     ),
     radial-gradient(
-      140% 120% at 50% 100%,
+      140% 120% at 50% calc(100% - 120px),
       rgba(14, 22, 34, 0.4) 0%,
       rgba(10, 10, 10, 0) 55%
     );
