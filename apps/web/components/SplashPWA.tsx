@@ -66,28 +66,33 @@ export default function SplashPWA() {
       <div className="flex flex-col items-center">
         <div className="splash-epicentro">
           <span className="splash-resplandor" />
-          <svg
-            className="splash-sismografo"
-            viewBox="0 0 240 64"
-            width="220"
-            height="59"
-            aria-hidden="true"
-          >
-            <path
-              className="splash-trazo"
-              d="M0,32 L60,32 L72,26 L84,38 L96,18 L104,52 L112,6 L120,58 L128,28 L136,36 L148,32 L240,32"
-              pathLength="1"
-              fill="none"
-              stroke="#f97316"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="splash-impacto" />
+          <div className="splash-cinta">
+            {/* Cinta de sismógrafo: 900 unidades de ancho (1 unidad = 1px)
+                dentro de un contenedor de 260px — la aguja fija está en el
+                centro del contenedor. La ráfaga P-S ocupa x=340 a x=430
+                (centro en x=385): a 300px/s de scroll, ese centro cruza
+                los 130px del contenedor (su punto medio) a los 0.85s. */}
+            <svg
+              className="splash-cinta-trazo"
+              viewBox="0 0 900 64"
+              width="900"
+              height="64"
+              aria-hidden="true"
+            >
+              <path
+                d="M0,32 L40,30 L80,33 L120,31 L160,34 L200,30 L240,33 L280,31 L320,32 L340,32 L352,26 L364,38 L376,18 L384,52 L392,6 L400,58 L408,28 L416,36 L430,32 L440,30 L480,33 L520,31 L560,32 L600,31 L640,32 L680,31 L720,32 L760,31 L800,32 L840,31 L880,32 L900,32"
+                fill="none"
+                stroke="#f97316"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+          <span className="splash-aguja" />
+          <span className="splash-destello" />
           <span className="splash-onda splash-onda--1" />
           <span className="splash-onda splash-onda--2" />
-          <span className="splash-onda splash-onda--3" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/icons/icon-192.png"
@@ -98,7 +103,14 @@ export default function SplashPWA() {
           />
         </div>
         <p className="splash-titulo text-2xl font-semibold tracking-tight text-neutral-100">
-          Sismos
+          <span className="sr-only">Sismos</span>
+          <span aria-hidden="true">
+            {"Sismos".split("").map((letra, indice) => (
+              <span key={indice} className="splash-titulo-letra">
+                {letra}
+              </span>
+            ))}
+          </span>
         </p>
       </div>
     </div>

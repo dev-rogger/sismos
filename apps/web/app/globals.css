@@ -324,13 +324,17 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 5.5rem;
+  width: 16.25rem;
   height: 5.5rem;
 }
 
 .splash-resplandor {
   position: absolute;
-  inset: -1.5rem;
+  left: 50%;
+  top: 50%;
+  width: 8.5rem;
+  height: 8.5rem;
+  transform: translate(-50%, -50%);
   border-radius: 9999px;
   background: radial-gradient(
     circle,
@@ -342,9 +346,11 @@ body {
 
 @media (prefers-reduced-motion: no-preference) {
   .splash-resplandor {
-    /* Respiro calmo, arranca después de la ráfaga del evento (~1.7s)
-       para no competir visualmente con la traza/anillos/impacto. */
-    animation: splash-respiro 3.6s cubic-bezier(0.45, 0, 0.55, 1) 1.7s infinite;
+    /* Respiro calmo: arranca después de que la cinta cruzó la aguja y
+       el título terminó de aparecer (~1.72s), para no competir con esa
+       secuencia. */
+    animation: splash-respiro 3.6s cubic-bezier(0.45, 0, 0.55, 1) 1.86s
+      infinite;
   }
 }
 
@@ -352,72 +358,89 @@ body {
   0%,
   100% {
     opacity: 0.28;
-    transform: scale(0.96);
+    transform: translate(-50%, -50%) scale(0.96);
   }
   50% {
     opacity: 0.5;
-    transform: scale(1.08);
+    transform: translate(-50%, -50%) scale(1.08);
   }
 }
 
-/* Traza de sismógrafo: se dibuja hasta un pico ("el evento"), luego
-   se desvanece. Motivo específico de una app de sismología, no un
-   efecto genérico. */
-.splash-sismografo {
+/* Cinta sísmica: a diferencia de un trazo que se dibuja una sola vez, un
+   sismógrafo real tiene la aguja fija y es el papel el que corre por
+   debajo. Acá el SVG (más ancho que su contenedor) se traslada de
+   derecha a izquierda a velocidad constante desde el primer frame — el
+   instrumento "ya está registrando" antes de que termine de cargar la
+   app, en vez de mostrar una animación de logo. La ráfaga (evento P-S)
+   está ubicada en un punto fijo del trazo, y la distancia total de
+   scroll se eligió a mano junto con ese punto para que la ráfaga cruce
+   el centro (donde está la aguja) siempre a los 0.85s — ningún valor se
+   mide en runtime, todo es aritmética fija de diseño. */
+.splash-cinta {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  overflow: visible;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
   opacity: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .splash-sismografo {
-    animation:
-      splash-sismografo-mostrar 0.01s linear forwards,
-      /* ease-out (no ease-in): así la traza empieza a apagarse de
-         inmediato en cuanto el ícono/anillos toman protagonismo, en vez
-         de quedar "pegada" a opacidad plena mientras el resto ya avanzó
-         (fue visible probando la coreografía en tiempo real). */
-      splash-sismografo-desvanecer 0.22s ease-out 0.6s forwards;
-  }
-}
-
-@keyframes splash-sismografo-mostrar {
-  to {
+  .splash-cinta {
     opacity: 1;
+    animation: splash-cinta-desvanecer 0.4s ease-out 0.85s forwards;
   }
 }
 
-@keyframes splash-sismografo-desvanecer {
+@keyframes splash-cinta-desvanecer {
   to {
     opacity: 0;
   }
 }
 
-.splash-trazo {
-  stroke-dasharray: 1 1;
-  stroke-dashoffset: 1;
+.splash-cinta-trazo {
+  display: block;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .splash-trazo {
-    animation: splash-trazo-dibujar 0.62s cubic-bezier(0.65, 0, 0.35, 1)
-      forwards;
+  .splash-cinta-trazo {
+    animation: splash-cinta-recorrer 1.9s linear forwards;
   }
 }
 
-@keyframes splash-trazo-dibujar {
+@keyframes splash-cinta-recorrer {
+  from {
+    transform: translateX(0);
+  }
   to {
-    stroke-dashoffset: 0;
+    /* 300px/s de velocidad de cinta (900px de largo, contenedor de
+       260px): a los 0.85s la ráfaga (centrada en x=385 del viewBox) cae
+       exactamente en el centro del contenedor (130px). */
+    transform: translateX(-570px);
   }
 }
 
-/* Flash de impacto: el instante en que la traza "registra" el evento. */
-.splash-impacto {
+/* Aguja fija: nunca anima — es el punto de lectura estacionario bajo el
+   que pasa la cinta, siempre visible (incluso con reduced-motion). */
+.splash-aguja {
   position: absolute;
-  inset: -0.5rem;
+  left: 50%;
+  top: 50%;
+  width: 0.375rem;
+  height: 0.375rem;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: rgba(249, 115, 22, 0.55);
+}
+
+/* Destello: el instante exacto en que la ráfaga pasa bajo la aguja. */
+.splash-destello {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3.25rem;
+  height: 3.25rem;
+  transform: translate(-50%, -50%);
   border-radius: 9999px;
   background: radial-gradient(
     circle,
@@ -428,59 +451,61 @@ body {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .splash-impacto {
-    animation: splash-impacto-flash 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.6s
+  .splash-destello {
+    animation: splash-destello-flash 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.85s
       forwards;
   }
 }
 
-@keyframes splash-impacto-flash {
+@keyframes splash-destello-flash {
   0% {
     opacity: 0;
-    transform: scale(0.7);
+    transform: translate(-50%, -50%) scale(0.7);
   }
   40% {
-    opacity: 0.85;
-    transform: scale(1.25);
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.2);
   }
   100% {
     opacity: 0;
-    transform: scale(1.5);
+    transform: translate(-50%, -50%) scale(1.5);
   }
 }
 
-/* Anillos concéntricos del evento — mismo ADN que los pulsos de sismo
-   del mapa (marcador-sismo--pulso / marcador-seleccion). */
+/* Anillos concéntricos — mismo ADN que los pulsos de sismo del mapa
+   (marcador-sismo--pulso / marcador-seleccion). Dos, no tres: un solo
+   foco de atención en el instante del impacto, no varias cosas
+   compitiendo a la vez. */
 .splash-onda {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 50%;
+  width: 5.5rem;
+  height: 5.5rem;
   border-radius: 9999px;
   border: 1.5px solid rgba(249, 115, 22, 0.6);
   opacity: 0;
+  transform: translate(-50%, -50%) scale(0.5);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .splash-onda--1 {
-    animation: splash-onda-expandir 0.8s cubic-bezier(0.19, 1, 0.22, 1) 0.6s
+    animation: splash-onda-expandir 0.6s cubic-bezier(0.19, 1, 0.22, 1) 0.85s
       forwards;
   }
   .splash-onda--2 {
-    animation: splash-onda-expandir 0.8s cubic-bezier(0.19, 1, 0.22, 1) 0.73s
-      forwards;
-  }
-  .splash-onda--3 {
-    animation: splash-onda-expandir 0.8s cubic-bezier(0.19, 1, 0.22, 1) 0.86s
+    animation: splash-onda-expandir 0.6s cubic-bezier(0.19, 1, 0.22, 1) 1s
       forwards;
   }
 }
 
 @keyframes splash-onda-expandir {
   0% {
-    transform: scale(0.5);
+    transform: translate(-50%, -50%) scale(0.5);
     opacity: 0.65;
   }
   100% {
-    transform: scale(5);
+    transform: translate(-50%, -50%) scale(5);
     opacity: 0;
   }
 }
@@ -496,8 +521,10 @@ body {
   .splash-icono {
     opacity: 0;
     clip-path: circle(0% at 50% 50%);
-    animation: splash-icono-formar 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s
-      forwards;
+    /* Leve overshoot: el ícono "se asienta" al condensar justo donde
+       cruzó la ráfaga, no solo aparece. */
+    animation: splash-icono-formar 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)
+      0.85s forwards;
   }
 }
 
@@ -514,25 +541,48 @@ body {
 
 .splash-titulo {
   margin-top: 1.5rem;
+}
+
+.splash-titulo-letra {
+  display: inline-block;
   opacity: 1;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .splash-titulo {
+  .splash-titulo-letra {
     opacity: 0;
-    clip-path: inset(0 100% 0 0);
-    animation: splash-titulo-barrido 0.5s cubic-bezier(0.65, 0, 0.35, 1) 1s
+    transform: translateY(0.4rem);
+    animation: splash-titulo-letra-entra 0.22s cubic-bezier(0.22, 1, 0.36, 1)
       forwards;
+  }
+
+  .splash-titulo-letra:nth-child(1) {
+    animation-delay: 1.3s;
+  }
+  .splash-titulo-letra:nth-child(2) {
+    animation-delay: 1.34s;
+  }
+  .splash-titulo-letra:nth-child(3) {
+    animation-delay: 1.38s;
+  }
+  .splash-titulo-letra:nth-child(4) {
+    animation-delay: 1.42s;
+  }
+  .splash-titulo-letra:nth-child(5) {
+    animation-delay: 1.46s;
+  }
+  .splash-titulo-letra:nth-child(6) {
+    animation-delay: 1.5s;
   }
 }
 
-@keyframes splash-titulo-barrido {
-  0% {
-    opacity: 1;
-    clip-path: inset(0 100% 0 0);
+@keyframes splash-titulo-letra-entra {
+  from {
+    opacity: 0;
+    transform: translateY(0.4rem);
   }
-  100% {
+  to {
     opacity: 1;
-    clip-path: inset(0 0% 0 0);
+    transform: translateY(0);
   }
 }
