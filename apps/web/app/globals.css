@@ -674,18 +674,17 @@ body {
   width: 7rem;
   height: 7rem;
   opacity: 1;
-  /* icon-192.png es un cuadrado sólido casi negro con el glifo naranja
-     encima (así debe ser: es el ícono real de instalación, con esquinas
-     duras porque iOS/Android le aplican su propia máscara en el Home
-     Screen). Mostrado tal cual sobre el fondo oscuro del splash se ve
-     como "el PNG pelado" — un cuadrado con esquinas rectas encima de
-     otro fondo oscuro. En vez de recortarlo con otra forma (que igual
-     dejaría un borde recto en algún punto), `mix-blend-mode: screen`
-     hace que el negro del cuadrado se funda con lo que sea que haya
-     detrás (fondo/resplandor/bloom, todos oscuros) y deja solo el glifo
-     naranja — sin tocar el archivo del ícono real. Funciona sin fugas
-     de blend gracias al `isolation: isolate` ya puesto en .splash-pwa. */
-  mix-blend-mode: screen;
+  /* icon-192.png (el ícono real de instalación) es un cuadrado sólido
+     rgb(10,10,10) — casi negro pero NO negro puro — con el glifo naranja
+     encima. `mix-blend-mode: screen` se probó para disimular ese cuadrado
+     sin tocar el ícono real, pero screen(casi-negro, fondo) no da
+     resultado neutro: al no ser negro puro, deja un cuadrado sutil pero
+     real, más claro que el fondo alrededor (matemática del blend, no un
+     bug de aplicación). El archivo que se usa acá
+     (icons/icon-glyph-splash.png, ver SplashPWA.tsx) es una versión
+     generada aparte con transparencia real (alfa calculado a partir de la
+     distancia de cada píxel al fondo conocido) — mismo glifo, sin cuadrado
+     que disimular, así que no hace falta ningún blend mode. */
 }
 
 @media (prefers-reduced-motion: no-preference) {

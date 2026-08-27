@@ -98,7 +98,7 @@ export default function SplashPWA() {
           <span className="splash-onda splash-onda--2" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/icons/icon-192.png"
+            src="/icons/icon-glyph-splash.png"
             alt=""
             width={112}
             height={112}
