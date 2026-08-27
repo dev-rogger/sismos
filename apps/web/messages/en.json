@@ -157,11 +157,12 @@
   },
   "admin": {
     "usuariosRegistrados": "Registered users",
-    "sinUsuarios": "No registered users",
-    "colEmail": "Email",
-    "colNombre": "Name",
-    "colRol": "Role",
-    "colRegistrado": "Registered",
+    "totalUsuarios": "{count, plural, one {# user} other {# users}}",
+    "sinUsuarios": "No registered users yet",
+    "sinUsuariosDescripcion": "They'll show up here as soon as someone creates an account.",
+    "registrado": "Registered",
+    "rolAdmin": "Admin",
+    "rolUsuario": "User",
     "reportes": "Reports",
     "proximamente": "Coming soon"
   }
