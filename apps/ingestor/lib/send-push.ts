@@ -5,7 +5,12 @@ import {
 } from "@sismos/db";
 import { regionChilePorLatitud, type SismoNormalizado } from "@sismos/shared";
 
-const UMBRAL_TERREMOTO = 8;
+// M8+ dejaba fuera la mayoría de los sismos realmente peligrosos para la
+// vida (varios terremotos con víctimas y daño real en Chile han estado en
+// el rango M6.5-7.5, no solo los catastróficos M8+) — se baja el umbral
+// para que más eventos con riesgo real reciban urgency:"high" +
+// requireInteraction + vibración más intensa.
+const UMBRAL_TERREMOTO = 6.5;
 const TOPE_ANTIGUEDAD_PUSH_MS = 60 * 60 * 1000;
 
 const REGIONES_CON_DEL = new Set([
