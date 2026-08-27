@@ -108,7 +108,17 @@ export default function GraficoConteos({
             strokeWidth={1}
           />
           {conteos.map((c, i) => {
-            const alto = Math.max((c.total / max) * (ALTO - 8), c.total > 0 ? 3 : 0);
+            // Escala raíz cuadrada, no lineal: la actividad sísmica real
+            // tiene picos que pueden ser 10x+ más grandes que el resto del
+            // período (ej. "Mes" con un mes de 183 sismos junto a meses de
+            // 10-20) — en lineal, esos picos dejan todas las demás barras
+            // casi invisibles por comparación. sqrt comprime esa diferencia
+            // sin invertir el orden (la barra más alta sigue siendo la más
+            // alta), y sigue siendo 1:1 cuando max es chico.
+            const alto = Math.max(
+              (Math.sqrt(c.total) / Math.sqrt(max)) * (ALTO - 8),
+              c.total > 0 ? 3 : 0,
+            );
             const x = i * (ANCHO_BARRA + GAP);
             const y = ALTO - alto;
             const esActivo = activo === i;
