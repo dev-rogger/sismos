@@ -136,23 +136,35 @@ export function useOverlayAccesible(
 
       const hrefAlCerrar = window.location.href;
 
-      // Diferimos la decisión de consumir la entrada de historial con
-      // `setTimeout` (macrotask), no un microtask: si este cierre es en
-      // realidad un reemplazo (otro overlay abriéndose en el mismo commit
-      // de React, p.ej. el menú cerrándose al elegir "Sismos", que abre la
-      // pantalla de historial en el mismo gesto), el efecto de ese overlay
-      // ya habrá corrido para cuando el setTimeout se ejecute, y
-      // encontraremos que ya no somos parte de la pila. El chequeo de
-      // `href` es una segunda red de seguridad, por si algún llamador
-      // futuro navega sin pasar por la bandera de arriba.
-      setTimeout(() => {
-        const idx = pilaOverlays.lastIndexOf(miToken);
-        if (idx === -1) return;
-        pilaOverlays.splice(idx, 1);
-        if (pilaOverlays.length !== 0) return;
-        if (window.location.href !== hrefAlCerrar) return;
-        window.history.back();
-      }, 0);
+      // Diferimos la decisión de consumir la entrada de historial: si este
+      // cierre es en realidad un reemplazo (otro overlay abriéndose en el
+      // mismo commit de React, p.ej. el menú cerrándose al elegir
+      // "Sismos"/"Estadísticas", que abren su propia pantalla en el mismo
+      // gesto), el efecto de MONTAJE de ese overlay nuevo tiene que haber
+      // corrido y empujado su token a `pilaOverlays` para cuando este
+      // chequeo se ejecute — si no, la vemos "vacía" por error y deshacemos
+      // el historial de un overlay que en realidad sigue abierto.
+      //
+      // Un `setTimeout(fn, 0)` NO alcanza a garantizar eso: los efectos
+      // pasivos de React se vacían vía el scheduler (MessageChannel), que
+      // en Chrome puede correr DESPUÉS de un setTimeout(0) agendado antes
+      // en el mismo tick — confirmado en la práctica (reproducible: el
+      // token del overlay nuevo todavía no estaba en la pila cuando este
+      // callback corría). `requestAnimationFrame` sí espera a que el
+      // navegador esté por pintar el frame, que ocurre después de que
+      // React vació todos los efectos pendientes del commit — ahí recién
+      // hacemos la revisión final en un setTimeout(0) normal (para no
+      // bloquear el pintado con trabajo síncrono).
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const idx = pilaOverlays.lastIndexOf(miToken);
+          if (idx === -1) return;
+          pilaOverlays.splice(idx, 1);
+          if (pilaOverlays.length !== 0) return;
+          if (window.location.href !== hrefAlCerrar) return;
+          window.history.back();
+        }, 0);
+      });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [abierto]);
