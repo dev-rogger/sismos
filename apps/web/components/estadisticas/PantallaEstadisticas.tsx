@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 import {
@@ -45,21 +45,22 @@ export default function PantallaEstadisticas({
   const {
     granularidad,
     setGranularidad,
-    ultimos7Dias,
+    resumen,
     conteos,
     loading,
     error,
     reintentar,
   } = useEstadisticas(soloChile, huboApertura);
 
-  const porBanda = useMemo(() => {
-    return BANDAS_MAGNITUD.map((banda) => ({
-      ...banda,
-      total: ultimos7Dias.filter(
-        (s) => s.magnitud >= banda.desde && s.magnitud < banda.hasta,
-      ).length,
-    }));
-  }, [ultimos7Dias]);
+  // El desglose real (por banda, sobre TODO el período, no solo la lista
+  // acotada) viene calculado del servidor — ver ResumenPeriodo.porBanda en
+  // @sismos/db. Acá solo se le pega el `hasta` (para el label "M3–5") que
+  // el servidor no necesita mandar.
+  const porBanda = BANDAS_MAGNITUD.map((banda) => ({
+    ...banda,
+    total:
+      resumen.porBanda.find((b) => b.desde === banda.desde)?.total ?? 0,
+  }));
 
   return (
     <div
@@ -128,10 +129,10 @@ export default function PantallaEstadisticas({
         <div className="flex-1 overflow-y-auto px-4 py-4">
           <section className="rounded-xl border border-neutral-800 bg-neutral-800/40 p-4">
             <p className="text-3xl font-semibold text-neutral-100">
-              {ultimos7Dias.length}
+              {resumen.total}
             </p>
             <p className="text-sm text-neutral-400">
-              {t("sismosUltimos7Dias")}
+              {t(`resumenVentana.${granularidad}`)}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               {porBanda.map((banda) => (
@@ -182,14 +183,24 @@ export default function PantallaEstadisticas({
           </section>
 
           <section className="mt-5">
-            <h2 className="mb-3 text-sm font-semibold text-neutral-200">
-              {t("listadoUltimos7Dias")}
+            <h2 className="mb-1 text-sm font-semibold text-neutral-200">
+              {t(`listadoVentana.${granularidad}`)}
             </h2>
-            {ultimos7Dias.length === 0 ? (
-              <p className="text-sm text-neutral-500">{t("sinSismos")}</p>
+            {resumen.total > resumen.sismos.length && (
+              <p className="mb-3 text-xs text-neutral-500">
+                {t("listadoAcotado", {
+                  mostrados: resumen.sismos.length,
+                  total: resumen.total,
+                })}
+              </p>
+            )}
+            {resumen.sismos.length === 0 ? (
+              <p className="mt-2 text-sm text-neutral-500">
+                {t(`sinSismosVentana.${granularidad}`)}
+              </p>
             ) : (
-              <ul className="flex flex-col gap-2">
-                {ultimos7Dias.map((sismo) => {
+              <ul className="mt-3 flex flex-col gap-2">
+                {resumen.sismos.map((sismo) => {
                   const region =
                     sismo.bandera === "🇨🇱"
                       ? regionChilePorLatitud(sismo.latitud)

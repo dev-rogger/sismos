@@ -3,12 +3,13 @@ import {
   findSismosSince,
   findTop10UltimosAnios,
   findTopHistoricos,
-  findUltimosDias,
+  findResumenPeriodo,
   findConteoPorPeriodo,
   type Sismo,
   type SismoHistorico,
   type GranularidadConteo,
   type ConteoPeriodo,
+  type ResumenPeriodo,
 } from "@sismos/db";
 
 export async function getUltimos10Dias(): Promise<Sismo[]> {
@@ -29,11 +30,12 @@ export async function getTopHistoricos(
   return findTopHistoricos(soloChile ? "chile" : "mundial");
 }
 
-export async function getUltimosDias(
+export async function getResumenPeriodo(
   dias: number,
   soloChile: boolean,
-): Promise<Sismo[]> {
-  return findUltimosDias(dias, soloChile);
+  limite: number,
+): Promise<ResumenPeriodo> {
+  return findResumenPeriodo(dias, soloChile, limite);
 }
 
 export async function getConteoPorPeriodo(

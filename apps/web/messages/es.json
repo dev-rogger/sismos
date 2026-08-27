@@ -124,7 +124,12 @@
     "cargando": "Cargando estadísticas…",
     "errorCarga": "No se pudieron cargar las estadísticas.",
     "reintentar": "Reintentar",
-    "sismosUltimos7Dias": "Sismos en los últimos 7 días",
+    "resumenVentana": {
+      "dia": "Sismos en los últimos 7 días",
+      "semana": "Sismos en las últimas 8 semanas",
+      "mes": "Sismos en los últimos 12 meses",
+      "anio": "Sismos en los últimos 5 años"
+    },
     "actividad": "Actividad",
     "granularidadAria": "Agrupar por",
     "granularidad": {
@@ -136,8 +141,19 @@
     "graficoAriaLabel": "Gráfico de cantidad de sismos por período",
     "sismosConteo": "{n} sismos",
     "sinDatosGrafico": "Sin datos suficientes para este gráfico todavía",
-    "listadoUltimos7Dias": "Sismos de los últimos 7 días",
-    "sinSismos": "No hubo sismos en los últimos 7 días con este filtro"
+    "listadoVentana": {
+      "dia": "Sismos de los últimos 7 días",
+      "semana": "Sismos de las últimas 8 semanas",
+      "mes": "Sismos de los últimos 12 meses",
+      "anio": "Sismos de los últimos 5 años"
+    },
+    "listadoAcotado": "Mostrando los {mostrados} más recientes de {total}",
+    "sinSismosVentana": {
+      "dia": "No hubo sismos en los últimos 7 días con este filtro",
+      "semana": "No hubo sismos en las últimas 8 semanas con este filtro",
+      "mes": "No hubo sismos en los últimos 12 meses con este filtro",
+      "anio": "No hubo sismos en los últimos 5 años con este filtro"
+    }
   },
   "compartir": {
     "boton": "Compartir",

@@ -265,24 +265,77 @@ export async function findUltimoCsnPreciso(): Promise<Date | null> {
   return row?.actualizado ?? null;
 }
 
+export interface ConteoBandaMagnitud {
+  desde: number;
+  total: number;
+}
+
+export interface ResumenPeriodo {
+  // Total real del período (cuenta en la DB, no el largo de `sismos`) — la
+  // ventana de "año" puede tener miles de eventos, mostrarlos todos en una
+  // lista sería impracticable en mobile. El conteo de arriba de la pantalla
+  // de Estadísticas necesita el número real, no el de la lista acotada.
+  total: number;
+  // Igual razón que `total`: si viniera de contar sobre `sismos` (la lista
+  // acotada), el desglose por magnitud no sumaría lo mismo que `total` en
+  // ventanas grandes — se calcula aparte, sobre todas las filas del período.
+  porBanda: ConteoBandaMagnitud[];
+  sismos: Sismo[];
+}
+
+// Mismos cortes que colorPorMagnitud en el frontend (lib/magnitud.ts) — si
+// alguno cambia, hay que actualizar el otro a mano (no hay una fuente única
+// compartida entre @sismos/db y el cliente para esto).
+const BANDAS_MAGNITUD = [0, 3, 5, 7];
+
 // A diferencia de findUltimos10Dias (número fijo, usado por el historial ya
-// existente), esta es genérica para la pantalla de Estadísticas: necesita
-// tanto "últimos 7 días" para el listado como filtrar por Chile/mundial, algo
-// que findUltimos10Dias no soporta.
-export async function findUltimosDias(
+// existente), esta es genérica para la pantalla de Estadísticas: la ventana
+// de días varía según la granularidad elegida (7 días / 8 semanas / 12
+// meses / 5 años), y necesita filtrar por Chile/mundial, algo que
+// findUltimos10Dias no soporta.
+export async function findResumenPeriodo(
   dias: number,
   soloChile: boolean,
-): Promise<Sismo[]> {
+  limite: number,
+): Promise<ResumenPeriodo> {
   const since = new Date(Date.now() - dias * 24 * 60 * 60 * 1000);
   const condiciones = soloChile
     ? and(gte(sismos.fecha, since), eq(sismos.bandera, "🇨🇱"))
     : gte(sismos.fecha, since);
-  const rows = await getDb()
-    .select()
-    .from(sismos)
-    .where(condiciones)
-    .orderBy(desc(sismos.fecha));
-  return rows.map(toSismo);
+  const bandaCase = sql<number>`
+    case
+      when ${sismos.magnitud} >= 7 then 7
+      when ${sismos.magnitud} >= 5 then 5
+      when ${sismos.magnitud} >= 3 then 3
+      else 0
+    end
+  `.as("banda");
+  const [totalRows, bandaRows, rows] = await Promise.all([
+    getDb()
+      .select({ total: sql<number>`count(*)::int` })
+      .from(sismos)
+      .where(condiciones),
+    getDb()
+      .select({ banda: bandaCase, total: sql<number>`count(*)::int` })
+      .from(sismos)
+      .where(condiciones)
+      .groupBy(bandaCase),
+    getDb()
+      .select()
+      .from(sismos)
+      .where(condiciones)
+      .orderBy(desc(sismos.fecha))
+      .limit(limite),
+  ]);
+  const totalesPorBanda = new Map(bandaRows.map((r) => [r.banda, r.total]));
+  return {
+    total: totalRows[0]?.total ?? 0,
+    porBanda: BANDAS_MAGNITUD.map((desde) => ({
+      desde,
+      total: totalesPorBanda.get(desde) ?? 0,
+    })),
+    sismos: rows.map(toSismo),
+  };
 }
 
 export type GranularidadConteo = "dia" | "semana" | "mes" | "anio";

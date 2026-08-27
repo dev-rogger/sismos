@@ -17,8 +17,19 @@ export interface ConteoPeriodo {
   total: number;
 }
 
+export interface ConteoBandaMagnitud {
+  desde: number;
+  total: number;
+}
+
+export interface ResumenPeriodo {
+  total: number;
+  porBanda: ConteoBandaMagnitud[];
+  sismos: ItemHistorial[];
+}
+
 interface RespuestaEstadisticas {
-  ultimos7Dias: ItemHistorial[];
+  resumen: ResumenPeriodo;
   conteos: ConteoPeriodo[];
 }
 
@@ -65,7 +76,7 @@ export function useEstadisticas(soloChile: boolean, activo: boolean) {
   return {
     granularidad,
     setGranularidad,
-    ultimos7Dias: datos?.ultimos7Dias ?? [],
+    resumen: datos?.resumen ?? { total: 0, porBanda: [], sismos: [] },
     conteos: datos?.conteos ?? [],
     loading,
     error,

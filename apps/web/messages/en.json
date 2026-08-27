@@ -124,7 +124,12 @@
     "cargando": "Loading statistics…",
     "errorCarga": "We couldn't load the statistics.",
     "reintentar": "Try again",
-    "sismosUltimos7Dias": "Earthquakes in the last 7 days",
+    "resumenVentana": {
+      "dia": "Earthquakes in the last 7 days",
+      "semana": "Earthquakes in the last 8 weeks",
+      "mes": "Earthquakes in the last 12 months",
+      "anio": "Earthquakes in the last 5 years"
+    },
     "actividad": "Activity",
     "granularidadAria": "Group by",
     "granularidad": {
@@ -136,8 +141,19 @@
     "graficoAriaLabel": "Chart of earthquake count by period",
     "sismosConteo": "{n} earthquakes",
     "sinDatosGrafico": "Not enough data for this chart yet",
-    "listadoUltimos7Dias": "Earthquakes from the last 7 days",
-    "sinSismos": "No earthquakes in the last 7 days with this filter"
+    "listadoVentana": {
+      "dia": "Earthquakes from the last 7 days",
+      "semana": "Earthquakes from the last 8 weeks",
+      "mes": "Earthquakes from the last 12 months",
+      "anio": "Earthquakes from the last 5 years"
+    },
+    "listadoAcotado": "Showing the {mostrados} most recent of {total}",
+    "sinSismosVentana": {
+      "dia": "No earthquakes in the last 7 days with this filter",
+      "semana": "No earthquakes in the last 8 weeks with this filter",
+      "mes": "No earthquakes in the last 12 months with this filter",
+      "anio": "No earthquakes in the last 5 years with this filter"
+    }
   },
   "compartir": {
     "boton": "Share",
