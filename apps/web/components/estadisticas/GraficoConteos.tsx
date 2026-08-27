@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ConteoPeriodo, GranularidadConteo } from "../../lib/use-estadisticas";
 
@@ -49,7 +49,22 @@ export default function GraficoConteos({
 }: GraficoConteosProps) {
   const t = useTranslations("estadisticas");
   const locale = useLocale();
-  const [activo, setActivo] = useState<number | null>(null);
+  // Cada barra es tocable (ver onClick más abajo) y muestra su fecha+conteo
+  // arriba, pero nada lo indica visualmente — sin esto, el área de arriba
+  // queda en blanco hasta que alguien toca algo por accidente y descubre
+  // que se puede. Arranca con la última barra (el período más reciente)
+  // ya seleccionada, para que se note desde el primer vistazo.
+  const [activo, setActivo] = useState<number | null>(
+    conteos.length > 0 ? conteos.length - 1 : null,
+  );
+
+  // Al cambiar de granularidad (o de Chile/mundial) llega un `conteos`
+  // nuevo con otra cantidad de barras — sin esto, `activo` se queda con el
+  // índice viejo, que puede apuntar a una barra distinta o no existir.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    setActivo(conteos.length > 0 ? conteos.length - 1 : null);
+  }, [conteos]);
 
   if (conteos.length === 0) {
     return (
@@ -62,7 +77,8 @@ export default function GraficoConteos({
   const max = Math.max(...conteos.map((c) => c.total), 1);
   const anchoTotal = conteos.length * (ANCHO_BARRA + GAP) - GAP;
   const etiquetar = indicesAEtiquetar(conteos.length);
-  const seleccionado = activo !== null ? conteos[activo] : null;
+  const activoValido = activo !== null && activo < conteos.length ? activo : null;
+  const seleccionado = activoValido !== null ? conteos[activoValido] : null;
 
   return (
     <div>
