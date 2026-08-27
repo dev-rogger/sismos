@@ -264,3 +264,69 @@ export async function findUltimoCsnPreciso(): Promise<Date | null> {
     .limit(1);
   return row?.actualizado ?? null;
 }
+
+// A diferencia de findUltimos10Dias (número fijo, usado por el historial ya
+// existente), esta es genérica para la pantalla de Estadísticas: necesita
+// tanto "últimos 7 días" para el listado como filtrar por Chile/mundial, algo
+// que findUltimos10Dias no soporta.
+export async function findUltimosDias(
+  dias: number,
+  soloChile: boolean,
+): Promise<Sismo[]> {
+  const since = new Date(Date.now() - dias * 24 * 60 * 60 * 1000);
+  const condiciones = soloChile
+    ? and(gte(sismos.fecha, since), eq(sismos.bandera, "🇨🇱"))
+    : gte(sismos.fecha, since);
+  const rows = await getDb()
+    .select()
+    .from(sismos)
+    .where(condiciones)
+    .orderBy(desc(sismos.fecha));
+  return rows.map(toSismo);
+}
+
+export type GranularidadConteo = "dia" | "semana" | "mes" | "anio";
+
+const UNIDAD_POSTGRES: Record<GranularidadConteo, string> = {
+  dia: "day",
+  semana: "week",
+  mes: "month",
+  anio: "year",
+};
+
+export interface ConteoPeriodo {
+  periodo: Date;
+  total: number;
+}
+
+// Cuenta sismos agrupados por día/semana/mes/año, para los gráficos de
+// actividad de la pantalla de Estadísticas. `date_trunc` corre en Postgres
+// (no se trae todas las filas a JS a sumar a mano) — con el volumen real
+// (miles de sismos "leves" detectados por CSN) traer todo sería lento y
+// pesado para nada, el conteo ya lo hace la base de datos.
+export async function findConteoPorPeriodo(
+  granularidad: GranularidadConteo,
+  desde: Date,
+  soloChile: boolean,
+): Promise<ConteoPeriodo[]> {
+  // `unidad` sale de UNIDAD_POSTGRES (4 valores fijos nuestros, nunca del
+  // usuario) así que va como literal SQL, no como bind parameter: pasado
+  // como parámetro, Postgres no logra inferir su tipo dentro de
+  // date_trunc() en el protocolo extendido (falla con "could not determine
+  // data type of parameter" — probado a mano contra la base local).
+  const unidad = UNIDAD_POSTGRES[granularidad];
+  const truncado = sql`date_trunc(${sql.raw(`'${unidad}'`)}, ${sismos.fecha})`;
+  const condiciones = soloChile
+    ? and(gte(sismos.fecha, desde), eq(sismos.bandera, "🇨🇱"))
+    : gte(sismos.fecha, desde);
+  const rows = await getDb()
+    .select({
+      periodo: truncado.as("periodo"),
+      total: sql<number>`count(*)::int`.as("total"),
+    })
+    .from(sismos)
+    .where(condiciones)
+    .groupBy(truncado)
+    .orderBy(truncado);
+  return rows.map((r) => ({ periodo: r.periodo as Date, total: r.total }));
+}

@@ -21,9 +21,28 @@ interface MenuLateralProps {
   onAbrirHistorial: () => void;
   onAbrirFallas: () => void;
   onAbrirNotificaciones: () => void;
+  onAbrirEstadisticas: () => void;
   puedeInstalarApp: boolean;
   onAbrirInstalarApp: () => void;
   onAbiertoChange?: (abierto: boolean) => void;
+}
+
+function IconoEstadisticas() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+    >
+      <path d="M4 20V10" />
+      <path d="M12 20V4" />
+      <path d="M20 20v-6" />
+    </svg>
+  );
 }
 
 function IconoHistorial() {
@@ -150,6 +169,7 @@ export default function MenuLateral({
   onAbrirHistorial,
   onAbrirFallas,
   onAbrirNotificaciones,
+  onAbrirEstadisticas,
   puedeInstalarApp,
   onAbrirInstalarApp,
   onAbiertoChange,
@@ -285,6 +305,14 @@ export default function MenuLateral({
           >
             <IconoNotificaciones />
             {t("notificaciones")}
+          </button>
+          <button
+            type="button"
+            onClick={() => elegir(onAbrirEstadisticas)}
+            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+          >
+            <IconoEstadisticas />
+            {t("estadisticas")}
           </button>
           <button
             type="button"

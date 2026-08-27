@@ -14,6 +14,7 @@
     "sismos": "Earthquakes",
     "fallas": "Faults",
     "notificaciones": "Notifications",
+    "estadisticas": "Statistics",
     "admin": "Admin",
     "usuarios": "Users",
     "reportes": "Reports",
@@ -116,6 +117,27 @@
     "errorCarga": "We couldn't load the list of faults.",
     "reintentar": "Try again",
     "sinResultados": "No results for \"{busqueda}\""
+  },
+  "estadisticas": {
+    "titulo": "Statistics",
+    "soloChile": "🇨🇱 Chile only",
+    "cargando": "Loading statistics…",
+    "errorCarga": "We couldn't load the statistics.",
+    "reintentar": "Try again",
+    "sismosUltimos7Dias": "Earthquakes in the last 7 days",
+    "actividad": "Activity",
+    "granularidadAria": "Group by",
+    "granularidad": {
+      "dia": "Day",
+      "semana": "Week",
+      "mes": "Month",
+      "anio": "Year"
+    },
+    "graficoAriaLabel": "Chart of earthquake count by period",
+    "sismosConteo": "{n} earthquakes",
+    "sinDatosGrafico": "Not enough data for this chart yet",
+    "listadoUltimos7Dias": "Earthquakes from the last 7 days",
+    "sinSismos": "No earthquakes in the last 7 days with this filter"
   },
   "compartir": {
     "boton": "Share",

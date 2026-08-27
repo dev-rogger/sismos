@@ -14,6 +14,7 @@
     "sismos": "Sismos",
     "fallas": "Fallas",
     "notificaciones": "Notificaciones",
+    "estadisticas": "Estadísticas",
     "admin": "Admin",
     "usuarios": "Usuarios",
     "reportes": "Reportes",
@@ -116,6 +117,27 @@
     "errorCarga": "No se pudo cargar la lista de fallas.",
     "reintentar": "Reintentar",
     "sinResultados": "Sin resultados para \"{busqueda}\""
+  },
+  "estadisticas": {
+    "titulo": "Estadísticas",
+    "soloChile": "🇨🇱 Solo Chile",
+    "cargando": "Cargando estadísticas…",
+    "errorCarga": "No se pudieron cargar las estadísticas.",
+    "reintentar": "Reintentar",
+    "sismosUltimos7Dias": "Sismos en los últimos 7 días",
+    "actividad": "Actividad",
+    "granularidadAria": "Agrupar por",
+    "granularidad": {
+      "dia": "Día",
+      "semana": "Semana",
+      "mes": "Mes",
+      "anio": "Año"
+    },
+    "graficoAriaLabel": "Gráfico de cantidad de sismos por período",
+    "sismosConteo": "{n} sismos",
+    "sinDatosGrafico": "Sin datos suficientes para este gráfico todavía",
+    "listadoUltimos7Dias": "Sismos de los últimos 7 días",
+    "sinSismos": "No hubo sismos en los últimos 7 días con este filtro"
   },
   "compartir": {
     "boton": "Compartir",

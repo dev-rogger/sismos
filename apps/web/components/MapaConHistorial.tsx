@@ -5,6 +5,7 @@ import MapaSismos from "./mapa/MapaSismos";
 import PanelHistorial from "./historial/PanelHistorial";
 import PantallaHistorial from "./historial/PantallaHistorial";
 import PantallaFallas from "./fallas/PantallaFallas";
+import PantallaEstadisticas from "./estadisticas/PantallaEstadisticas";
 import MenuLateral from "./menu/MenuLateral";
 import ModalConfiguracion from "./configuracion/ModalConfiguracion";
 import ModalInstalarApp from "./instalar/ModalInstalarApp";
@@ -47,6 +48,7 @@ export default function MapaConHistorial({
   const [historialAbierto, setHistorialAbierto] = useState(false);
   const [pantallaFallasAbierta, setPantallaFallasAbierta] = useState(false);
   const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
+  const [estadisticasAbiertas, setEstadisticasAbiertas] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
 
   // El toast de invitación a notificaciones vive más arriba en el árbol
@@ -81,6 +83,7 @@ export default function MapaConHistorial({
     historialAbierto ||
       pantallaFallasAbierta ||
       notificacionesAbiertas ||
+      estadisticasAbiertas ||
       menuAbierto,
   );
 
@@ -145,10 +148,15 @@ export default function MapaConHistorial({
         onSeleccionar={seleccionarFallaDesdeLista}
         onCerrar={() => setPantallaFallasAbierta(false)}
       />
+      <PantallaEstadisticas
+        abierto={estadisticasAbiertas}
+        onCerrar={() => setEstadisticasAbiertas(false)}
+      />
       <MenuLateral
         onAbrirHistorial={() => setHistorialAbierto(true)}
         onAbrirFallas={() => setPantallaFallasAbierta(true)}
         onAbrirNotificaciones={() => setNotificacionesAbiertas(true)}
+        onAbrirEstadisticas={() => setEstadisticasAbiertas(true)}
         puedeInstalarApp={puedeInstalar}
         onAbrirInstalarApp={abrirManual}
         onAbiertoChange={setMenuAbierto}
