@@ -308,25 +308,27 @@ body {
   opacity: 0;
 }
 
-/* Van tres variantes distintas de "algo del mapa se ve por encima del
-   splash" (franja abajo por safe-area, ídem en el propio splash, y el
-   control de atribución de MapLibre sin estilo asomando arriba antes de
-   que cargue maplibre-gl.css) — cada una con un mecanismo distinto de
-   fondo. En vez de perseguir la próxima variante, se elimina la categoría
-   completa: mientras el splash exista y no esté saliendo, el contenido
-   real (<main>, en cualquier ruta) queda con visibility:hidden — no
-   depende de que el z-index/stacking se comporte como se espera, así que
-   no importa CÓMO se filtre algo, no hay nada que pintar. Al empezar a
-   salir (data-saliendo) se vuelve visible para el crossfade con el splash
-   desvaneciéndose. */
+/* Van cuatro variantes distintas de "algo del mapa se ve por un instante"
+   (franja abajo por safe-area, ídem en el propio splash, el control de
+   atribución de MapLibre sin estilo, y esta: la atribución sin asentar
+   del todo justo durante el crossfade). Las primeras tres eran el splash
+   dejando ver el mapa por un hueco; esta última es distinta — ocurre
+   DENTRO de la ventana real de fade-out (data-saliendo), cuando el mapa
+   ya se revela a propósito pero MapLibre no había terminado de asentar
+   sus controles. En vez de perseguir la próxima variante de "el mapa no
+   estaba listo todavía", se saca el crossfade: <main> queda oculto
+   durante TODA la vida de .splash-pwa, incluido el fade-out — recién se
+   ve cuando el splash ya desapareció del todo (se desmonta). El splash ya
+   llega a opacity:0 antes de desmontarse, así el corte es imperceptible
+   en la práctica; lo que se gana es no depender nunca de que el mapa
+   esté 100% asentado a un instante exacto. */
 @media (display-mode: standalone) {
-  .splash-pwa:not([data-saliendo="true"]) ~ main {
+  .splash-pwa ~ main {
     visibility: hidden;
   }
 }
 
-.splash-pwa[data-standalone-legacy="true"]:not([data-saliendo="true"])
-  ~ main {
+.splash-pwa[data-standalone-legacy="true"] ~ main {
   visibility: hidden;
 }
 
