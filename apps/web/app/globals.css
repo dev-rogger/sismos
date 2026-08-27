@@ -362,10 +362,14 @@ body {
    centro de la composición, fría hacia el borde inferior) en vez de negro
    plano — de lejos sigue leyéndose oscuro, de cerca tiene textura. Va
    detrás de todo el contenido (z-index propio, capa nueva) sin tocar el
-   fondo de .splash-pwa ni su ::after (fix de safe-area ya validado). */
+   fondo de .splash-pwa ni su ::after (fix de safe-area ya validado).
+   `inset` extiende -120px abajo, igual que .splash-pwa::after: si este
+   fondo terminara en el borde real (inset:0) y el ::after de abajo sigue
+   120px más, se nota la costura entre la viñeta y el relleno plano —
+   exactamente el "espacio negro raro abajo" que se reportó. */
 .splash-fondo {
   position: absolute;
-  inset: 0;
+  inset: 0 0 -120px 0;
   z-index: 0;
   pointer-events: none;
   background:
@@ -382,11 +386,12 @@ body {
 }
 
 /* Grano sutil (estático, no anima): evita que el negro se vea "plano de
-   sistema" y le da una textura fílmica discreta. */
+   sistema" y le da una textura fílmica discreta. Mismo -120px que
+   .splash-fondo — que el grano cubra exactamente lo mismo que la viñeta. */
 .splash-fondo::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 0 0 -120px 0;
   opacity: 0.05;
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
