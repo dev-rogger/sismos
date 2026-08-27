@@ -332,6 +332,32 @@ body {
   visibility: hidden;
 }
 
+/* El control de atribución de MapLibre (el cartel "OpenStreetMap") sigue
+   asomando pese a lo de arriba: maplibre-gl.css le pone visibility:visible
+   explícito a `.maplibregl-ctrl-attrib` (para que nunca quede oculto por
+   accidente — es requisito de atribución de OpenStreetMap), lo que anula
+   el visibility:hidden heredado de <main> justo para ese elemento. display
+   sí gana siempre: si el ancestro no genera caja, no hay nada que un
+   descendiente pueda "revivir" con su propio visibility. Se apunta al
+   control puntual, no a todo <main>, para no arriesgar que MapLibre
+   inicialice el mapa en un contenedor de tamaño cero (por eso el resto de
+   <main> usa visibility, no display). */
+@media (display-mode: standalone) {
+  .splash-pwa ~ main .maplibregl-ctrl-attrib,
+  .splash-pwa ~ main .maplibregl-ctrl-bottom-left,
+  .splash-pwa ~ main .maplibregl-ctrl-bottom-right {
+    display: none;
+  }
+}
+
+.splash-pwa[data-standalone-legacy="true"] ~ main .maplibregl-ctrl-attrib,
+.splash-pwa[data-standalone-legacy="true"] ~ main .maplibregl-ctrl-bottom-left,
+.splash-pwa[data-standalone-legacy="true"]
+  ~ main
+  .maplibregl-ctrl-bottom-right {
+  display: none;
+}
+
 /* Fondo con profundidad: dos vignettes radiales suaves (cálida cerca del
    centro de la composición, fría hacia el borde inferior) en vez de negro
    plano — de lejos sigue leyéndose oscuro, de cerca tiene textura. Va
