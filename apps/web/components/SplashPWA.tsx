@@ -63,24 +63,27 @@ export default function SplashPWA() {
       data-saliendo={saliendo}
       data-standalone-legacy={standaloneLegacy}
     >
-      <div className="flex flex-col items-center">
+      <div className="splash-fondo" aria-hidden="true" />
+      <div className="splash-contenido flex flex-col items-center">
         <div className="splash-epicentro">
           <span className="splash-resplandor" />
+          <span className="splash-bloom" />
           <div className="splash-cinta">
-            {/* Cinta de sismógrafo: 900 unidades de ancho (1 unidad = 1px)
-                dentro de un contenedor de 260px — la aguja fija está en el
-                centro del contenedor. La ráfaga P-S ocupa x=340 a x=430
-                (centro en x=385): a 300px/s de scroll, ese centro cruza
-                los 130px del contenedor (su punto medio) a los 0.85s. */}
+            {/* Cinta de sismógrafo: el SVG (350% del ancho del
+                contenedor, que a su vez es 88vw) se traslada en
+                porcentaje de su propio ancho, no en px fijos — así la
+                sincronía se mantiene exacta en cualquier dispositivo. La
+                aguja fija está en el centro del contenedor. La ráfaga
+                P-S ocupa x=340 a x=428 del viewBox (centro ~x=384): ese
+                centro cruza el punto medio del contenedor a los 0.85s
+                (ver la nota de cálculo junto a splash-cinta-recorrer). */}
             <svg
               className="splash-cinta-trazo"
-              viewBox="0 0 900 64"
-              width="900"
-              height="64"
+              viewBox="0 0 900 96"
               aria-hidden="true"
             >
               <path
-                d="M0,32 L40,30 L80,33 L120,31 L160,34 L200,30 L240,33 L280,31 L320,32 L340,32 L352,26 L364,38 L376,18 L384,52 L392,6 L400,58 L408,28 L416,36 L430,32 L440,30 L480,33 L520,31 L560,32 L600,31 L640,32 L680,31 L720,32 L760,31 L800,32 L840,31 L880,32 L900,32"
+                d="M0,48 L40,46 L80,50 L120,47 L160,51 L200,46 L240,49 L280,47 L320,48 L340,48 L352,38 L364,58 L376,26 L384,80 L392,6 L400,90 L408,42 L416,54 L428,48 L440,46 L480,50 L520,47 L560,48 L600,47 L640,48 L680,47 L720,48 L760,47 L800,48 L840,47 L880,48 L900,48"
                 fill="none"
                 stroke="#f97316"
                 strokeWidth="2"
@@ -97,12 +100,12 @@ export default function SplashPWA() {
           <img
             src="/icons/icon-192.png"
             alt=""
-            width={80}
-            height={80}
+            width={112}
+            height={112}
             className="splash-icono"
           />
         </div>
-        <p className="splash-titulo text-2xl font-semibold tracking-tight text-neutral-100">
+        <p className="splash-titulo text-4xl font-semibold tracking-tight">
           <span className="sr-only">Sismos</span>
           <span aria-hidden="true">
             {"Sismos".split("").map((letra, indice) => (

@@ -319,27 +319,78 @@ body {
   visibility: hidden;
 }
 
+/* Fondo con profundidad: dos vignettes radiales suaves (cálida cerca del
+   centro de la composición, fría hacia el borde inferior) en vez de negro
+   plano — de lejos sigue leyéndose oscuro, de cerca tiene textura. Va
+   detrás de todo el contenido (z-index propio, capa nueva) sin tocar el
+   fondo de .splash-pwa ni su ::after (fix de safe-area ya validado). */
+.splash-fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      120% 90% at 50% 38%,
+      rgba(38, 30, 22, 0.9) 0%,
+      rgba(10, 10, 10, 0) 60%
+    ),
+    radial-gradient(
+      140% 120% at 50% 100%,
+      rgba(14, 22, 34, 0.4) 0%,
+      rgba(10, 10, 10, 0) 55%
+    );
+}
+
+/* Grano sutil (estático, no anima): evita que el negro se vea "plano de
+   sistema" y le da una textura fílmica discreta. */
+.splash-fondo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Contenido por encima del fondo, con un gesto compositivo (ancla un poco
+   arriba del centro geométrico exacto en vez de quedar 50/50 a la
+   fuerza). Estático, no animado. */
+.splash-contenido {
+  position: relative;
+  z-index: 1;
+  transform: translateY(-4vh);
+}
+
 .splash-epicentro {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16.25rem;
-  height: 5.5rem;
+  /* 88vw en vez de un ancho fijo: la composición escala con el
+     dispositivo real en vez de quedar como una isla del mismo tamaño en
+     cualquier pantalla. */
+  width: 88vw;
+  height: 12rem;
 }
 
 .splash-resplandor {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 8.5rem;
-  height: 8.5rem;
+  width: 13rem;
+  height: 13rem;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
+  /* Dos tonos, no naranja puro de borde a borde: el borde exterior toma
+     un dejo del azul que ya usa la app (#38bdf8 en marcador-seleccion),
+     en vez de inventar un color nuevo. */
   background: radial-gradient(
     circle,
-    rgba(249, 115, 22, 0.35),
-    transparent 70%
+    rgba(249, 115, 22, 0.35) 0%,
+    rgba(249, 115, 22, 0.08) 55%,
+    rgba(56, 189, 248, 0.05) 80%,
+    transparent 100%
   );
   opacity: 0.4;
 }
@@ -372,10 +423,11 @@ body {
    derecha a izquierda a velocidad constante desde el primer frame — el
    instrumento "ya está registrando" antes de que termine de cargar la
    app, en vez de mostrar una animación de logo. La ráfaga (evento P-S)
-   está ubicada en un punto fijo del trazo, y la distancia total de
-   scroll se eligió a mano junto con ese punto para que la ráfaga cruce
-   el centro (donde está la aguja) siempre a los 0.85s — ningún valor se
-   mide en runtime, todo es aritmética fija de diseño. */
+   está ubicada en un punto fijo del trazo, y la traslación se expresa en
+   porcentaje del propio ancho del SVG (no en px fijos) para que la
+   sincronía se mantenga exacta sin importar el ancho real del
+   dispositivo — ningún valor se mide en runtime, todo es aritmética fija
+   de diseño. */
 .splash-cinta {
   position: absolute;
   inset: 0;
@@ -400,6 +452,11 @@ body {
 
 .splash-cinta-trazo {
   display: block;
+  /* 350% del contenedor (mismo factor ~3.5 de "ancho total / ventana
+     visible" que antes en px fijos): la altura queda libre para
+     respetar la relación de aspecto real del viewBox (900×96), sin
+     distorsionar el trazo. */
+  width: 350%;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -413,24 +470,47 @@ body {
     transform: translateX(0);
   }
   to {
-    /* 300px/s de velocidad de cinta (900px de largo, contenedor de
-       260px): a los 0.85s la ráfaga (centrada en x=385 del viewBox) cae
-       exactamente en el centro del contenedor (130px). */
-    transform: translateX(-570px);
+    /* Ventana visible = 1/3.5 = 28.57% de la cinta. Ráfaga centrada en
+       x=384 de 900 → fracción 0.4267. Para que ese punto caiga en el
+       centro del contenedor (50%) a los 0.85s: 0.4267 − 0.5/3.5 = 0.2838
+       (28.38% recorrido a esa altura). Extrapolando esa velocidad a los
+       1.9s totales: 0.2838 / 0.85 × 1.9 ≈ 0.6355 → -63.6%. Deja ~7.9% de
+       cinta de margen al final (no se ve "el borde del papel"). */
+    transform: translateX(-63.6%);
   }
 }
 
-/* Aguja fija: nunca anima — es el punto de lectura estacionario bajo el
-   que pasa la cinta, siempre visible (incluso con reduced-motion). */
+/* Aguja fija: el punto de lectura estacionario bajo el que pasa la
+   cinta, siempre visible (incluso con reduced-motion). Solo se anima con
+   una anticipación mínima justo antes del impacto (ver más abajo). */
 .splash-aguja {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 0.375rem;
-  height: 0.375rem;
+  width: 0.5rem;
+  height: 0.5rem;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
   background: rgba(249, 115, 22, 0.55);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .splash-aguja {
+    /* Anticipación: una compresión mínima justo antes del cruce (termina
+       a los 0.80s, 50ms antes del flash a 0.85s) — el golpe se siente
+       con más peso que si el flash disparara sin ningún preludio. */
+    animation: splash-aguja-anticipo 0.18s cubic-bezier(0.4, 0, 1, 1) 0.62s 1;
+  }
+}
+
+@keyframes splash-aguja-anticipo {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(0.82);
+  }
 }
 
 /* Destello: el instante exacto en que la ráfaga pasa bajo la aguja. */
@@ -438,8 +518,8 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 5rem;
+  height: 5rem;
   transform: translate(-50%, -50%);
   border-radius: 9999px;
   background: radial-gradient(
@@ -472,6 +552,41 @@ body {
   }
 }
 
+/* Bloom: al impacto, no solo destella el punto — toda la atmósfera
+   alrededor sube de intensidad brevemente y se asienta, como si la
+   pantalla completa registrara el evento, no solo el ícono. */
+.splash-bloom {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36rem;
+  height: 36rem;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(249, 115, 22, 0.22), transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .splash-bloom {
+    animation: splash-bloom-atmosfera 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.85s
+      forwards;
+  }
+}
+
+@keyframes splash-bloom-atmosfera {
+  0% {
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* Anillos concéntricos — mismo ADN que los pulsos de sismo del mapa
    (marcador-sismo--pulso / marcador-seleccion). Dos, no tres: un solo
    foco de atención en el instante del impacto, no varias cosas
@@ -480,8 +595,8 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 5.5rem;
-  height: 5.5rem;
+  width: 8rem;
+  height: 8rem;
   border-radius: 9999px;
   border: 1.5px solid rgba(249, 115, 22, 0.6);
   opacity: 0;
@@ -490,11 +605,11 @@ body {
 
 @media (prefers-reduced-motion: no-preference) {
   .splash-onda--1 {
-    animation: splash-onda-expandir 0.6s cubic-bezier(0.19, 1, 0.22, 1) 0.85s
+    animation: splash-onda-expandir 0.75s cubic-bezier(0.19, 1, 0.22, 1) 0.85s
       forwards;
   }
   .splash-onda--2 {
-    animation: splash-onda-expandir 0.6s cubic-bezier(0.19, 1, 0.22, 1) 1s
+    animation: splash-onda-expandir 0.75s cubic-bezier(0.19, 1, 0.22, 1) 1s
       forwards;
   }
 }
@@ -505,15 +620,15 @@ body {
     opacity: 0.65;
   }
   100% {
-    transform: translate(-50%, -50%) scale(5);
+    transform: translate(-50%, -50%) scale(7);
     opacity: 0;
   }
 }
 
 .splash-icono {
   position: relative;
-  width: 5rem;
-  height: 5rem;
+  width: 7rem;
+  height: 7rem;
   opacity: 1;
 }
 
@@ -540,12 +655,19 @@ body {
 }
 
 .splash-titulo {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
 }
 
 .splash-titulo-letra {
   display: inline-block;
   opacity: 1;
+  /* Relleno degradado cálido en vez de blanco sólido plano — tratamiento
+     de wordmark, no texto de sistema. */
+  background: linear-gradient(180deg, #fff7ed 0%, #fdba74 55%, #f97316 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 @media (prefers-reduced-motion: no-preference) {
