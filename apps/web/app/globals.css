@@ -250,6 +250,17 @@ body {
   position: fixed;
   inset: 0;
   z-index: 100;
+  /* El grano de .splash-fondo::after usa mix-blend-mode — sin esto, el
+     blend puede filtrarse contra lo pintado FUERA de este elemento (el
+     mapa, el fondo de la página) en vez de quedar contenido acá adentro.
+     Es un bug conocido de WebKit con blend modes + stacking contexts
+     complejos (position:fixed + z-index): se vio como un frame gris
+     sólido lavando toda la pantalla durante el arranque, en vez del
+     grano sutil al 5% que debía verse. `isolation: isolate` es la forma
+     correcta (recomendada por spec) de usar mix-blend-mode sin este
+     riesgo, no un parche.
+  */
+  isolation: isolate;
   /* Oculto por defecto: el splash solo tiene sentido dentro de la PWA
      instalada. Se muestra por CSS puro (media query abajo), no por JS,
      para que aparezca en el primer paint sin esperar hidratación. */
