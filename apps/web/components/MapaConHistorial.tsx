@@ -6,6 +6,8 @@ import PanelHistorial from "./historial/PanelHistorial";
 import PantallaHistorial from "./historial/PantallaHistorial";
 import PantallaFallas from "./fallas/PantallaFallas";
 import PantallaEstadisticas from "./estadisticas/PantallaEstadisticas";
+import PantallaUsuarios from "./admin/PantallaUsuarios";
+import PantallaReportes from "./admin/PantallaReportes";
 import MenuLateral from "./menu/MenuLateral";
 import ModalConfiguracion from "./configuracion/ModalConfiguracion";
 import ModalInstalarApp from "./instalar/ModalInstalarApp";
@@ -19,6 +21,10 @@ import type { FallaSeleccionada } from "../lib/tipos-falla";
 interface MapaConHistorialProps {
   sismosIniciales: SismoMapa[];
   sismoInicial: SismoSeleccionado | null;
+  // Deep link de fallback desde las viejas rutas /admin/usuarios y
+  // /admin/reportes (ver app/admin/*/page.tsx): abre el overlay
+  // correspondiente apenas monta, en vez de navegar a una página aparte.
+  adminInicial: "usuarios" | "reportes" | null;
   // Si el fetch inicial de sismos falló en el servidor (ver app/page.tsx),
   // el mapa arranca con sismosIniciales vacío sin que eso signifique
   // realmente "no hay sismos" — se le pasa a MapaSismos para que muestre el
@@ -30,6 +36,7 @@ interface MapaConHistorialProps {
 export default function MapaConHistorial({
   sismosIniciales,
   sismoInicial,
+  adminInicial,
   errorCargaInicial,
 }: MapaConHistorialProps) {
   const [sismoSeleccionado, setSismoSeleccionado] =
@@ -49,6 +56,12 @@ export default function MapaConHistorial({
   const [pantallaFallasAbierta, setPantallaFallasAbierta] = useState(false);
   const [notificacionesAbiertas, setNotificacionesAbiertas] = useState(false);
   const [estadisticasAbiertas, setEstadisticasAbiertas] = useState(false);
+  const [usuariosAbierto, setUsuariosAbierto] = useState(
+    adminInicial === "usuarios",
+  );
+  const [reportesAbierto, setReportesAbierto] = useState(
+    adminInicial === "reportes",
+  );
   const [menuAbierto, setMenuAbierto] = useState(false);
 
   // El toast de invitación a notificaciones vive más arriba en el árbol
@@ -84,6 +97,8 @@ export default function MapaConHistorial({
       pantallaFallasAbierta ||
       notificacionesAbiertas ||
       estadisticasAbiertas ||
+      usuariosAbierto ||
+      reportesAbierto ||
       menuAbierto,
   );
 
@@ -152,11 +167,21 @@ export default function MapaConHistorial({
         abierto={estadisticasAbiertas}
         onCerrar={() => setEstadisticasAbiertas(false)}
       />
+      <PantallaUsuarios
+        abierto={usuariosAbierto}
+        onCerrar={() => setUsuariosAbierto(false)}
+      />
+      <PantallaReportes
+        abierto={reportesAbierto}
+        onCerrar={() => setReportesAbierto(false)}
+      />
       <MenuLateral
         onAbrirHistorial={() => setHistorialAbierto(true)}
         onAbrirFallas={() => setPantallaFallasAbierta(true)}
         onAbrirNotificaciones={() => setNotificacionesAbiertas(true)}
         onAbrirEstadisticas={() => setEstadisticasAbiertas(true)}
+        onAbrirUsuarios={() => setUsuariosAbierto(true)}
+        onAbrirReportes={() => setReportesAbierto(true)}
         puedeInstalarApp={puedeInstalar}
         onAbrirInstalarApp={abrirManual}
         onAbiertoChange={setMenuAbierto}

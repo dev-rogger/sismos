@@ -40,9 +40,17 @@ function parseSismoDesdeQuery(params: {
   };
 }
 
+function parseAdminDesdeQuery(params: {
+  [key: string]: string | string[] | undefined;
+}): "usuarios" | "reportes" | null {
+  const admin = typeof params.admin === "string" ? params.admin : null;
+  return admin === "usuarios" || admin === "reportes" ? admin : null;
+}
+
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const sismoInicial = parseSismoDesdeQuery(params);
+  const adminInicial = parseAdminDesdeQuery(params);
 
   let sismosIniciales: SismoMapa[] = [];
   let errorCargaInicial = false;
@@ -70,6 +78,7 @@ export default async function Home({ searchParams }: HomeProps) {
       <MapaConHistorial
         sismosIniciales={sismosIniciales}
         sismoInicial={sismoInicial}
+        adminInicial={adminInicial}
         errorCargaInicial={errorCargaInicial}
       />
     </PantallaPrincipal>
