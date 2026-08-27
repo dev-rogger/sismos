@@ -21,6 +21,8 @@ interface MenuLateralProps {
   onAbrirHistorial: () => void;
   onAbrirFallas: () => void;
   onAbrirNotificaciones: () => void;
+  onAbrirUsuarios: () => void;
+  onAbrirReportes: () => void;
   puedeInstalarApp: boolean;
   onAbrirInstalarApp: () => void;
   onAbiertoChange?: (abierto: boolean) => void;
@@ -150,6 +152,8 @@ export default function MenuLateral({
   onAbrirHistorial,
   onAbrirFallas,
   onAbrirNotificaciones,
+  onAbrirUsuarios,
+  onAbrirReportes,
   puedeInstalarApp,
   onAbrirInstalarApp,
   onAbiertoChange,
@@ -314,14 +318,14 @@ export default function MenuLateral({
                 <div className="flex flex-col gap-1 pl-9">
                   <button
                     type="button"
-                    onClick={() => navegarA("/admin/usuarios")}
+                    onClick={() => elegir(onAbrirUsuarios)}
                     className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
                   >
                     {t("usuarios")}
                   </button>
                   <button
                     type="button"
-                    onClick={() => navegarA("/admin/reportes")}
+                    onClick={() => elegir(onAbrirReportes)}
                     className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
                   >
                     {t("reportes")}

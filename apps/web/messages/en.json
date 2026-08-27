@@ -164,6 +164,10 @@
     "rolAdmin": "Admin",
     "rolUsuario": "User",
     "reportes": "Reports",
-    "proximamente": "Coming soon"
+    "proximamente": "Coming soon",
+    "cargando": "Loading…",
+    "errorCarga": "Couldn't load the information.",
+    "reintentar": "Retry",
+    "accesoDenegado": "You don't have permission to access this section."
   }
 }
