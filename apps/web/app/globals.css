@@ -332,6 +332,18 @@ body {
   visibility: hidden;
 }
 
+/* Red de seguridad: PantallaPrincipal fija su alto real en px vía JS
+   (useAlturaViewportReal) porque `100dvh` puro no siempre recalcula a
+   tiempo en Safari mobile (ver ese hook). Si esa medición en px llegara a
+   salir corta igual, `min-height:100dvh` la sobrepasa (min-height gana
+   sobre un height explícito menor) y el `background` evita que se vea el
+   fondo del body por debajo — mismo color que ya pinta .splash-pwa, así
+   que cualquier borde entre ambos es imperceptible. */
+.pantalla-principal {
+  min-height: 100dvh;
+  background: var(--color-background);
+}
+
 /* El control de atribución de MapLibre (el cartel "OpenStreetMap") sigue
    asomando pese a lo de arriba: maplibre-gl.css le pone visibility:visible
    explícito a `.maplibregl-ctrl-attrib` (para que nunca quede oculto por

@@ -41,20 +41,35 @@ export function useAlturaViewportReal(): number | null {
     }
     medirAhora();
 
+    // Arranque en frío de la PWA: WebKit a veces no ha asentado del todo
+    // `visualViewport.height` en el instante exacto de este primer mount, y
+    // esa medición síncrona puede salir corta — sin nada que la corrija,
+    // queda mal el resto de la sesión (el hueco recién se ve mucho después,
+    // cuando el splash se desmonta y expone `<main>`). Un remedido único,
+    // dos frames después, corrige eso sin repetir el parpadeo del timer que
+    // se sacó más abajo: durante esos 2 frames el elemento sigue con
+    // `visibility:hidden` detrás del splash (`.splash-pwa ~ main` en
+    // globals.css), así que el reflow no llega a pintarse.
+    let raf2: number | undefined;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(medirAhora);
+    });
+
     // iOS dispara varios eventos de resize seguidos mientras asienta la
     // barra/safe-area — sin debounce, cada uno dispara su propio ciclo de
     // resize+redraw del mapa. Colapsamos las ráfagas en una sola medición.
     //
     // A propósito NO hay un timer "por si acaso" re-midiendo unos cientos
-    // de ms después del mount: la altura base (visualViewport.height) y el
-    // alto del safe-area (env(), constante) ya son correctos en la primera
-    // medición síncrona de arriba. Un timer así se probó (pensando en que
-    // WebKit tardaría en asentar las métricas del WKWebView recién
-    // abierto) y causó un salto de alto visible en pleno splash — cada
-    // cambio de `alturaPx` reflowea un elemento fixed de pantalla completa
-    // con z-index alto, y eso se ve como un parpadeo real, no solo
-    // percibido. Si algo cambia de verdad después del mount, ya lo cubren
-    // los listeners de resize/orientationchange de abajo.
+    // de ms después del mount (más allá del remedido de 2 frames de arriba,
+    // que corre mientras el elemento sigue oculto): la altura base
+    // (visualViewport.height) y el alto del safe-area (env(), constante) ya
+    // son correctos en esa primera ventana. Un timer más tardío se probó
+    // (pensando en que WebKit tardaría en asentar las métricas del
+    // WKWebView recién abierto) y causó un salto de alto visible en pleno
+    // splash — cada cambio de `alturaPx` reflowea un elemento fixed de
+    // pantalla completa con z-index alto, y eso se ve como un parpadeo
+    // real, no solo percibido. Si algo cambia de verdad después del mount,
+    // ya lo cubren los listeners de resize/orientationchange de abajo.
     let debounceId: ReturnType<typeof setTimeout> | undefined;
     function medirConDebounce() {
       if (debounceId !== undefined) clearTimeout(debounceId);
@@ -65,6 +80,8 @@ export function useAlturaViewportReal(): number | null {
     window.addEventListener("resize", medirConDebounce);
     window.addEventListener("orientationchange", medirConDebounce);
     return () => {
+      cancelAnimationFrame(raf1);
+      if (raf2 !== undefined) cancelAnimationFrame(raf2);
       if (debounceId !== undefined) clearTimeout(debounceId);
       window.visualViewport?.removeEventListener("resize", medirConDebounce);
       window.removeEventListener("resize", medirConDebounce);
