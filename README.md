@@ -6,7 +6,7 @@ PWA gratuita e informativa que muestra sismos de Chile (CSN) y del mundo (USGS) 
 
 - `apps/web` — Next.js 16 App Router, PWA instalable
 - `apps/ingestor` — Function serverless en Vercel que consulta CSN + USGS y guarda los eventos
-- `packages/db` — Conexión y modelos de MongoDB (Mongoose)
+- `packages/db` — Conexión y schema de PostgreSQL (Drizzle ORM)
 - `packages/shared` — Tipos compartidos y normalización de datos entre fuentes
 - `packages/eslint-config`, `packages/typescript-config` — configuración compartida
 
@@ -18,4 +18,4 @@ pnpm install
 pnpm dev
 ```
 
-Ver `docs/superpowers/specs/` para las decisiones de diseño.
+Ver `docs/superpowers/specs/` para las decisiones de diseño y `/vault/` (abrible en Obsidian) para la documentación de referencia del estado actual del proyecto.
