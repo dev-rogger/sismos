@@ -44,16 +44,6 @@ export default function ActualizacionToastWatcher() {
     // (primera instalación), el primer "controllerchange" es solo el SW
     // tomando control por primera vez, no una versión nueva — lo ignoramos.
     let yaTeniaControlador = Boolean(navigator.serviceWorker.controller);
-    const montadoEn = Date.now();
-
-    // El navegador chequea si hay SW nuevo en cada navegación, incluida la
-    // que acaba de abrir esta pestaña. Si esa revisión encuentra una versión
-    // nueva, con skipWaiting+clientsClaim se activa y toma control casi al
-    // toque del mount — antes de que la sesión tenga estado real que perder
-    // (mapa movido, sismo seleccionado). En ese caso no tiene sentido pedir
-    // permiso: recargamos directo. Si el cambio llega después de esta
-    // ventana, asumimos que la app se estuvo usando y ahí sí avisamos.
-    const VENTANA_ARRANQUE_MS = 5000;
 
     function avisarNuevaVersion() {
       pedirMostrarToast("actualizacion", () => mostrarToastActualizacion());
@@ -114,10 +104,11 @@ export default function ActualizacionToastWatcher() {
         yaTeniaControlador = true;
         return;
       }
-      if (Date.now() - montadoEn < VENTANA_ARRANQUE_MS) {
-        window.location.reload();
-        return;
-      }
+      // Recargar solo no más: cualquier `location.reload()` automático es
+      // una navegación completa, así que si esto llega a caer mientras el
+      // splash está en pantalla, la app entera se remonta y el splash se
+      // reproduce dos veces. Avisamos siempre y dejamos que la persona
+      // decida cuándo recargar — nunca de sorpresa.
       avisarNuevaVersion();
     }
 
