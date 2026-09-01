@@ -1,25 +1,14 @@
-"use client";
-
-import { useAlturaViewportReal } from "../lib/use-altura-viewport-real";
-
 export default function PantallaPrincipal({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const alturaPx = useAlturaViewportReal();
-
+  // Sin JS: `.pantalla-principal` es `position:fixed; inset:0` (globals.css).
+  // Deriva su tamaño del mismo viewport que ya usa .splash-pwa, así que
+  // ambos coinciden por construcción, no por una cuenta que tenga que
+  // calzar. Ya no es componente de cliente: no necesita estado ni efectos.
   return (
-    <main
-      className="pantalla-principal flex w-screen flex-col lg:flex-row"
-      // Antes de que el efecto corra (primer paint, incluido el HTML que
-      // manda el servidor), 100dvh es el mejor fallback disponible — ya
-      // arregla el caso más común, JS solo termina de afinarlo. El
-      // `min-height:100dvh` de `.pantalla-principal` (globals.css) es la
-      // red de seguridad si esta medición en px sale corta: nunca deja un
-      // hueco más chico que el viewport real.
-      style={{ height: alturaPx !== null ? `${alturaPx}px` : "100dvh" }}
-    >
+    <main className="pantalla-principal flex flex-col lg:flex-row">
       {children}
     </main>
   );

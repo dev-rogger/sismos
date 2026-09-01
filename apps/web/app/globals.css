@@ -332,15 +332,23 @@ body {
   visibility: hidden;
 }
 
-/* Red de seguridad: PantallaPrincipal fija su alto real en px vía JS
-   (useAlturaViewportReal) porque `100dvh` puro no siempre recalcula a
-   tiempo en Safari mobile (ver ese hook). Si esa medición en px llegara a
-   salir corta igual, `min-height:100dvh` la sobrepasa (min-height gana
-   sobre un height explícito menor) y el `background` evita que se vea el
-   fondo del body por debajo — mismo color que ya pinta .splash-pwa, así
-   que cualquier borde entre ambos es imperceptible. */
+/* `position:fixed; inset:0` en vez de un alto calculado en JS.
+   Durante mucho tiempo esto midió `visualViewport.height +
+   env(safe-area-inset-bottom)` con un hook, pero con `viewport-fit=cover`
+   ese alto YA incluye el área del home indicator — sumarle el inset lo
+   contaba dos veces y dejaba <main> ~34px más alto que la pantalla en
+   iPhone. El documento quedaba scrolleable por esa diferencia y el
+   rubber-band de iOS dejaba ver el fondo del body: la franja negra abajo
+   que se persiguió por varios commits.
+
+   `fixed inset:0` lo resuelve de raíz: deriva del mismo viewport que ya usa
+   .splash-pwa (así ambos coinciden por construcción, sin ninguna cuenta que
+   tenga que calzar) y además hace imposible que el documento scrollee, que
+   es lo que producía la franja. Verificado en Chrome standalone y WebKit
+   real: `fixed inset:0` == `100dvh` == `innerHeight` == visualViewport. */
 .pantalla-principal {
-  min-height: 100dvh;
+  position: fixed;
+  inset: 0;
   background: var(--color-background);
 }
 
