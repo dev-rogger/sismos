@@ -21,4 +21,8 @@ Ver [[Pendientes/00 - Convenciones del Vault]]. Resumen: el agente `docs-agent` 
 
 ## Corrección importante vs. el CLAUDE.md del workspace (`~/Sites/CLAUDE.md`)
 
-El CLAUDE.md del workspace describe `sismos` con **"MongoDB (Mongoose)"**. Eso está desactualizado: el código real usa **PostgreSQL + Drizzle ORM** (ver [[02 - Base de Datos]]). Esta nota queda como registro del desfase; no se editó el CLAUDE.md del workspace porque está fuera del repo `sismos`.
+El CLAUDE.md del workspace describía `sismos` con **"MongoDB (Mongoose)"**. Eso estaba desactualizado: el código real usa **PostgreSQL + Drizzle ORM** (ver [[02 - Base de Datos]]). Ya se corrigió tanto ahí como en el `README.md` de este repo (2026-08-29).
+
+## Cómo depurar la PWA en modo standalone
+
+El splash y varios bugs de viewport solo se manifiestan con `(display-mode: standalone)`, que **no** se puede emular desde DevTools. La receta que sí funciona (ventana `--app=` de Chrome + `Emulation.setSafeAreaInsetsOverride` por CDP) está documentada en [[Pendientes/Bug - Intro Splash (banda negra + doble render)]]. Vale la pena leerla antes de tocar cualquier cosa de alturas de pantalla.

@@ -4,38 +4,68 @@ tags: [bug, resuelto]
 
 # Bug: intro/splash — banda negra inferior + a veces se muestra 2 veces
 
-**Estado**: fixes implementados 2026-08-31, pendiente de confirmación visual del usuario en PWA instalada (no se pudo probar en navegador automatizado en esa sesión — extensión Chrome desconectada).
+**Estado**: resuelto 2026-09-01, con medición reproducible. Pendiente solo la confirmación del usuario en iPhone real.
 
-## Síntomas reportados originalmente
+## Cómo VER la intro (el bloqueo que duró 6 commits)
 
-1. Persistía un espacio/banda de color negro en la parte inferior de la pantalla durante o después de la intro, a pesar de 3 intentos de fix previos.
-2. El splash a veces se renderizaba/mostraba dos veces.
+El splash solo se activa con `@media (display-mode: standalone)`, así que en una pestaña normal de Chrome no aparece — por eso todos los fixes anteriores se hicieron a ciegas. `Emulation.setEmulatedMedia` de DevTools **no** soporta `display-mode`. La forma que sí funciona:
 
-## Causa raíz y fix — banda negra
+```
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --remote-debugging-port=9223 --user-data-dir=/tmp/chrome-pwa \
+  --no-first-run "--app=http://localhost:3000/"
+```
 
-No estaba en `SplashPWA.tsx` (ese ya cubre toda la pantalla correctamente). Estaba en `PantallaPrincipal.tsx`: el `<main>` que contiene el mapa fija su alto en px vía `useAlturaViewportReal()` (`apps/web/lib/use-altura-viewport-real.ts`), que medía `visualViewport.height` **una sola vez, síncrono al montar**. Si esa primera medición salía corta (arranque en frío de la PWA), `<main>` quedaba con altura insuficiente para toda la sesión — invisible mientras el splash lo tapa (`visibility:hidden`), expuesto recién al desmontarse.
+Una ventana `--app=` sí matchea `(display-mode: standalone)`. Además Chrome soporta `Emulation.setSafeAreaInsetsOverride` por CDP, así que se reproduce la geometría exacta de un iPhone 15 Pro (393×852, inset inferior 34px). Alternativa con WebKit real: simulador iOS + `xcrun simctl openurl booted http://localhost:3000/`.
 
-Importante: ya hubo una versión con puro CSS `100dvh` sin JS, revertida por el commit `e580e23` porque Safari mobile no siempre recalcula `dvh` a tiempo — por eso no se podía simplemente volver a CSS puro.
+## Causa raíz — banda negra: el inset se contaba dos veces
 
-**Fix aplicado** (commit `856a11b`):
-- `use-altura-viewport-real.ts`: remedido único con doble `requestAnimationFrame` tras el mount, mientras `<main>` sigue oculto detrás del splash (no repite el parpadeo del timer que se sacó en un fix anterior).
-- `globals.css` + `PantallaPrincipal.tsx`: nueva clase `.pantalla-principal` con `min-height:100dvh` + mismo `background` oscuro del splash, como red de seguridad si la medición en px falla igual.
+El hook `useAlturaViewportReal` hacía `visualViewport.height + env(safe-area-inset-bottom)`. Pero con `viewport-fit=cover` (que la app usa), `visualViewport.height` **ya incluye** el área del home indicator — ese es el efecto de `cover`. Sumarle el inset lo contaba doble.
 
-Revisado por el agente `animation-guardian` antes de implementar (aprobó el enfoque, sugirió el doble rAF en vez de enganchar la remedición al evento `sismos:mapa-listo`, para no depender de que el mapa cargue).
+Medido en standalone con insets de iPhone 15 Pro, ANTES del fix:
+
+```
+innerHeight = 852
+main        = 886   ← 34px de más, exactamente el home indicator
+scrollHeight= 886   overflow = 34   ← el documento scrolleaba
+```
+
+Ese scroll de 34px es lo que producía la franja: el rubber-band de iOS dejaba ver el fondo negro del `<body>` bajo el mapa.
+
+Verificado en WebKit real: `fixed inset:0` == `100dvh` == `innerHeight` == `visualViewport.height`. Los insets y el alto del viewport **nunca son sumables** — o el viewport ya los incluye (standalone), o el inset vale 0.
+
+### Por qué fallaron los fixes anteriores
+
+- Los 3 fixes sobre `.splash-fondo`/viñetas atacaban una costura de tono dentro del splash, no la franja.
+- `856a11b` (`min-height:100dvh`) no podía funcionar: `min-height` es un piso, y el elemento tenía `height:886px`. Apuntaba a "la medición sale corta" cuando en realidad **salía larga**.
+- `.splash-pwa::after` (extender 120px el fondo) era código muerto: `.splash-pwa` ya cubría la pantalla completa. Su premisa ("`inset:0` no cubre el home indicator en iOS") es falsa con `viewport-fit=cover`.
+
+### Fix aplicado
+
+Se **borró** el hook `use-altura-viewport-real.ts` (medía un valor idéntico a `100dvh` y le sumaba un error). En su lugar, CSS puro:
+
+```css
+.pantalla-principal { position: fixed; inset: 0; background: var(--color-background); }
+```
+
+`fixed inset:0` deriva del mismo viewport que ya usa `.splash-pwa` — así ambos coinciden por construcción, sin ninguna cuenta que tenga que calzar — y además hace **imposible** que el documento scrollee, matando la clase entera de bugs de rubber-band. Lo mismo en `MenuLateral.tsx` (`inset-y-0`), que tenía el mismo bug.
+
+Medido DESPUÉS: `main = 852`, `overflow = 0`. ✅
+
+Los `env(safe-area-inset-bottom)` de los botones flotantes del mapa (`MapaSismos.tsx`) se dejaron como estaban: con el contenedor ya correcto, ahora posicionan bien (antes el sobrante los empujaba sobre el home indicator).
 
 ## Causa raíz y fix — doble splash
 
-No era un bug de React ni de la coreografía del splash — era un `window.location.reload()` real. `ActualizacionToastWatcher.tsx` recargaba la página sola y sin avisar si el service worker se actualizaba dentro de los primeros 5s de abierta la app (`VENTANA_ARRANQUE_MS`). Como el splash dura entre 2.1s y 6s, una actualización de SW que activa justo después de un deploy caía en esa ventana, recargando la app entera a mitad del splash — que volvía a montarse de cero.
+`ActualizacionToastWatcher.tsx` hacía `window.location.reload()` sin avisar si el service worker se actualizaba dentro de los primeros 5s (`VENTANA_ARRANQUE_MS`). El splash dura entre 2.1s y 6s, así que una actualización post-deploy caía en plena intro, recargaba la app entera y el splash se reproducía. Se sacó el reload automático: ahora siempre se muestra el toast de "nueva versión" y la persona decide.
 
-**Fix aplicado** (commit `5252355`): se sacó el reload automático y silencioso; ahora siempre se muestra el toast de "nueva versión disponible" (el mismo que ya existía para fuera de esa ventana) y la persona decide cuándo recargar. Cualquier `reload()` es una navegación completa, así que no había forma de "posponerlo" y seguir garantizando que el splash aparezca una sola vez — había que sacarlo.
+## Ideas evaluadas y descartadas
 
-## Archivos modificados
+- **SCSS**: no aporta. Es un preprocesador — compila a CSS antes de que el navegador vea nada, y el bug es aritmética de viewport en runtime. Además desalinea del Tailwind v4, que ya tiene variables y anidamiento nativos.
+- **`100svh`/`100lvh`**: en standalone son idénticos a `dvh` (no hay barras que colapsen).
+- **Framer Motion**: el problema es layout, no orquestación.
+- **Splash nativo del manifest**: iOS no lo implementa bien (`apple-touch-startup-image` por resolución, ~20 archivos, sin animación) y se perdería la coreografía de la cinta sismográfica. Mantener el splash en React es correcto — lo que estaba mal era que competía por el alto con `<main>`.
 
-- `apps/web/lib/use-altura-viewport-real.ts`
-- `apps/web/components/PantallaPrincipal.tsx`
-- `apps/web/app/globals.css`
-- `apps/web/components/ActualizacionToastWatcher.tsx`
+## Pendiente (P1/P2, opcional)
 
-## Siguiente paso
-
-Confirmación visual del usuario en la PWA instalada (celular o Mac) después del deploy a prod. Si algo sigue fallando, retomar desde acá — no está 100% verificado en navegador real todavía.
+- **P1**: limpiar andamiaje muerto — `.splash-pwa::after` y quizá las reglas `display:none` de `.maplibregl-ctrl-*`.
+- **P2**: con `<main>` ya fijo, se podría bajar el piso del splash de 2100ms a ~1200ms y volver a un crossfade real de 240ms (`cubic-bezier(0.32, 0.72, 0, 1)`). El crossfade se había sacado porque el mapa aparecía mal geometrizado — causa que ya no existe. Conversación aparte.
