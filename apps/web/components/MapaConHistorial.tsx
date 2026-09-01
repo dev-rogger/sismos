@@ -11,6 +11,7 @@ import PantallaReportes from "./admin/PantallaReportes";
 import MenuLateral from "./menu/MenuLateral";
 import ModalConfiguracion from "./configuracion/ModalConfiguracion";
 import ModalInstalarApp from "./instalar/ModalInstalarApp";
+import { ProveedorOverlays } from "../lib/navegacion-overlays";
 import { useFiltroMapa } from "../lib/use-filtro-mapa";
 import { useUbicacionUsuario } from "../lib/use-ubicacion-usuario";
 import { useInstalarApp } from "../lib/use-instalar-app";
@@ -130,7 +131,7 @@ export default function MapaConHistorial({
   };
 
   return (
-    <>
+    <ProveedorOverlays>
       <div className="relative flex-1">
         <MapaSismos
           sismosIniciales={sismosIniciales}
@@ -200,6 +201,6 @@ export default function MapaConHistorial({
         onInstalar={instalar}
         onDescartar={descartar}
       />
-    </>
+    </ProveedorOverlays>
   );
 }

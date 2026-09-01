@@ -1,10 +1,10 @@
 ---
-tags: [arquitectura, pendiente]
+tags: [arquitectura, hecho]
 ---
 
 # Navegación: refactor del patrón de overlays
 
-**Estado**: bug puntual arreglado 2026-09-01. El refactor de fondo queda pendiente de decisión.
+**Estado**: bug puntual arreglado y refactor implementado, ambos 2026-09-01.
 
 ## El bug que lo destapó (ya resuelto)
 
@@ -53,7 +53,63 @@ El patrón actual es frágil **por diseño**, no por complejidad accidental:
 
 Es el antipatrón `rerender-move-effect-to-event` de las react-best-practices de Vercel. Cada pantalla nueva vuelve a jugar la lotería.
 
-## Propuesta recomendada
+## Refactor implementado
+
+`lib/navegacion-overlays.tsx` (nuevo): `ProveedorOverlays` es el **único dueño
+del historial**. Mantiene la pila en un ref, una `profundidad` en estado, un
+solo listener de `popstate` y un solo efecto de reconciliación.
+
+La clave: la decisión pasó de N cleanups independientes a **un efecto que ve el
+estado final de la pila después de cada commit**. Si el menú se desregistra y
+una pantalla se registra en el mismo commit, ambos updates se agrupan, la
+profundidad va de 1 a 1 y no se toca el historial. La carrera desaparece por
+construcción, no por ganarle al timing.
+
+`use-overlay-accesible.ts` conserva **la misma firma pública** — los 11
+llamadores no se tocaron. Solo cambian sus entrañas: sigue haciendo Escape,
+scroll lock y focus trap; el historial se delega al proveedor. Se fueron
+`pilaOverlays`, la bandera global, el `rAF + setTimeout(0)` y el `hrefAlCerrar`.
+
+`marcarProximoCierreComoNavegacion()` se eliminó como global: `MenuLateral`
+ahora toma `marcarNavegacionSaliente` del contexto. El defecto original ("lo
+consume el cleanup equivocado") desaparece porque hay un solo consumidor.
+
+### Verificación (CDP, ventana Chrome --app en standalone)
+
+Suite funcional, 4 pantallas x 2 vueltas con CPU frenado 6x: **8/8**. Cada una
+abre y queda abierta, el botón atrás la cierra, no saca de la app, y el rastro
+de historial es `[push]` limpio.
+
+Casos borde: **3/3**
+- submenú Idioma anidado: atrás cierra el submenú y deja el menú abierto
+- "Iniciar sesión" navega de verdad a /login (el caso de la bandera global)
+- dos ciclos abrir/cerrar: sin overlays colgados ni historial inflado
+
+### Límite honesto de esta verificación
+
+No se pudo reproducir la carrera original en este entorno para demostrar que el
+refactor la previene: con el dev server caliente y la página cacheada, el bug
+tampoco aparece con el código viejo y el `setTimeout` reintroducido. La carrera
+sí se había reproducido antes (7/8) al arreglar `elegir()`.
+
+O sea: está verificado que el refactor **no regresiona** nada, y su valor es
+estructural (se van la pila global y la bandera). No está medido que arregle
+una carrera que hoy no se logra provocar.
+
+### Trampas del harness que costaron tiempo (anotadas para la próxima)
+
+1. React deja un `<div hidden id="S:0">` del streaming SSR con una copia del
+   árbol, y aparece PRIMERO en el DOM. Hay que filtrar `el.closest('[hidden]')`
+   o se termina clickeando botones invisibles.
+2. Con la ventana `--app` tapada por otra, Chrome congela las transiciones CSS:
+   `translate` se queda en el valor inicial para siempre. Guiarse por el estado
+   (`aria-hidden`), no por la geometría, o pedir `prefers-reduced-motion`.
+3. En dev el splash vive ~10s (hidratación + mapa lentos) y mientras tanto
+   `<main>` tiene `visibility:hidden`. Esperar a que `.splash-pwa` desaparezca,
+   no adivinar un timeout.
+
+## Propuesta original (referencia)
+
 
 Un único `useNavegacionOverlays`: reducer central en `MapaConHistorial` con `pantallaActiva: 'historial' | 'estadisticas' | ... | null` en vez de ~7 `useState` booleanos, y **una sola** suscripción a `popstate` en el proveedor. El `pushState` se hace en el handler `abrir(pantalla)`, no en un efecto; `cerrar()` hace `back()`.
 

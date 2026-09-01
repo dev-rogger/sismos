@@ -5,10 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useSession, signOut } from "next-auth/react";
-import {
-  useOverlayAccesible,
-  marcarProximoCierreComoNavegacion,
-} from "../../lib/use-overlay-accesible";
+import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
+import { useContextoOverlays } from "../../lib/navegacion-overlays";
 import { marcarLogout } from "../../lib/auth-toast-marker";
 import { useCompartir } from "../../lib/use-compartir";
 import { cambiarIdioma } from "../../lib/actions/cambiar-idioma";
@@ -189,6 +187,7 @@ export default function MenuLateral({
   const cuentaMenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { data: session } = useSession();
+  const contextoOverlays = useContextoOverlays();
   // NODE_ENV solo es "production" en builds/deploys reales; en `next dev`
   // local queda "development", así que esto no aplica en prod — solo evita
   // necesitar sesión de admin para trabajar en el panel localmente.
@@ -218,14 +217,14 @@ export default function MenuLateral({
     accion();
   };
 
-  // Como elegir(), pero para ítems que navegan de verdad con el router en
-  // vez de abrir otro overlay: avisa al hook del drawer que no deshaga su
-  // pushState sintético con history.back(), porque eso compite con el
-  // router.push y Next aborta esa navegación (ver use-overlay-accesible.ts).
+  // Como elegir(), pero para ítems que navegan de verdad con el router en vez
+  // de abrir otro overlay: avisa al proveedor que no deshaga su pushState
+  // sintético con history.back(), porque eso compite con el router.push y
+  // Next aborta esa navegación (ver lib/navegacion-overlays.tsx).
   const navegarA = (ruta: string) => {
-    marcarProximoCierreComoNavegacion();
+    contextoOverlays?.marcarNavegacionSaliente();
     setAbierto(false);
-    setTimeout(() => router.push(ruta), 0);
+    router.push(ruta);
   };
 
   return (
