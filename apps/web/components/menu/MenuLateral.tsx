@@ -205,9 +205,17 @@ export default function MenuLateral({
     onAbiertoChange?.(abierto);
   }, [abierto, onAbiertoChange]);
 
+  // La acción corre en el MISMO commit que cierra el menú, a propósito: con
+  // un `setTimeout(accion, 0)` de por medio, cerrar y abrir caían en dos
+  // commits separados de React, y en el hueco el cleanup del menú veía la
+  // pila de overlays vacía y disparaba un `history.back()`. Ese popstate
+  // llegaba tarde, cuando la pantalla nueva ya había montado, y la cerraba
+  // sola — se veía como "toco Estadísticas y vuelve al mapa". Intermitente
+  // porque dependía de quién ganara entre el frame del navegador y el flush
+  // de efectos de React (reproducido 4 de 6 veces con el CPU frenado).
   const elegir = (accion: () => void) => {
     setAbierto(false);
-    setTimeout(accion, 0);
+    accion();
   };
 
   // Como elegir(), pero para ítems que navegan de verdad con el router en
