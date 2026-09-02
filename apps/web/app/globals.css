@@ -351,24 +351,34 @@ body {
    plano — de lejos sigue leyéndose oscuro, de cerca tiene textura. Va
    detrás de todo el contenido (z-index propio, capa nueva).
 
-   A propósito NO se extiende hacia el área del home indicator (a
-   diferencia de .splash-pwa::after, que sí lo hace): se probaron dos
-   variantes de "extender la caja y reposicionar el gradiente para que
-   siga apuntando al borde real" y ambas dejaron una banda de tono
-   distinto visible cerca del borde (el gradiente tiene su propio punto
-   donde termina de desvanecerse, y ese punto siempre queda visible en
-   algún lado si se fuerza la caja a ser más alta que el viewport real).
-   La solución robusta es más simple: este fondo cubre EXACTAMENTE el
-   viewport real (inset:0, sin extender), así el gradiente siempre
-   termina justo en el borde real, donde se desvanece a
-   rgba(10,10,10,0) — el mismo var(--color-background) plano que ya
-   tiene .splash-pwa por debajo. El área del home indicator, más abajo,
-   la cubre solo .splash-pwa::after con ESE MISMO color plano — como
-   ambos lados de la costura son idénticos (el mismo color base), no
-   hace falta que ningún punto de referencia coincida con precisión. */
+   Sí se extiende hacia el área del home indicator (ver el `bottom`
+   negativo abajo). Hubo una versión que NO lo hacía, con este
+   razonamiento: "el gradiente se desvanece a rgba(10,10,10,0) justo en el
+   borde, que es el mismo color plano que pinta .splash-pwa::after más
+   abajo, así que la costura es invisible". Ese razonamiento es falso para
+   el SEGUNDO gradiente: está anclado `at 50% 100%` y en el borde inferior
+   está en su punto más FUERTE, no desvanecido. La costura sí se veía, y
+   era justamente la franja negra que se persiguió por varios commits. */
 .splash-fondo {
   position: absolute;
-  inset: 0;
+  /* Se extiende por debajo del borde del viewport, hasta el borde FÍSICO de
+     la pantalla. Ese es el arreglo de la franja negra de la intro.
+
+     El segundo gradiente está anclado `at 50% 100%`, o sea al borde inferior
+     de esta caja, y ahí está en su punto MÁS fuerte (rgba(14,22,34,0.4)), no
+     desvanecido. En la PWA instalada la caja se cortaba antes del borde
+     físico, así que se veía el resplandor a plena intensidad y, de golpe,
+     34px de negro plano: ese corte era la "franja negra". En web no se
+     notaba porque la barra del navegador ocupa justo esa zona.
+
+     Al extender la caja, el `100%` del gradiente pasa a ser el borde real de
+     la pantalla y no queda ningún corte. Sirve bajo las dos hipótesis de cómo
+     mide iOS: si el viewport ya cubría el área del home indicator, esto se
+     va 34px fuera de pantalla y no se ve; si no la cubría, la tapa justo. */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
   z-index: 0;
   pointer-events: none;
   background:
@@ -385,9 +395,9 @@ body {
 }
 
 /* Grano sutil (estático, no anima): evita que el negro se vea "plano de
-   sistema" y le da una textura fílmica discreta. Tampoco se extiende —
-   mismo motivo que .splash-fondo: el área del home indicator nunca se ve,
-   texturarla no aporta nada y solo suma otro punto donde desalinear. */
+   sistema" y le da una textura fílmica discreta. Su `inset:0` es relativo a
+   .splash-fondo, que ahora se extiende hasta el borde físico, así que el
+   grano cubre esa zona también sin nada que ajustar acá. */
 .splash-fondo::after {
   content: "";
   position: absolute;

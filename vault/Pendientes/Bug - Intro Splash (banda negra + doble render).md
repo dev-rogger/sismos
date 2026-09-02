@@ -14,6 +14,47 @@ tags: [bug, abierto]
 > también sobre el mapa, y en más de un dispositivo.
 > Estado actual = el de `856a11b`: franja en la intro, mapa limpio.
 
+## CAUSA RAÍZ de la franja negra: el gradiente cortado (2026-09-02)
+
+La pista decisiva la dio el usuario: *"en web se ve bien, porque la franja negra
+sube la pantalla para que no tope con los botones del navegador, pero a nivel de
+PWA no hay barra de navegador, por lo que debería usar el total de la pantalla"*.
+
+`.splash-fondo` tiene dos gradientes; el segundo es
+`radial-gradient(140% 120% at 50% 100%, rgba(14,22,34,0.4) 0%, ...)` — un
+resplandor frío **anclado al borde inferior, donde está en su punto MÁS fuerte**,
+no desvanecido.
+
+En la PWA instalada esa capa (`inset:0`) se cortaba antes del borde físico de la
+pantalla, y debajo quedaba `.splash-pwa::after` con negro plano. O sea: resplandor
+azulado a plena intensidad y, de golpe, ~34px de negro puro. **Ese corte era la
+franja.** En web no se nota porque la barra del navegador ocupa justo esa zona, así
+que el gradiente sí llega hasta donde termina lo visible.
+
+### Por qué el comentario anterior del CSS estaba equivocado
+
+Argumentaba que la costura era invisible porque "el gradiente se desvanece a
+`rgba(10,10,10,0)` justo en el borde, el mismo color plano que hay debajo". Eso es
+cierto para el PRIMER gradiente (cálido, `at 50% 38%`) pero **falso para el
+segundo**, que está anclado justo ahí y en su máximo. De ahí que varios intentos
+"arreglaran" el fondo sin que la franja desapareciera.
+
+### Fix aplicado
+
+`.splash-fondo` pasa de `inset: 0` a extenderse por debajo:
+`bottom: calc(-1 * env(safe-area-inset-bottom, 0px))`. Así el `100%` del gradiente
+cae en el borde físico real y no queda ningún corte. El grano (`::after`) hereda la
+caja extendida automáticamente.
+
+Es **agnóstico a la hipótesis** de cómo mide iOS: si el viewport ya cubría el área
+del home indicator, la extensión se va fuera de pantalla y no se ve; si no la
+cubría, la tapa justo. En web, `env(safe-area-inset-bottom)` es 0 y no cambia nada.
+
+Medido en Chromium con inset de iPhone: `.splash-fondo` sobrepasa el viewport en
+34px exactos, sin costura visible ni regresión. **La confirmación real es en el
+iPhone del usuario** — Chromium no puede validar este caso (ver la lección de más
+abajo).
+
 ## La intro ahora se ve también en web (2026-09-01)
 
 El splash dejó de estar detrás de `@media (display-mode: standalone)`: ahora se
