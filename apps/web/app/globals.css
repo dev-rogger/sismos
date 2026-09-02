@@ -261,10 +261,13 @@ body {
      riesgo, no un parche.
   */
   isolation: isolate;
-  /* Oculto por defecto: el splash solo tiene sentido dentro de la PWA
-     instalada. Se muestra por CSS puro (media query abajo), no por JS,
-     para que aparezca en el primer paint sin esperar hidratación. */
-  display: none;
+  /* Visible siempre, en web y en la PWA instalada. Por CSS puro y no por
+     JS, para que aparezca en el primer paint sin esperar a la hidratación.
+     Antes vivía detrás de `@media (display-mode: standalone)`: además de
+     dar dos experiencias distintas, eso hacía la intro imposible de ver en
+     un navegador normal — el bloqueo real que arrastró varios intentos de
+     arreglarla a ciegas. */
+  display: flex;
   align-items: center;
   justify-content: center;
   background: var(--color-background);
@@ -293,17 +296,6 @@ body {
   background: var(--color-background);
 }
 
-@media (display-mode: standalone) {
-  .splash-pwa {
-    display: flex;
-  }
-}
-
-/* Fallback para iOS viejo, que no soporta la media query de arriba. */
-.splash-pwa[data-standalone-legacy="true"] {
-  display: flex;
-}
-
 .splash-pwa[data-saliendo="true"] {
   opacity: 0;
 }
@@ -322,13 +314,7 @@ body {
    llega a opacity:0 antes de desmontarse, así el corte es imperceptible
    en la práctica; lo que se gana es no depender nunca de que el mapa
    esté 100% asentado a un instante exacto. */
-@media (display-mode: standalone) {
-  .splash-pwa ~ main {
-    visibility: hidden;
-  }
-}
-
-.splash-pwa[data-standalone-legacy="true"] ~ main {
+.splash-pwa ~ main {
   visibility: hidden;
 }
 
@@ -354,19 +340,9 @@ body {
    control puntual, no a todo <main>, para no arriesgar que MapLibre
    inicialice el mapa en un contenedor de tamaño cero (por eso el resto de
    <main> usa visibility, no display). */
-@media (display-mode: standalone) {
-  .splash-pwa ~ main .maplibregl-ctrl-attrib,
-  .splash-pwa ~ main .maplibregl-ctrl-bottom-left,
-  .splash-pwa ~ main .maplibregl-ctrl-bottom-right {
-    display: none;
-  }
-}
-
-.splash-pwa[data-standalone-legacy="true"] ~ main .maplibregl-ctrl-attrib,
-.splash-pwa[data-standalone-legacy="true"] ~ main .maplibregl-ctrl-bottom-left,
-.splash-pwa[data-standalone-legacy="true"]
-  ~ main
-  .maplibregl-ctrl-bottom-right {
+.splash-pwa ~ main .maplibregl-ctrl-attrib,
+.splash-pwa ~ main .maplibregl-ctrl-bottom-left,
+.splash-pwa ~ main .maplibregl-ctrl-bottom-right {
   display: none;
 }
 

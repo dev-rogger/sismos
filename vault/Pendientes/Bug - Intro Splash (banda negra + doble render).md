@@ -14,6 +14,28 @@ tags: [bug, abierto]
 > también sobre el mapa, y en más de un dispositivo.
 > Estado actual = el de `856a11b`: franja en la intro, mapa limpio.
 
+## La intro ahora se ve también en web (2026-09-01)
+
+El splash dejó de estar detrás de `@media (display-mode: standalone)`: ahora se
+muestra igual en navegador y en la PWA instalada. Motivos:
+
+1. **Una sola experiencia** en vez de dos que divergen.
+2. **Se puede depurar.** Que la intro solo existiera en standalone fue el bloqueo
+   real detrás de varios arreglos a ciegas — nadie podía verla en un navegador
+   normal. Ahora se abre en cualquier pestaña, incluido Safari del iPhone.
+
+De paso se borró el fallback `data-standalone-legacy` (para iOS viejo sin soporte
+de la media query) y las 3 media queries + sus 3 duplicados colapsaron en 3 reglas
+simples.
+
+Verificado en pestaña normal (`display-mode: standalone` = false): el splash se
+monta con `display:flex`, `<main>` queda en `visibility:hidden` mientras dura, y
+a los ~6s se desmonta y el mapa se revela.
+
+**Pendiente de opinión del producto:** en web el piso sigue siendo 2100ms. Para
+una app sísmica que la gente abre con urgencia después de un temblor, quizá
+convenga un piso más corto en navegador que en la PWA.
+
 ## Cómo VER la intro (el bloqueo que duró 6 commits)
 
 El splash solo se activa con `@media (display-mode: standalone)`, así que en una pestaña normal de Chrome no aparece — por eso todos los fixes anteriores se hicieron a ciegas. `Emulation.setEmulatedMedia` de DevTools **no** soporta `display-mode`. La forma que sí funciona:

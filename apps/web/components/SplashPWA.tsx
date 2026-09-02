@@ -11,26 +11,15 @@ const DURACION_MINIMA_MS = 2100;
 const DURACION_MAXIMA_MS = 6000;
 const DURACION_SALIDA_MS = 280;
 
-// Fallback para iOS viejo, que no soporta la media query
-// `(display-mode: standalone)` que usa el CSS para mostrar el splash
-// desde el primer paint sin esperar a que cargue el JS.
-function esStandaloneLegacyIOS(): boolean {
-  if (typeof window === "undefined") return false;
-  return (window.navigator as { standalone?: boolean }).standalone === true;
-}
-
 export default function SplashPWA() {
-  // El splash se muestra por CSS (media query en globals.css), no por este
-  // estado: así aparece en el primer paint en vez de recién tras hidratar.
-  // Este componente solo decide CUÁNDO se va y agrega el fallback iOS.
+  // El splash se muestra por CSS (globals.css), no por este estado: así
+  // aparece en el primer paint en vez de recién tras hidratar. Este
+  // componente solo decide CUÁNDO se va.
   const [terminado, setTerminado] = useState(false);
   const [saliendo, setSaliendo] = useState(false);
-  const [standaloneLegacy, setStandaloneLegacy] = useState(false);
   const yaSalioRef = useRef(false);
 
   useEffect(() => {
-    setStandaloneLegacy(esStandaloneLegacyIOS());
-
     const inicio = Date.now();
 
     function salir() {
@@ -58,11 +47,7 @@ export default function SplashPWA() {
   if (terminado) return null;
 
   return (
-    <div
-      className="splash-pwa"
-      data-saliendo={saliendo}
-      data-standalone-legacy={standaloneLegacy}
-    >
+    <div className="splash-pwa" data-saliendo={saliendo}>
       <div className="splash-fondo" aria-hidden="true" />
       <div className="splash-contenido flex flex-col items-center">
         <div className="splash-epicentro">
