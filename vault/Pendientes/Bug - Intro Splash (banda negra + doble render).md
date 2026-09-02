@@ -1,10 +1,18 @@
 ---
-tags: [bug, resuelto]
+tags: [bug, abierto]
 ---
 
 # Bug: intro/splash — banda negra inferior + a veces se muestra 2 veces
 
-**Estado**: resuelto 2026-09-01, con medición reproducible. Pendiente solo la confirmación del usuario en iPhone real.
+**Estado**: ABIERTO. El fix del 2026-09-01 (`638b61d`) fue una REGRESIÓN y se revirtió el mismo día.
+
+> ⚠️ Lección cara: `638b61d` se basó en medir con `Emulation.setSafeAreaInsetsOverride`
+> en Chromium, donde `visualViewport.height` SÍ incluye el área del home indicator.
+> En WebKit real es al revés. Chromium no sirve para validar esto — y WebKit es el
+> único navegador donde el bug existe (PWA instalada en iPhone).
+> Efecto de la regresión: la franja pasó de verse solo en la intro a verse SIEMPRE,
+> también sobre el mapa, y en más de un dispositivo.
+> Estado actual = el de `856a11b`: franja en la intro, mapa limpio.
 
 ## Cómo VER la intro (el bloqueo que duró 6 commits)
 
