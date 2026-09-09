@@ -147,9 +147,10 @@ Nueva ruta + `PantallaAdminPronosticos.tsx` (mismo patrón que `PantallaReportes
 
 ## Testing / verificación
 
-- `packages/forecast`: unit tests de `calcularBValue` y `ajustarEtas` contra casos conocidos de la literatura (ej. secuencias sintéticas con parámetros ETAS conocidos, ver si el ajuste MLE los recupera dentro de una tolerancia razonable).
-- Endpoint on-demand: test de integración verificando que una segunda visita dentro de la misma ventana reutiliza el pronóstico existente en vez de crear uno nuevo.
-- Job de verificación: test de integración con Postgres local (Docker) simulando un pronóstico con ventana cerrada y un sismo real dentro/fuera de la zona, verificando que el `resultado` calculado sea el correcto (acierto/fallo/parcial).
-- Job de recalibración: test verificando que no recalibra una región si no hay suficientes eventos nuevos desde la última calibración.
+> Nota: hoy no existe ningún test de integración contra Postgres en el repo (`packages/db` no tiene tests; el único precedente de testing automatizado son los unit tests puros con Vitest de `packages/shared`). Este feature no introduce infraestructura de testing de DB nueva — lo que toca la base de datos se verifica manualmente contra `pnpm docker:dev`, no con un suite automatizado.
+
+- `packages/forecast`: unit tests (Vitest, mismo patrón que `packages/shared`) de `calcularBValue`, `detectarEnjambres`, `ajustarEtas` y `calcularProbabilidad` contra casos sintéticos con parámetros conocidos.
+- Capa de datos (`packages/db`) y jobs que tocan Postgres: verificación manual contra `pnpm docker:dev` (crear filas de prueba, correr el endpoint/job, inspeccionar el resultado en la tabla) — no hay suite automatizada de integración que mantener.
+- Endpoint on-demand: verificación manual de que una segunda visita dentro de la misma ventana reutiliza el pronóstico existente en vez de crear uno nuevo.
 - Manual: abrir `PantallaPronostico` con datos reales y confirmar que el panel de admin refleja los mismos pronósticos con su estado correcto.
 - La auditoría de `sismologia-guardian` es un proceso, no un test automatizado — se verifica invocándolo y revisando su reporte.
