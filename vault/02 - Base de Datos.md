@@ -15,13 +15,13 @@ tags: [base-de-datos]
 ## Migraciones
 
 - Drizzle Kit. Config en `packages/db/drizzle.config.ts`.
-- Migraciones SQL versionadas en `packages/db/drizzle/000N_*.sql` (9 migraciones al momento de escribir esto, `0000` a `0008`; `0007` agrega el estado de notificación a `sismos`, `0008` crea `ingesta_estado`).
+- Migraciones SQL versionadas en `packages/db/drizzle/000N_*.sql` (10 migraciones al momento de escribir esto, `0000` a `0009`; `0007` agrega el estado de notificación a `sismos` (backfill solo CSN M>=4 y cualquier fuente M>=7), `0008` crea `ingesta_estado`, `0009` agrega `sismos.fuente_notificada` con backfill `= fuente` donde `notificado_at` no es nulo).
 - Scripts: `pnpm --filter @sismos/db db:generate` (genera migración desde el schema) y `db:migrate` (aplica).
 
 ## Schema (`packages/db/src/schema.ts`)
 
 ### `sismos`
-Eventos activos/recientes. Columnas clave: `fuente`, `externalId` (unique compuesto con `fuente`), `fecha`, `magnitud`, `profundidadKm`, `latitud`/`longitud`, `lugar`, `bandera`, `refCruzadaFuente`/`refCruzadaExternalId` (para dedupe entre CSN/GAEL y USGS cuando el mismo sismo aparece en ambas fuentes), `ubicacionAproximada` (bool — cuando se geocodificó de forma aproximada), `notificadoAt` / `magnitudNotificada` (nullable — estado de notificación push: cuándo se avisó y con qué magnitud; solo los escribe `marcarNotificado()`, ningún upsert/replace los pisa, así el estado sobrevive a que CSN reemplace una fila USGS).
+Eventos activos/recientes. Columnas clave: `fuente`, `externalId` (unique compuesto con `fuente`), `fecha`, `magnitud`, `profundidadKm`, `latitud`/`longitud`, `lugar`, `bandera`, `refCruzadaFuente`/`refCruzadaExternalId` (para dedupe entre CSN/GAEL y USGS cuando el mismo sismo aparece en ambas fuentes), `ubicacionAproximada` (bool — cuando se geocodificó de forma aproximada), `notificadoAt` / `magnitudNotificada` / `fuenteNotificada` (nullable — estado de notificación push: cuándo se avisó, con qué magnitud y con qué fuente; `fuenteNotificada` permite re-avisar a Chile un sismo grande avisado primero como USGS y luego reemplazado por CSN; solo los escribe `marcarNotificado()`, ningún upsert/replace los pisa, así el estado sobrevive a que CSN reemplace una fila USGS).
 
 ### `sismosHistoricos`
 Top históricos. Tiene `alcance` (`"mundial" | "chile"`, default `"mundial"`) — un mismo evento puede existir una vez por alcance (ej. Valdivia 1960 aparece en el top mundial y en el top de Chile como dos filas). Unique compuesto `(externalId, alcance)`.
