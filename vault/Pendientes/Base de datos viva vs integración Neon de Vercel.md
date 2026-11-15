@@ -23,6 +23,12 @@ tags: [infra, pendiente, neon, vercel]
 - Las migraciones nuevas (0007, 0008, 0009) son aditivas, pero **hay que aplicarlas en la base viva ANTES de desplegar** (ver [[../05 - Infra y CI]]). Si el código nuevo corre sin ellas, la ingesta devuelve 500 y la web falla.
 - Preview de Vercel y Producción comparten `DATABASE_URL` (ámbitos Production y Preview): un preview de `develop` escribe/lee la base viva. Para un QA aislado hace falta una rama Neon dedicada y `vercel env add DATABASE_URL preview develop`.
 
+## Actualización 2026-11-15 (tarde)
+
+- La base viva es la que está detrás de la `DATABASE_URL` sensible de Vercel (sigue sin leerse; da igual: los builds la tienen). Se migró sin tocar credenciales: el build del ingestor corre `db:migrate:deploy` (ver [[../05 - Infra y CI]]). Comprobado con datos reales: tras el deploy, `/api/sismos` del preview devolvió las columnas nuevas y `/api/health` del ingestor de producción respondió `200` con las tres fuentes (`csn`, `gael`, `usgs`) actualizadas hace segundos.
+- La integración Neon de Vercel (`neon-yellow-magnet`, host `ep-young-glitter`) sigue apuntando a una base vieja y no se usó.
+- **GitHub Actions `Ingest cron` falla con `401 Unauthorized`** (ya fallaba el 2026-11-01): el secreto `CRON_SECRET` del repo no coincide con el de Vercel. La ingesta real corre desde otro disparador (muy probablemente cron-job.org cada ~1 min: el health marca edades de segundos). Arreglar: actualizar el secreto `CRON_SECRET` en GitHub (Settings → Secrets → Actions) con el valor de Vercel. Mientras no se arregle, el job `ingest` del workflow queda en rojo y `watchdog` (que solo mira `/api/health`) sí pasa.
+
 ## Pendiente
 
 - [ ] Confirmar que la base viva es `asteria-co` (o cuál es) y anotar aquí su identificación (nombre de proyecto, host sin credenciales).

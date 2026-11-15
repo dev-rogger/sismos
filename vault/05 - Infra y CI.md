@@ -32,7 +32,11 @@ Ver `docs/superpowers/specs/2026-07-07-sismos-monorepo-design.md` para el razona
 
 ## Orden de despliegue
 
-**Paso BLOQUEANTE:** aplicar las migraciones `0007`, `0008` y `0009` en Neon (`pnpm --filter @sismos/db db:migrate` con la `DATABASE_URL` de producción) **antes** de desplegar web e ingestor. Son aditivas (columnas y tabla nuevas), así que el código viejo sigue funcionando con el schema nuevo; el orden inverso no es seguro.
+**Desde 2026-11-15 el build del ingestor aplica las migraciones solo** (`apps/ingestor/vercel.ts` → `buildCommand: pnpm --filter @sismos/db db:migrate:deploy && next build`; el script es `packages/db/scripts/migrate.mjs`, idempotente, con el migrador de Drizzle y la misma regla SSL de `connection.ts`). Si la migración falla, el build falla y Vercel sigue sirviendo el deploy anterior (fallo seguro). Ya se aplicaron `0007`, `0008` y `0009` en la base viva así (build del preview de `develop`, verificado: el preview de web devolvió `notificadoAt`, `magnitudNotificada` y `fuenteNotificada`).
+
+**Ojo:** Preview y Producción comparten `DATABASE_URL`, así que un build de preview del ingestor también migra la base viva. Es seguro mientras las migraciones sean aditivas; una migración destructiva exigiría revisar este flujo antes de empujar a cualquier rama. El web no migra, y el orden "schema primero, código después" lo garantiza el build del ingestor.
+
+Antes de este cambio el paso era manual y bloqueante: las migraciones son aditivas, así que el código viejo funciona con el schema nuevo; el orden inverso no es seguro.
 
 Si se despliega el código nuevo sin migrar, los `select` de `sismos` piden columnas inexistentes (`notificado_at`, `magnitud_notificada`, `fuente_notificada`): la ingesta responde `500`, la web muestra error y `/api/health` responde `503` (falta la tabla `ingesta_estado`).
 
