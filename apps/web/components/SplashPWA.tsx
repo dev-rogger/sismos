@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 // Piso: la coreografía (traza → impacto → ícono → título) tarda ~1.5s en
 // asentarse; si el mapa está listo antes, igual esperamos a que termine el
 // remate en vez de cortarlo a mitad de camino.
-const DURACION_MINIMA_MS = 2100;
+const DURACION_MINIMA_MS = 1900;
+// Visitas repetidas (marca puesta por el script de app/layout.tsx antes del
+// primer paint) y reduced-motion: no hay coreografía que dejar terminar, solo
+// un respiro de marca. Que la intro estorbe menos cuanto más se usa la app.
+const DURACION_MINIMA_CORTA_MS = 750;
+const DURACION_MINIMA_REDUCIDA_MS = 500;
 // Techo: si el evento "mapa listo" nunca llega (ruta sin mapa, error, red muy
 // lenta), no queremos que el splash se quede pegado para siempre.
 const DURACION_MAXIMA_MS = 6000;
-const DURACION_SALIDA_MS = 280;
+const DURACION_SALIDA_MS = 320;
 
 export default function SplashPWA() {
   // El splash se muestra por CSS (globals.css), no por este estado: así
@@ -21,6 +26,19 @@ export default function SplashPWA() {
 
   useEffect(() => {
     const inicio = Date.now();
+    const reducida = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const minimo = reducida
+      ? DURACION_MINIMA_REDUCIDA_MS
+      : document.documentElement.dataset.intro === "corta"
+        ? DURACION_MINIMA_CORTA_MS
+        : DURACION_MINIMA_MS;
+    try {
+      localStorage.setItem("sismos:intro-vista", String(inicio));
+    } catch {
+      // Modo privado / storage bloqueado: simplemente siempre intro completa.
+    }
 
     function salir() {
       if (yaSalioRef.current) return;
@@ -31,10 +49,14 @@ export default function SplashPWA() {
 
     function alMapaListo() {
       const transcurrido = Date.now() - inicio;
-      const restante = Math.max(0, DURACION_MINIMA_MS - transcurrido);
+      const restante = Math.max(0, minimo - transcurrido);
       setTimeout(salir, restante);
     }
 
+    // El mapa puede cargar antes de que este efecto se registre (sobre todo
+    // con caché caliente): MapaSismos deja la marca en <html> además del
+    // evento, para no esperar el techo de 6s por un evento ya perdido.
+    if (document.documentElement.dataset.mapaListo === "1") alMapaListo();
     window.addEventListener("sismos:mapa-listo", alMapaListo);
     const maxTimer = setTimeout(salir, DURACION_MAXIMA_MS);
 
@@ -43,6 +65,12 @@ export default function SplashPWA() {
       clearTimeout(maxTimer);
     };
   }, []);
+
+  // Antes del primer paint sin intro: <main> hace un fade-in corto en vez de
+  // aparecer de golpe cuando el splash se desmonta (ver globals.css).
+  useLayoutEffect(() => {
+    if (terminado) document.documentElement.dataset.introFin = "1";
+  }, [terminado]);
 
   if (terminado) return null;
 

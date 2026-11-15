@@ -239,6 +239,7 @@ export default function MapaSismos({
     });
     mapRef.current = map;
     map.once("load", () => {
+      document.documentElement.dataset.mapaListo = "1";
       window.dispatchEvent(new Event("sismos:mapa-listo"));
     });
 

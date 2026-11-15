@@ -272,8 +272,8 @@ body {
   justify-content: center;
   background: var(--color-background);
   /* Salida más rápida y decisiva que la entrada (timing asimétrico):
-     se va en 280ms, la entrada se toma ~1.5s. */
-  transition: opacity 0.28s cubic-bezier(0.4, 0, 1, 1);
+     se va en 320ms, la entrada se toma ~1.5s. */
+  transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .splash-pwa::after {
@@ -298,6 +298,32 @@ body {
 
 .splash-pwa[data-saliendo="true"] {
   opacity: 0;
+}
+
+/* Salida con intención: el contenido se acerca un poco mientras se
+   desvanece (la cámara "entra" al mapa) en vez de solo apagarse. */
+.splash-contenido {
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.splash-pwa[data-saliendo="true"] .splash-contenido {
+  transform: translateY(-4vh) scale(1.06);
+}
+
+/* Revelado del mapa: <main> está oculto mientras vive el splash (ver más
+   abajo), así que al desmontarse aparecería de golpe. SplashPWA marca
+   html[data-intro-fin] antes de ese paint; el fade lo suaviza. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-intro-fin] > body main {
+    animation: mapa-revelar 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+@keyframes mapa-revelar {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Van cuatro variantes distintas de "algo del mapa se ve por un instante"
@@ -771,5 +797,45 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Intro corta (visita repetida, ver SCRIPT_INTRO en layout.tsx): sin cinta
+   ni impacto; el ícono se condensa de inmediato y el título entra rápido.
+   Total ~0.55s en vez de ~1.7s. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-intro="corta"] .splash-cinta,
+  html[data-intro="corta"] .splash-destello,
+  html[data-intro="corta"] .splash-bloom,
+  html[data-intro="corta"] .splash-onda {
+    display: none;
+  }
+  html[data-intro="corta"] .splash-icono {
+    animation-duration: 0.35s;
+    animation-delay: 0.05s;
+  }
+  html[data-intro="corta"] .splash-resplandor {
+    animation-delay: 0.3s;
+  }
+  html[data-intro="corta"] .splash-titulo-letra {
+    animation-duration: 0.3s;
+  }
+  html[data-intro="corta"] .splash-titulo-letra:nth-child(1) {
+    animation-delay: 0.25s;
+  }
+  html[data-intro="corta"] .splash-titulo-letra:nth-child(2) {
+    animation-delay: 0.28s;
+  }
+  html[data-intro="corta"] .splash-titulo-letra:nth-child(3) {
+    animation-delay: 0.31s;
+  }
+  html[data-intro="corta"] .splash-titulo-letra:nth-child(4) {
+    animation-delay: 0.34s;
+  }
+  html[data-intro="corta"] .splash-titulo-letra:nth-child(5) {
+    animation-delay: 0.37s;
+  }
+  html[data-intro="corta"] .splash-titulo-letra:nth-child(6) {
+    animation-delay: 0.4s;
   }
 }
