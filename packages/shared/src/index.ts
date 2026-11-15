@@ -10,3 +10,4 @@ export * from "./decision-notificacion";
 export * from "./geocodificacion-aproximada";
 export * from "./radio-percepcion";
 export * from "./destinatarios";
+export * from "./push-endpoint";

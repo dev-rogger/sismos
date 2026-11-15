@@ -269,6 +269,44 @@ describe("enviarPushParaSismo: omitirAlcanceMundial (A1)", () => {
   });
 });
 
+describe("enviarPushParaSismo: endpoints no permitidos (B4)", () => {
+  it("descarta sin enviar y borra de la BD las suscripciones con endpoint inválido", async () => {
+    const malas = [
+      "http://fcm.googleapis.com/x",
+      "https://evil.com/x",
+      "https://fcm.googleapis.com:8443/x",
+      "https://user:pass@fcm.googleapis.com/x",
+    ].map((endpoint) => ({ endpoint, keys: { p256dh: "p", auth: "a" } }));
+    vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue([
+      ...subs(1),
+      ...malas,
+    ] as never);
+    const r = await enviarPushParaSismo(evento());
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0]![0]).toMatchObject({
+      endpoint: "https://fcm.googleapis.com/fcm/send/0",
+    });
+    expect(db.deletePushSubscription).toHaveBeenCalledTimes(4);
+    for (const { endpoint } of malas) {
+      expect(db.deletePushSubscription).toHaveBeenCalledWith(endpoint);
+    }
+    expect(r.enviados).toBe(1);
+  });
+
+  it("si todas son inválidas no envía ni lanza", async () => {
+    vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue([
+      { endpoint: "https://evil.com/x", keys: { p256dh: "p", auth: "a" } },
+    ] as never);
+    await expect(enviarPushParaSismo(evento())).resolves.toEqual({
+      enviados: 0,
+      fallidos: 0,
+      eliminados: 0,
+    });
+    expect(send).not.toHaveBeenCalled();
+    expect(db.deletePushSubscription).toHaveBeenCalledWith("https://evil.com/x");
+  });
+});
+
 describe("enviarAlertaAdmin: canal webhook", () => {
   const fetchMock = vi.fn();
   beforeEach(() => {

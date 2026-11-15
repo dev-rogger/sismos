@@ -5,6 +5,7 @@ import {
   deletePushSubscription,
 } from "@sismos/db";
 import {
+  esEndpointPushPermitido,
   regionChilePorLatitud,
   TOPE_ANTIGUEDAD_NOTIFICACION_MS,
   type SismoNormalizado,
@@ -102,9 +103,24 @@ export async function enviarPushParaSismo(
     profundidadKm: evento.profundidadKm,
     fuente: evento.fuente,
   });
+  // Suscripciones guardadas antes de la allowlist de endpoints (o insertadas
+  // por fuera de la API): no se les envía nada —el servidor haría un POST a un
+  // destino arbitrario— y se borran.
+  const invalidas = destinatarios.filter(
+    (s) => !esEndpointPushPermitido(s.endpoint),
+  );
+  if (invalidas.length > 0) {
+    console.warn(
+      `[send-push] descartando ${invalidas.length} suscripción(es) con endpoint no permitido`,
+    );
+    await Promise.all(invalidas.map((s) => deletePushSubscription(s.endpoint)));
+  }
+  const validas = destinatarios.filter((s) =>
+    esEndpointPushPermitido(s.endpoint),
+  );
   const suscripciones = opts.omitirAlcanceMundial
-    ? destinatarios.filter((s) => !s.alcanceMundial)
-    : destinatarios;
+    ? validas.filter((s) => !s.alcanceMundial)
+    : validas;
   if (suscripciones.length === 0) return resultado;
 
   const esRevision = opts.motivo === "revision";

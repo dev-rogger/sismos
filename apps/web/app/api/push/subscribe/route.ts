@@ -10,7 +10,7 @@ import {
   esEndpointPushPermitido,
   MAX_ENDPOINT_LENGTH,
   MAX_KEY_LENGTH,
-} from "../../../../lib/push-endpoint";
+} from "@sismos/shared";
 
 // Rate limit en memoria del proceso: best-effort. En serverless cada instancia
 // tiene su propio contador, así que frena abusos simples pero no es una garantía.
