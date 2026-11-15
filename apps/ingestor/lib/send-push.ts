@@ -178,6 +178,17 @@ export async function enviarPushParaSismo(
   console.log(
     `[send-push] ${evento.externalId} (${opts.motivo ?? "nuevo"}): enviados=${resultado.enviados} fallidos=${resultado.fallidos} eliminados=${resultado.eliminados}`,
   );
+  // Si NINGÚN envío llegó y hubo fallos que no son suscripciones muertas
+  // (404/410), el problema es del servicio de push o de la red: se lanza para
+  // que el ingestor NO marque el sismo como avisado y lo reintente en la
+  // siguiente corrida. Con fallo parcial (al menos un envío exitoso) sí se
+  // marca como avisado: reintentar duplicaría el aviso a quienes ya lo
+  // recibieron, y quienes fallaron quedan sin aviso (límite conocido).
+  if (resultado.enviados === 0 && resultado.fallidos - resultado.eliminados > 0) {
+    throw new Error(
+      `ningún envío de push llegó para ${evento.externalId}: fallidos=${resultado.fallidos} eliminados=${resultado.eliminados}`,
+    );
+  }
   return resultado;
 }
 

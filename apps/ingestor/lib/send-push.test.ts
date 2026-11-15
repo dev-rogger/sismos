@@ -50,12 +50,13 @@ beforeEach(() => {
 describe("enviarPushParaSismo", () => {
   it("(a) 404 y 410 borran la suscripción, 500 no", async () => {
     vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue(
-      subs(3) as never,
+      subs(4) as never,
     );
     send
       .mockRejectedValueOnce({ statusCode: 404 })
       .mockRejectedValueOnce({ statusCode: 410 })
-      .mockRejectedValueOnce({ statusCode: 500 });
+      .mockRejectedValueOnce({ statusCode: 500 })
+      .mockResolvedValueOnce({} as never);
     const r = await enviarPushParaSismo(evento());
     expect(db.deletePushSubscription).toHaveBeenCalledTimes(2);
     expect(db.deletePushSubscription).toHaveBeenCalledWith(
@@ -64,7 +65,7 @@ describe("enviarPushParaSismo", () => {
     expect(db.deletePushSubscription).toHaveBeenCalledWith(
       "https://fcm.googleapis.com/fcm/send/1",
     );
-    expect(r).toEqual({ enviados: 0, fallidos: 3, eliminados: 2 });
+    expect(r).toEqual({ enviados: 1, fallidos: 3, eliminados: 2 });
   });
 
   it("pasa la profundidad del sismo a la búsqueda de destinatarios", async () => {
@@ -173,6 +174,57 @@ describe("enviarPushParaSismo", () => {
     );
     expect(send).not.toHaveBeenCalled();
     expect(r).toEqual({ enviados: 0, fallidos: 0, eliminados: 0 });
+  });
+});
+
+describe("enviarPushParaSismo: fallos de envío (A2)", () => {
+  it("lanza si TODOS los envíos fallan con 5xx/red, para que el sismo no se marque como avisado", async () => {
+    vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue(
+      subs(3) as never,
+    );
+    send
+      .mockRejectedValueOnce({ statusCode: 500 })
+      .mockRejectedValueOnce({ statusCode: 503 })
+      .mockRejectedValueOnce(new Error("red"));
+    await expect(enviarPushParaSismo(evento())).rejects.toThrow(/ningún envío/);
+  });
+
+  it("fallo parcial: no lanza (algunos recibieron el aviso) y devuelve contadores", async () => {
+    vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue(
+      subs(3) as never,
+    );
+    send
+      .mockRejectedValueOnce({ statusCode: 500 })
+      .mockResolvedValueOnce({} as never)
+      .mockRejectedValueOnce({ statusCode: 500 });
+    await expect(enviarPushParaSismo(evento())).resolves.toEqual({
+      enviados: 1,
+      fallidos: 2,
+      eliminados: 0,
+    });
+  });
+
+  it("solo 404/410 (suscripciones muertas) no cuenta como fallo: no lanza", async () => {
+    vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue(
+      subs(2) as never,
+    );
+    send
+      .mockRejectedValueOnce({ statusCode: 410 })
+      .mockRejectedValueOnce({ statusCode: 404 });
+    await expect(enviarPushParaSismo(evento())).resolves.toEqual({
+      enviados: 0,
+      fallidos: 2,
+      eliminados: 2,
+    });
+  });
+
+  it("sin suscripciones no lanza", async () => {
+    vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue([] as never);
+    await expect(enviarPushParaSismo(evento())).resolves.toEqual({
+      enviados: 0,
+      fallidos: 0,
+      eliminados: 0,
+    });
   });
 });
 
