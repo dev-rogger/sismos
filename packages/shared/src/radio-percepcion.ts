@@ -58,27 +58,19 @@ function mmiPredicho(
 }
 
 /**
- * Radio (epicentral, en km) hasta donde se estima que el sismo se sintió,
- * dado su magnitud y profundidad. La profundidad es opcional en la práctica:
- * si falta o es inválida se asume un sismo superficial.
+ * Radio epicentral (km, redondeado, tope RADIO_MAXIMO_KM) hasta donde el MMI
+ * predicho para un sismo de magnitud `m` y profundidad `h` (km, ya validada)
+ * alcanza el umbral dado. Devuelve 0 si ni en el epicentro se llega al umbral.
+ * No aplica el mínimo de 10 km: eso es una decisión de dibujo del mapa.
  */
-export function radioPercepcionKm(
-  magnitud: number,
-  profundidadKm: number,
-): number {
-  const m = Math.max(2, magnitud);
-  const h =
-    Number.isFinite(profundidadKm) && profundidadKm > 0
-      ? profundidadKm
-      : PROFUNDIDAD_POR_DEFECTO_KM;
-
+export function radioMmiKm(m: number, h: number, umbralMmi: number): number {
   // El MMI predicho es monótonamente decreciente con la distancia, así que
-  // basta una bisección para encontrar dónde cruza el umbral de MMI III.
+  // basta una bisección para encontrar dónde cruza el umbral.
   let bajo = 0.1;
   let alto = 5000;
   for (let i = 0; i < 60 && alto - bajo > 0.5; i += 1) {
     const medio = (bajo + alto) / 2;
-    if (mmiPredicho(m, h, medio) >= UMBRAL_MMI_SENTIDO) {
+    if (mmiPredicho(m, h, medio) >= umbralMmi) {
       bajo = medio;
     } else {
       alto = medio;
@@ -92,7 +84,22 @@ export function radioPercepcionKm(
     Math.max(distanciaHipocentralKm * distanciaHipocentralKm - h * h, 0),
   );
 
-  return Math.round(
-    Math.min(RADIO_MAXIMO_KM, Math.max(RADIO_MINIMO_KM, radioEpicentralKm)),
-  );
+  return Math.round(Math.min(RADIO_MAXIMO_KM, radioEpicentralKm));
+}
+
+/**
+ * Radio (epicentral, en km) hasta donde se estima que el sismo se sintió
+ * (MMI III), para dibujar el mapa. La profundidad es opcional en la práctica:
+ * si falta o es inválida se asume un sismo superficial. Mínimo 10 km.
+ */
+export function radioPercepcionKm(
+  magnitud: number,
+  profundidadKm: number,
+): number {
+  const m = Math.max(2, magnitud);
+  const h =
+    Number.isFinite(profundidadKm) && profundidadKm > 0
+      ? profundidadKm
+      : PROFUNDIDAD_POR_DEFECTO_KM;
+  return Math.max(RADIO_MINIMO_KM, radioMmiKm(m, h, UMBRAL_MMI_SENTIDO));
 }
