@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { marcarIntroFin } from "../lib/intro-fin";
 
 // Piso: la coreografía (traza → impacto → ícono → título) tarda ~1.5s en
 // asentarse; si el mapa está listo antes, igual esperamos a que termine el
@@ -67,9 +68,12 @@ export default function SplashPWA() {
   }, []);
 
   // Antes del primer paint sin intro: <main> hace un fade-in corto en vez de
-  // aparecer de golpe cuando el splash se desmonta (ver globals.css).
+  // aparecer de golpe cuando el splash se desmonta (ver globals.css). La marca
+  // se quita sola al terminar el fade: solo debe animar el primer revelado, no
+  // cada <main> de las navegaciones siguientes.
   useLayoutEffect(() => {
-    if (terminado) document.documentElement.dataset.introFin = "1";
+    if (!terminado) return;
+    return marcarIntroFin(document.documentElement);
   }, [terminado]);
 
   if (terminado) return null;
