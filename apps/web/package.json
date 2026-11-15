@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit",
+    "test": "vitest run",
     "generar-fallas-chile": "node scripts/generar-fallas-chile.mjs"
   },
   "dependencies": {
@@ -35,6 +36,7 @@
     "eslint": "^9.39.1",
     "serwist": "^9.5.11",
     "tailwindcss": "^4.3.2",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^4.1.10"
   }
 }

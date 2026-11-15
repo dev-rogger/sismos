@@ -6,6 +6,39 @@ import {
   obtenerSuscripcion,
 } from "../../../../lib/push-subscriptions";
 import { esRadioKmValido, esCentroValido } from "../../../../lib/radio-notificacion";
+import {
+  esEndpointPushPermitido,
+  MAX_ENDPOINT_LENGTH,
+  MAX_KEY_LENGTH,
+} from "../../../../lib/push-endpoint";
+
+// Rate limit en memoria del proceso: best-effort. En serverless cada instancia
+// tiene su propio contador, así que frena abusos simples pero no es una garantía.
+const LIMITE_POR_MINUTO = 20;
+const VENTANA_MS = 60_000;
+const peticionesPorIp = new Map<string, { inicio: number; cuenta: number }>();
+
+function superaRateLimit(request: Request): boolean {
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "desconocida";
+  const ahora = Date.now();
+  if (peticionesPorIp.size > 1000) {
+    for (const [clave, v] of peticionesPorIp) {
+      if (ahora - v.inicio >= VENTANA_MS) peticionesPorIp.delete(clave);
+    }
+  }
+  const actual = peticionesPorIp.get(ip);
+  if (!actual || ahora - actual.inicio >= VENTANA_MS) {
+    peticionesPorIp.set(ip, { inicio: ahora, cuenta: 1 });
+    return false;
+  }
+  actual.cuenta += 1;
+  return actual.cuenta > LIMITE_POR_MINUTO;
+}
+
+function tooManyRequests() {
+  return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+}
 
 interface SubscribeBody {
   subscription?: {
@@ -23,13 +56,33 @@ function esMagnitudValida(valor: unknown): valor is number {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as SubscribeBody;
+  if (superaRateLimit(request)) return tooManyRequests();
+  let body: SubscribeBody;
+  try {
+    body = (await request.json()) as SubscribeBody;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   const endpoint = body.subscription?.endpoint;
   const keys = body.subscription?.keys;
 
   if (!endpoint || !keys?.p256dh || !keys?.auth) {
     return NextResponse.json(
       { error: "Missing subscription endpoint or keys" },
+      { status: 400 },
+    );
+  }
+  if (
+    typeof endpoint !== "string" ||
+    typeof keys.p256dh !== "string" ||
+    typeof keys.auth !== "string" ||
+    keys.p256dh.length > MAX_KEY_LENGTH ||
+    keys.auth.length > MAX_KEY_LENGTH ||
+    endpoint.length > MAX_ENDPOINT_LENGTH ||
+    !esEndpointPushPermitido(endpoint)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid subscription endpoint or keys" },
       { status: 400 },
     );
   }
@@ -109,7 +162,13 @@ export async function GET(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const body = (await request.json()) as { endpoint?: string };
+  if (superaRateLimit(request)) return tooManyRequests();
+  let body: { endpoint?: string };
+  try {
+    body = (await request.json()) as { endpoint?: string };
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   if (!body.endpoint) {
     return NextResponse.json({ error: "Missing endpoint" }, { status: 400 });
   }
