@@ -24,7 +24,11 @@ jobs:
   # Segundo disparador independiente: avisa (GitHub envía correo si el job
   # falla) cuando la ingesta dejó de registrar ok o la BD no responde.
   # /api/health no requiere secreto ni expone datos sensibles.
+  # needs + always(): corre después de la ingesta (no en paralelo, para no leer
+  # el estado antes de que se registre) y también si la ingesta falló.
   watchdog:
+    needs: ingest
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Check ingest health
