@@ -8,6 +8,7 @@ const base = {
   fecha: hace(5),
   notificadoAt: null,
   magnitudNotificada: null,
+  fuenteNotificada: null,
   ahora,
 };
 
@@ -89,5 +90,51 @@ describe("decidirNotificacion", () => {
         magnitudNotificada: 4.2,
       }).enviar,
     ).toBe(false);
+  });
+
+  describe("fuente distinta a la notificada (A1)", () => {
+    const avisadoComoUsgs = {
+      ...base,
+      magnitud: 7.1,
+      notificadoAt: hace(4),
+      magnitudNotificada: 7.1,
+      fuenteNotificada: "usgs" as const,
+    };
+
+    it("fila CSN avisada solo como USGS (M>=4) envía 'nuevo' para Chile", () => {
+      expect(decidirNotificacion(avisadoComoUsgs)).toEqual({
+        enviar: true,
+        motivo: "nuevo",
+      });
+    });
+
+    it("fila CSN ya avisada como CSN no re-avisa", () => {
+      expect(
+        decidirNotificacion({ ...avisadoComoUsgs, fuenteNotificada: "csn" })
+          .enviar,
+      ).toBe(false);
+    });
+
+    it("fila CSN avisada como USGS bajo el piso de Chile no envía", () => {
+      expect(
+        decidirNotificacion({
+          ...avisadoComoUsgs,
+          magnitud: 3.9,
+          magnitudNotificada: 3.9,
+        }).enviar,
+      ).toBe(false);
+    });
+
+    it("respeta el tope de antigüedad", () => {
+      expect(
+        decidirNotificacion({ ...avisadoComoUsgs, fecha: hace(90) }).enviar,
+      ).toBe(false);
+    });
+
+    it("fila USGS ya avisada no envía por esta regla", () => {
+      expect(
+        decidirNotificacion({ ...avisadoComoUsgs, fuente: "usgs" }).enviar,
+      ).toBe(false);
+    });
   });
 });

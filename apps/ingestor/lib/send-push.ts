@@ -75,7 +75,14 @@ function esErrorConStatusCode(error: unknown): error is { statusCode: number } {
 
 export async function enviarPushParaSismo(
   evento: SismoNormalizado,
-  opts: { motivo?: "nuevo" | "revision" } = {},
+  opts: {
+    motivo?: "nuevo" | "revision";
+    /**
+     * Excluye a los suscriptores con alcanceMundial: ya recibieron el aviso de
+     * este sismo cuando lo vio USGS (ver decidirNotificacion).
+     */
+    omitirAlcanceMundial?: boolean;
+  } = {},
 ): Promise<ResultadoEnvioPush> {
   const resultado: ResultadoEnvioPush = { enviados: 0, fallidos: 0, eliminados: 0 };
   const antiguedadMs = Date.now() - evento.fecha.getTime();
@@ -88,13 +95,16 @@ export async function enviarPushParaSismo(
 
   configurarVapid();
 
-  const suscripciones = await findSubscripcionesParaSismo({
+  const destinatarios = await findSubscripcionesParaSismo({
     magnitud: evento.magnitud,
     latitud: evento.latitud,
     longitud: evento.longitud,
     profundidadKm: evento.profundidadKm,
     fuente: evento.fuente,
   });
+  const suscripciones = opts.omitirAlcanceMundial
+    ? destinatarios.filter((s) => !s.alcanceMundial)
+    : destinatarios;
   if (suscripciones.length === 0) return resultado;
 
   const esRevision = opts.motivo === "revision";

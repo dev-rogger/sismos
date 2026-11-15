@@ -71,6 +71,7 @@ function fila(p: Partial<Fila> = {}): Fila {
     updatedAt: new Date(),
     notificadoAt: null,
     magnitudNotificada: null,
+    fuenteNotificada: null,
     ...p,
   } as Fila;
 }
@@ -102,7 +103,7 @@ describe("runIngest: notificación", () => {
     expect(enviarPushParaSismo).toHaveBeenCalledWith(expect.anything(), {
       motivo: "nuevo",
     });
-    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 4.5);
+    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 4.5, "csn");
   });
 
   it("(b) relectura sin cambio de un sismo ya notificado -> 0 push", async () => {
@@ -124,7 +125,7 @@ describe("runIngest: notificación", () => {
     });
     await runIngest();
     expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
-    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 4.1);
+    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 4.1, "csn");
   });
 
   it("Review Focus 2: M4.2 avisado y revisado a M5.8 -> re-avisa y registra la nueva magnitud", async () => {
@@ -142,7 +143,7 @@ describe("runIngest: notificación", () => {
     expect(enviarPushParaSismo).toHaveBeenCalledWith(expect.anything(), {
       motivo: "revision",
     });
-    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 5.8);
+    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 5.8, "csn");
   });
 
   it("(c) Review Focus 4: si el envío falla NO se marca como notificado y la ingesta sigue", async () => {
@@ -166,10 +167,48 @@ describe("runIngest: notificación", () => {
     expect(db.replaceWithCsn).toHaveBeenCalledWith("us-1", expect.anything());
     expect(resumen.deduped).toBe(1);
     expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
-    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 4.5);
+    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 4.5, "csn");
   });
 
-  it("USGS ya avisado reemplazado por CSN sin cambio -> 0 push", async () => {
+  it("A1: M7.1 avisado como USGS y luego reemplazado por CSN -> 1 push a Chile sin repetir alcance mundial", async () => {
+    m(db.findRecentByFuentes).mockResolvedValue([
+      fila({ fuente: "usgs", externalId: "us-1", magnitud: 7.1 }),
+    ]);
+    m(db.replaceWithCsn).mockResolvedValue(
+      fila({
+        externalId: "csn-1",
+        magnitud: 7.1,
+        notificadoAt: hace(1),
+        magnitudNotificada: 7.1,
+        fuenteNotificada: "usgs",
+      }),
+    );
+    m(fetchCsnRecent).mockResolvedValue([evento({ magnitud: 7.1 })]);
+    await runIngest();
+    expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
+    expect(enviarPushParaSismo).toHaveBeenCalledWith(expect.anything(), {
+      motivo: "nuevo",
+      omitirAlcanceMundial: true,
+    });
+    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 7.1, "csn");
+  });
+
+  it("A1: USGS M5 sin notificar reemplazado por CSN -> 1 push normal, sin omitirAlcanceMundial", async () => {
+    m(db.findRecentByFuentes).mockResolvedValue([
+      fila({ fuente: "usgs", externalId: "us-1", magnitud: 5 }),
+    ]);
+    m(db.replaceWithCsn).mockResolvedValue(
+      fila({ externalId: "csn-1", magnitud: 5 }),
+    );
+    m(fetchCsnRecent).mockResolvedValue([evento({ magnitud: 5 })]);
+    await runIngest();
+    expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
+    expect(enviarPushParaSismo).toHaveBeenCalledWith(expect.anything(), {
+      motivo: "nuevo",
+    });
+  });
+
+  it("A1: CSN ya avisado como CSN (reemplazo o relectura) -> 0 push", async () => {
     m(db.findRecentByFuentes).mockResolvedValue([
       fila({ fuente: "usgs", externalId: "us-1" }),
     ]);
@@ -178,6 +217,7 @@ describe("runIngest: notificación", () => {
         externalId: "csn-1",
         notificadoAt: hace(1),
         magnitudNotificada: 4.5,
+        fuenteNotificada: "csn",
       }),
     );
     m(fetchCsnRecent).mockResolvedValue([evento()]);
@@ -217,7 +257,7 @@ describe("runIngest: notificación", () => {
     m(fetchCsnRecent).mockResolvedValue([evento()]);
     await runIngest();
     expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
-    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 4.5);
+    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 4.5, "csn");
   });
 
   it("reconciliación con aproximado ya avisado y misma magnitud -> 0 push", async () => {
@@ -251,7 +291,7 @@ describe("runIngest: notificación", () => {
     m(fetchCsnRecent).mockResolvedValue([evento({ magnitud: 5.2 })]);
     await runIngest();
     expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
-    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 5.2);
+    expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 5.2, "csn");
   });
 
   it("USGS M7 nuevo -> 1 push; USGS M6 -> 0", async () => {
@@ -275,7 +315,7 @@ describe("runIngest: notificación", () => {
     ]);
     await runIngest();
     expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
-    expect(db.marcarNotificado).toHaveBeenCalledWith("usgs", "us-7", 7.1);
+    expect(db.marcarNotificado).toHaveBeenCalledWith("usgs", "us-7", 7.1, "usgs");
   });
 });
 

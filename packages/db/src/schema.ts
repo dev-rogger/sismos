@@ -34,6 +34,9 @@ export const sismos = pgTable(
     // escribe solo marcarNotificado(); ningún upsert/replace lo pisa.
     notificadoAt: timestamp("notificado_at"),
     magnitudNotificada: doublePrecision("magnitud_notificada"),
+    // Fuente con la que se avisó (puede ser distinta de `fuente` si CSN
+    // reemplazó una fila de USGS ya avisada).
+    fuenteNotificada: text("fuente_notificada"),
   },
   (table) => [
     unique("sismos_fuente_external_id_unique").on(

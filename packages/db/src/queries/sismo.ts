@@ -20,6 +20,7 @@ export interface Sismo {
   ubicacionAproximada: boolean;
   notificadoAt: Date | null;
   magnitudNotificada: number | null;
+  fuenteNotificada: SismoFuente | null;
 }
 
 function toSismo(row: typeof sismos.$inferSelect): Sismo {
@@ -46,6 +47,7 @@ function toSismo(row: typeof sismos.$inferSelect): Sismo {
     ubicacionAproximada: row.ubicacionAproximada,
     notificadoAt: row.notificadoAt,
     magnitudNotificada: row.magnitudNotificada,
+    fuenteNotificada: row.fuenteNotificada as SismoFuente | null,
   };
 }
 
@@ -72,18 +74,24 @@ export async function findRecentByFuentes(
   return rows.map(toSismo);
 }
 
-// Registra que ya se avisó de este sismo y con qué magnitud. Es la única
-// escritura de notificado_at / magnitud_notificada: upsertSismo, replaceWithCsn
-// y actualizarFilaCsn no tocan esas columnas, así que el estado sobrevive a
-// relecturas y a que CSN reemplace una fila de USGS.
+// Registra que ya se avisó de este sismo, con qué magnitud y con qué fuente
+// (`fuenteNotificada`, que puede diferir de la fuente actual de la fila). Es la
+// única escritura de notificado_at / magnitud_notificada / fuente_notificada:
+// upsertSismo, replaceWithCsn y actualizarFilaCsn no tocan esas columnas, así
+// que el estado sobrevive a relecturas y a que CSN reemplace una fila de USGS.
 export async function marcarNotificado(
   fuente: SismoFuente,
   externalId: string,
   magnitud: number,
+  fuenteNotificada: SismoFuente = fuente,
 ): Promise<void> {
   await getDb()
     .update(sismos)
-    .set({ notificadoAt: new Date(), magnitudNotificada: magnitud })
+    .set({
+      notificadoAt: new Date(),
+      magnitudNotificada: magnitud,
+      fuenteNotificada,
+    })
     .where(and(eq(sismos.fuente, fuente), eq(sismos.externalId, externalId)));
 }
 

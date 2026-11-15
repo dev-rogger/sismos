@@ -14,6 +14,8 @@ export interface EntradaDecisionNotificacion {
   fuente: SismoFuente;
   notificadoAt: Date | null;
   magnitudNotificada: number | null;
+  /** Fuente con la que se avisó (null si nunca se avisó). */
+  fuenteNotificada: SismoFuente | null;
   ahora: Date;
 }
 
@@ -31,8 +33,15 @@ const NO_ENVIAR: DecisionNotificacion = { enviar: false, motivo: null };
 export function decidirNotificacion(
   entrada: EntradaDecisionNotificacion,
 ): DecisionNotificacion {
-  const { magnitud, fecha, fuente, notificadoAt, magnitudNotificada, ahora } =
-    entrada;
+  const {
+    magnitud,
+    fecha,
+    fuente,
+    notificadoAt,
+    magnitudNotificada,
+    fuenteNotificada,
+    ahora,
+  } = entrada;
 
   if (ahora.getTime() - fecha.getTime() > TOPE_ANTIGUEDAD_NOTIFICACION_MS) {
     return NO_ENVIAR;
@@ -43,6 +52,20 @@ export function decidirNotificacion(
 
   if (notificadoAt === null) {
     return magnitud >= umbral ? { enviar: true, motivo: "nuevo" } : NO_ENVIAR;
+  }
+
+  // Ya notificado, pero con otra fuente: un sismo grande visto primero por
+  // USGS (aviso solo a suscriptores de alcance mundial) y luego reemplazado por
+  // CSN nunca avisó a la audiencia de Chile. Se avisa una vez más; al marcar
+  // con fuente "csn" la regla deja de aplicar.
+  if (
+    fuente === "csn" &&
+    fuenteNotificada !== null &&
+    fuenteNotificada !== undefined &&
+    fuenteNotificada !== "csn" &&
+    magnitud >= UMBRAL_MAGNITUD_CHILE
+  ) {
+    return { enviar: true, motivo: "nuevo" };
   }
 
   // Ya notificado. Sin magnitud registrada no se puede medir la revisión: no

@@ -176,6 +176,47 @@ describe("enviarPushParaSismo", () => {
   });
 });
 
+describe("enviarPushParaSismo: omitirAlcanceMundial (A1)", () => {
+  const mixtas = () =>
+    [
+      { ...subs(1)[0]!, alcanceMundial: true },
+      {
+        endpoint: "https://fcm.googleapis.com/fcm/send/solo-chile",
+        keys: { p256dh: "p", auth: "a" },
+        alcanceMundial: false,
+      },
+    ] as never;
+
+  it("con la opción, no envía a quienes tienen alcanceMundial", async () => {
+    vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue(mixtas());
+    const r = await enviarPushParaSismo(evento(), {
+      motivo: "nuevo",
+      omitirAlcanceMundial: true,
+    });
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0]![0]).toMatchObject({
+      endpoint: "https://fcm.googleapis.com/fcm/send/solo-chile",
+    });
+    expect(r.enviados).toBe(1);
+  });
+
+  it("sin la opción, envía a todos los destinatarios", async () => {
+    vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue(mixtas());
+    await enviarPushParaSismo(evento());
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+
+  it("si al omitir no queda nadie, no envía ni lanza", async () => {
+    vi.mocked(db.findSubscripcionesParaSismo).mockResolvedValue([
+      { ...subs(1)[0]!, alcanceMundial: true },
+    ] as never);
+    await expect(
+      enviarPushParaSismo(evento(), { omitirAlcanceMundial: true }),
+    ).resolves.toEqual({ enviados: 0, fallidos: 0, eliminados: 0 });
+    expect(send).not.toHaveBeenCalled();
+  });
+});
+
 describe("enviarAlertaAdmin: canal webhook", () => {
   const fetchMock = vi.fn();
   beforeEach(() => {

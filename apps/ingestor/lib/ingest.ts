@@ -4,6 +4,7 @@ import {
   normalizeUsgsFeature,
   normalizeGaelSismo,
   decidirNotificacion,
+  UMBRAL_MAGNITUD_MUNDIAL,
   type SismoNormalizado,
 } from "@sismos/shared";
 import {
@@ -67,6 +68,12 @@ async function errorSeguro(
 // sismo como notificado solo si el envío no lanzó. Si el push falla, la fila
 // queda sin marcar y la siguiente corrida lo reintenta mientras no supere el
 // tope de antigüedad de decidirNotificacion.
+//
+// Riesgo aceptado (no hay reclamo atómico): si dos corridas del ingestor se
+// solapan, ambas pueden leer la fila sin marcar y avisar dos veces. Es raro
+// (el cron corre cada 5 min y una corrida dura segundos) y el daño se acota
+// porque el push lleva `topic` y `tag` por sismo, con lo que el servicio de
+// push y el navegador reemplazan el aviso repetido en vez de apilarlo.
 async function notificarSiCorresponde(
   evento: SismoNormalizado,
   fila: Sismo,
@@ -77,11 +84,25 @@ async function notificarSiCorresponde(
     fuente: fila.fuente,
     notificadoAt: fila.notificadoAt,
     magnitudNotificada: fila.magnitudNotificada,
+    fuenteNotificada: fila.fuenteNotificada,
     ahora: new Date(),
   });
   if (!decision.enviar) return;
+  // Fila CSN ya avisada solo como USGS por un sismo que superó el umbral
+  // mundial: los suscriptores de alcance mundial ya recibieron ese aviso, así
+  // que se les omite para no duplicarlo.
+  const yaAvisadoComoMundial =
+    fila.fuente === "csn" &&
+    fila.notificadoAt !== null &&
+    fila.fuenteNotificada !== null &&
+    fila.fuenteNotificada !== "csn" &&
+    fila.magnitudNotificada !== null &&
+    fila.magnitudNotificada >= UMBRAL_MAGNITUD_MUNDIAL;
   try {
-    await enviarPushParaSismo(evento, { motivo: decision.motivo ?? "nuevo" });
+    await enviarPushParaSismo(evento, {
+      motivo: decision.motivo ?? "nuevo",
+      ...(yaAvisadoComoMundial ? { omitirAlcanceMundial: true } : {}),
+    });
   } catch (error) {
     console.error("[ingest] push notification failed:", error);
     await errorSeguro("push", error);
@@ -89,7 +110,12 @@ async function notificarSiCorresponde(
   }
   await okSeguro("push");
   try {
-    await marcarNotificado(fila.fuente, fila.externalId, evento.magnitud);
+    await marcarNotificado(
+      fila.fuente,
+      fila.externalId,
+      evento.magnitud,
+      evento.fuente,
+    );
   } catch (error) {
     console.error("[ingest] no se pudo marcar el sismo como notificado:", error);
   }
