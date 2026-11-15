@@ -101,3 +101,12 @@ export const estadoIngesta = pgTable("estado_ingesta", {
   fuente: text("fuente").primaryKey(),
   ultimaAlertaEnviada: timestamp("ultima_alerta_enviada"),
 });
+
+// Salud de la ingesta por fuente ("csn" | "usgs" | "gael" | "push"). Distinta de
+// `estado_ingesta`, que solo guarda el throttle de alertas al admin.
+export const ingestaEstado = pgTable("ingesta_estado", {
+  fuente: text("fuente").primaryKey(),
+  ultimoOk: timestamp("ultimo_ok", { withTimezone: true }),
+  ultimoError: timestamp("ultimo_error", { withTimezone: true }),
+  ultimoErrorMsg: text("ultimo_error_msg"),
+});
