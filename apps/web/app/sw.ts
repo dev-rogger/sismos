@@ -15,6 +15,9 @@ declare const self: ServiceWorkerGlobalScope;
 // lo soportan (se ignora en los que no).
 interface NotificationOptionsConVibracion extends NotificationOptions {
   vibrate?: number[];
+  // Tampoco está en la lib DOM de TS; vive en la spec de Notifications.
+  renotify?: boolean;
+  timestamp?: number;
 }
 
 const serwist = new Serwist({
@@ -37,6 +40,14 @@ self.addEventListener("push", (event) => {
     requireInteraction: Boolean(data.severo),
     data: { url: data.url ?? "/" },
   };
+  // Mismo tag = la notificación nueva reemplaza a la anterior del mismo sismo
+  // (una revisión de magnitud no apila otra). renotify solo con tag y solo en
+  // revisiones, para que el reemplazo vuelva a sonar/vibrar.
+  if (typeof data.tag === "string" && data.tag) {
+    opciones.tag = data.tag;
+    if (data.renotify === true) opciones.renotify = true;
+  }
+  if (typeof data.timestamp === "number") opciones.timestamp = data.timestamp;
   event.waitUntil(
     self.registration.showNotification(data.title ?? "Sismos", opciones),
   );
@@ -51,8 +62,12 @@ self.addEventListener("notificationclick", (event) => {
       .then((clientList) => {
         for (const client of clientList) {
           if ("focus" in client) {
-            client.navigate(url);
-            return client.focus();
+            // navigate() falla en clientes no controlados por este SW: en ese
+            // caso se abre una ventana nueva con la URL del sismo.
+            return client
+              .navigate(url)
+              .then((c) => (c ?? client).focus())
+              .catch(() => self.clients.openWindow(url));
           }
         }
         return self.clients.openWindow(url);
