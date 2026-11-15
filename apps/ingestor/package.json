@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint --max-warnings 0",
     "check-types": "next typegen && tsc --noEmit",
+    "test": "vitest run",
     "poll": "bash scripts/poll.sh",
     "backfill-historicos": "tsx --env-file=.env.local scripts/backfill-historicos.ts"
   },
@@ -30,6 +31,7 @@
     "@vercel/config": "^0.5.5",
     "eslint": "^9.39.1",
     "tsx": "^4.23.0",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^4.1.10"
   }
 }
