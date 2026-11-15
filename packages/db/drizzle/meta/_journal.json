@@ -50,6 +50,13 @@
       "when": 1786982472947,
       "tag": "0006_keen_sumo",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794781542742,
+      "tag": "0007_lumpy_ogun",
+      "breakpoints": true
     }
   ]
 }

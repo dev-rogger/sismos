@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, gte, asc, sql, getTableColumns } from "drizzle-orm";
+import { and, desc, eq, gt, gte, inArray, asc, sql, getTableColumns } from "drizzle-orm";
 import type { SismoFuente, SismoNormalizado } from "@sismos/shared";
 import { getDb } from "../connection";
 import { sismos } from "../schema";
@@ -18,6 +18,8 @@ export interface Sismo {
   createdAt: Date;
   updatedAt: Date;
   ubicacionAproximada: boolean;
+  notificadoAt: Date | null;
+  magnitudNotificada: number | null;
 }
 
 function toSismo(row: typeof sismos.$inferSelect): Sismo {
@@ -42,6 +44,8 @@ function toSismo(row: typeof sismos.$inferSelect): Sismo {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     ubicacionAproximada: row.ubicacionAproximada,
+    notificadoAt: row.notificadoAt,
+    magnitudNotificada: row.magnitudNotificada,
   };
 }
 
@@ -54,6 +58,33 @@ export async function findRecentByFuente(
     .from(sismos)
     .where(and(eq(sismos.fuente, fuente), gte(sismos.fecha, since)));
   return rows.map(toSismo);
+}
+
+export async function findRecentByFuentes(
+  fuentes: SismoFuente[],
+  since: Date,
+): Promise<Sismo[]> {
+  if (fuentes.length === 0) return [];
+  const rows = await getDb()
+    .select()
+    .from(sismos)
+    .where(and(inArray(sismos.fuente, fuentes), gte(sismos.fecha, since)));
+  return rows.map(toSismo);
+}
+
+// Registra que ya se avisó de este sismo y con qué magnitud. Es la única
+// escritura de notificado_at / magnitud_notificada: upsertSismo, replaceWithCsn
+// y actualizarFilaCsn no tocan esas columnas, así que el estado sobrevive a
+// relecturas y a que CSN reemplace una fila de USGS.
+export async function marcarNotificado(
+  fuente: SismoFuente,
+  externalId: string,
+  magnitud: number,
+): Promise<void> {
+  await getDb()
+    .update(sismos)
+    .set({ notificadoAt: new Date(), magnitudNotificada: magnitud })
+    .where(and(eq(sismos.fuente, fuente), eq(sismos.externalId, externalId)));
 }
 
 export async function findRecentAproximados(since: Date): Promise<Sismo[]> {
@@ -70,6 +101,8 @@ export async function findRecentAproximados(since: Date): Promise<Sismo[]> {
   return rows.map(toSismo);
 }
 
+// Nota: las columnas notificado_at / magnitud_notificada NO figuran en los
+// `set` de upsertSismo, replaceWithCsn ni actualizarFilaCsn a propósito.
 export interface ResultadoUpsertSismo {
   sismo: Sismo;
   esNuevo: boolean;

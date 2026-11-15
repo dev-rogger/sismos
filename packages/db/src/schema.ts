@@ -30,6 +30,10 @@ export const sismos = pgTable(
     ubicacionAproximada: boolean("ubicacion_aproximada")
       .notNull()
       .default(false),
+    // Estado de notificación push: cuándo se avisó y con qué magnitud. Lo
+    // escribe solo marcarNotificado(); ningún upsert/replace lo pisa.
+    notificadoAt: timestamp("notificado_at"),
+    magnitudNotificada: doublePrecision("magnitud_notificada"),
   },
   (table) => [
     unique("sismos_fuente_external_id_unique").on(
