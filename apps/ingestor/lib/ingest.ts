@@ -40,7 +40,6 @@ export interface IngestSummary {
   deduped: number;
 }
 
-const DEDUPE_WINDOW_MS = 10 * 60 * 1000;
 const RECONCILIACION_LOOKBACK_MS = 24 * 60 * 60 * 1000;
 
 // Registrar el estado de salud nunca debe romper ni frenar la ingesta.
@@ -198,7 +197,6 @@ export async function runIngest(): Promise<IngestSummary> {
     summary.usgs.errors = 1;
   }
 
-  const since = new Date(Date.now() - DEDUPE_WINDOW_MS);
   const desdeReconciliacion = new Date(Date.now() - RECONCILIACION_LOOKBACK_MS);
 
   // Una sola carga de candidatos para todo el ciclo (antes: una consulta por
@@ -303,9 +301,10 @@ export async function runIngest(): Promise<IngestSummary> {
       }
     }
 
-    const usgsCandidatos = candidatos.filter(
-      (c) => c.fuente === "usgs" && c.fecha >= since,
-    );
+    // Todo el conjunto cargado (24 h): findDuplicate decide por tiempo,
+    // distancia y magnitud. Una ventana más corta dejaba duplicar un CSN
+    // tardío sobre su fila USGS.
+    const usgsCandidatos = candidatos.filter((c) => c.fuente === "usgs");
     const match = findDuplicate(evento, usgsCandidatos as SismoNormalizado[]);
     if (match) {
       const reemplazada = await replaceWithCsn(match.externalId, evento);
@@ -325,9 +324,10 @@ export async function runIngest(): Promise<IngestSummary> {
   }
 
   for (const evento of usgsEventos) {
-    const csnCandidatos = candidatos.filter(
-      (c) => c.fuente === "csn" && c.fecha >= since,
-    );
+    // Todo el conjunto cargado (24 h), no solo los últimos 10 min: un USGS que
+    // sigue en el feed tras ser reemplazado por CSN debe hacer match y no
+    // reinsertarse como fila USGS duplicada.
+    const csnCandidatos = candidatos.filter((c) => c.fuente === "csn");
     const match = findDuplicate(evento, csnCandidatos as SismoNormalizado[]);
     if (match) {
       await setRefCruzada(match.fuente, match.externalId, {

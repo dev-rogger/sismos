@@ -424,3 +424,43 @@ describe("runIngest: salud de csn (M3)", () => {
     );
   });
 });
+
+describe("runIngest: ventana de candidatos (M5)", () => {
+  it("USGS que sigue en el feed tras ser reemplazado por CSN (>10 min) hace match y no se reinserta", async () => {
+    const fecha = hace(30);
+    m(db.findRecentByFuentes).mockResolvedValue([
+      fila({ fuente: "csn", externalId: "csn-1", fecha, magnitud: 5 }),
+    ]);
+    m(fetchUsgsRecent).mockResolvedValue([
+      evento({
+        fuente: "usgs",
+        externalId: "us-1",
+        fecha,
+        magnitud: 5,
+        bandera: null,
+      }),
+    ]);
+    const resumen = await runIngest();
+    expect(db.setRefCruzada).toHaveBeenCalledWith("csn", "csn-1", {
+      fuente: "usgs",
+      externalId: "us-1",
+    });
+    expect(db.upsertSismo).not.toHaveBeenCalled();
+    expect(resumen.deduped).toBe(1);
+  });
+
+  it("CSN tardío (>10 min) reemplaza la fila USGS en vez de insertar un duplicado", async () => {
+    const fecha = hace(30);
+    m(db.findRecentByFuentes).mockResolvedValue([
+      fila({ fuente: "usgs", externalId: "us-1", fecha, magnitud: 5 }),
+    ]);
+    m(db.replaceWithCsn).mockResolvedValue(
+      fila({ externalId: "csn-1", fecha, magnitud: 5 }),
+    );
+    m(fetchCsnRecent).mockResolvedValue([evento({ fecha, magnitud: 5 })]);
+    const resumen = await runIngest();
+    expect(db.replaceWithCsn).toHaveBeenCalledWith("us-1", expect.anything());
+    expect(db.upsertSismo).not.toHaveBeenCalled();
+    expect(resumen.deduped).toBe(1);
+  });
+});
