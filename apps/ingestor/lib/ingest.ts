@@ -3,13 +3,14 @@ import {
   normalizeCsnSismo,
   normalizeUsgsFeature,
   normalizeGaelSismo,
-  UMBRAL_MAGNITUD_MUNDIAL,
+  decidirNotificacion,
   type SismoNormalizado,
 } from "@sismos/shared";
 import {
-  findRecentByFuente,
-  findRecentAproximados,
+  findRecentByFuentes,
   findUltimoCsnPreciso,
+  marcarNotificado,
+  type Sismo,
   replaceWithCsn,
   reemplazarConPrecision,
   actualizarAproximadoExistente,
@@ -37,6 +38,52 @@ export interface IngestSummary {
 
 const DEDUPE_WINDOW_MS = 10 * 60 * 1000;
 const RECONCILIACION_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+
+// Decide con el estado persistido de la fila (no con "es nuevo") y marca el
+// sismo como notificado solo si el envío no lanzó. Si el push falla, la fila
+// queda sin marcar y la siguiente corrida lo reintenta mientras no supere el
+// tope de antigüedad de decidirNotificacion.
+async function notificarSiCorresponde(
+  evento: SismoNormalizado,
+  fila: Sismo,
+): Promise<void> {
+  const decision = decidirNotificacion({
+    magnitud: evento.magnitud,
+    fecha: evento.fecha,
+    fuente: fila.fuente,
+    notificadoAt: fila.notificadoAt,
+    magnitudNotificada: fila.magnitudNotificada,
+    ahora: new Date(),
+  });
+  if (!decision.enviar) return;
+  try {
+    await enviarPushParaSismo(evento);
+  } catch (error) {
+    console.error("[ingest] push notification failed:", error);
+    return;
+  }
+  try {
+    await marcarNotificado(fila.fuente, fila.externalId, evento.magnitud);
+  } catch (error) {
+    console.error("[ingest] no se pudo marcar el sismo como notificado:", error);
+  }
+}
+
+// Mantiene la lista en memoria coherente con la BD tras cada escritura, para
+// que dos eventos del mismo ciclo no se dupliquen ni lean estado viejo.
+function guardarEnLista(
+  lista: Sismo[],
+  fuenteAnterior: Sismo["fuente"],
+  externalIdAnterior: string,
+  fila: Sismo,
+): void {
+  const i = lista.findIndex(
+    (c) =>
+      c.fuente === fuenteAnterior && c.externalId === externalIdAnterior,
+  );
+  if (i >= 0) lista[i] = fila;
+  else lista.push(fila);
+}
 
 export async function runIngest(): Promise<IngestSummary> {
   const summary: IngestSummary = {
@@ -93,27 +140,43 @@ export async function runIngest(): Promise<IngestSummary> {
   const since = new Date(Date.now() - DEDUPE_WINDOW_MS);
   const desdeReconciliacion = new Date(Date.now() - RECONCILIACION_LOOKBACK_MS);
 
+  // Una sola carga de candidatos para todo el ciclo (antes: una consulta por
+  // evento). Se filtra en memoria y se mantiene al día tras cada escritura.
+  const candidatos = await findRecentByFuentes(
+    ["csn", "usgs"],
+    desdeReconciliacion,
+  );
+
   for (const evento of csnEventos) {
     if (csnPreciso) {
-      const aproximadoCandidatos =
-        await findRecentAproximados(desdeReconciliacion);
+      const aproximadoCandidatos = candidatos.filter(
+        (c) => c.fuente === "csn" && c.ubicacionAproximada,
+      );
       const matchAproximado = findDuplicate(
         evento,
         aproximadoCandidatos as SismoNormalizado[],
       );
       if (matchAproximado) {
-        let reconciliado = false;
+        let reconciliado: Sismo | null = null;
         try {
-          const resultado = await reemplazarConPrecision(
+          reconciliado = await reemplazarConPrecision(
             matchAproximado.externalId,
             evento,
           );
-          reconciliado = resultado !== null;
         } catch (error) {
           console.error("[ingest] reconciliación con aproximado falló:", error);
         }
         if (reconciliado) {
+          guardarEnLista(
+            candidatos,
+            "csn",
+            matchAproximado.externalId,
+            reconciliado,
+          );
           summary.csn.inserted += 1;
+          // La fila aproximada pudo haberse notificado ya (entonces solo
+          // re-avisa si la magnitud subió >= 0.5) o no (entonces avisa ahora).
+          await notificarSiCorresponde(evento, reconciliado);
           continue;
         }
         // No se pudo reconciliar (0 filas afectadas o error): degradar a
@@ -126,10 +189,7 @@ export async function runIngest(): Promise<IngestSummary> {
       // el ID real de xor.cl, así que sin este chequeo cada failover
       // insertaría una fila aproximada duplicada por cada evento que ya
       // habíamos guardado con precisión (y volvería a notificarlo).
-      const csnCandidatos = await findRecentByFuente(
-        "csn",
-        desdeReconciliacion,
-      );
+      const csnCandidatos = candidatos.filter((c) => c.fuente === "csn");
       const matchPreciso = findDuplicate(
         evento,
         csnCandidatos.filter(
@@ -158,7 +218,18 @@ export async function runIngest(): Promise<IngestSummary> {
             matchAproximado.externalId,
             evento,
           );
-          if (actualizado) continue;
+          if (actualizado) {
+            guardarEnLista(
+              candidatos,
+              "csn",
+              matchAproximado.externalId,
+              actualizado,
+            );
+            // Estado persistido: no re-avisa salvo que nunca se haya avisado
+            // o la magnitud haya subido >= 0.5.
+            await notificarSiCorresponde(evento, actualizado);
+            continue;
+          }
         } catch (error) {
           console.error(
             "[ingest] no se pudo actualizar el aproximado existente:",
@@ -171,26 +242,31 @@ export async function runIngest(): Promise<IngestSummary> {
       }
     }
 
-    const usgsCandidatos = await findRecentByFuente("usgs", since);
+    const usgsCandidatos = candidatos.filter(
+      (c) => c.fuente === "usgs" && c.fecha >= since,
+    );
     const match = findDuplicate(evento, usgsCandidatos as SismoNormalizado[]);
     if (match) {
-      await replaceWithCsn(match.externalId, evento);
+      const reemplazada = await replaceWithCsn(match.externalId, evento);
       summary.deduped += 1;
-    } else {
-      const { esNuevo } = await upsertSismo(evento);
-      summary.csn.inserted += 1;
-      if (esNuevo && evento.magnitud >= 4) {
-        try {
-          await enviarPushParaSismo(evento);
-        } catch (error) {
-          console.error("[ingest] push notification failed:", error);
-        }
+      if (reemplazada) {
+        guardarEnLista(candidatos, "usgs", match.externalId, reemplazada);
+        // La fila conserva el estado de notificación de la fila USGS: si
+        // nunca se avisó y supera el piso de Chile, avisa una sola vez.
+        await notificarSiCorresponde(evento, reemplazada);
       }
+    } else {
+      const { sismo } = await upsertSismo(evento);
+      guardarEnLista(candidatos, sismo.fuente, sismo.externalId, sismo);
+      summary.csn.inserted += 1;
+      await notificarSiCorresponde(evento, sismo);
     }
   }
 
   for (const evento of usgsEventos) {
-    const csnCandidatos = await findRecentByFuente("csn", since);
+    const csnCandidatos = candidatos.filter(
+      (c) => c.fuente === "csn" && c.fecha >= since,
+    );
     const match = findDuplicate(evento, csnCandidatos as SismoNormalizado[]);
     if (match) {
       await setRefCruzada(match.fuente, match.externalId, {
@@ -199,15 +275,10 @@ export async function runIngest(): Promise<IngestSummary> {
       });
       summary.deduped += 1;
     } else {
-      const { esNuevo } = await upsertSismo(evento);
+      const { sismo } = await upsertSismo(evento);
+      guardarEnLista(candidatos, sismo.fuente, sismo.externalId, sismo);
       summary.usgs.inserted += 1;
-      if (esNuevo && evento.magnitud >= UMBRAL_MAGNITUD_MUNDIAL) {
-        try {
-          await enviarPushParaSismo(evento);
-        } catch (error) {
-          console.error("[ingest] push notification failed:", error);
-        }
-      }
+      await notificarSiCorresponde(evento, sismo);
     }
   }
 
