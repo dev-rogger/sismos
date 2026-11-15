@@ -19,6 +19,10 @@ export function esEndpointPushPermitido(endpoint: string): boolean {
     return false;
   }
   if (url.protocol !== "https:") return false;
+  // Sin puerto explícito (los servicios de push usan 443) ni credenciales en la
+  // URL: ambos sirven para apuntar el POST del servidor a otro destino.
+  if (url.port !== "") return false;
+  if (url.username !== "" || url.password !== "") return false;
   const host = url.hostname.toLowerCase();
   return HOSTS_PERMITIDOS.some((s) => host === s || host.endsWith("." + s));
 }

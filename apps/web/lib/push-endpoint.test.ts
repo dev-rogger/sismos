@@ -16,6 +16,9 @@ describe("esEndpointPushPermitido", () => {
     "https://evil.com/x",
     "https://fcm.googleapis.com.evil.com/x",
     "https://127.0.0.1/x",
+    "https://fcm.googleapis.com:8443/x",
+    "https://user:pass@fcm.googleapis.com/x",
+    "https://fcm.googleapis.com@evil.com/x",
     "no es una url",
     `https://fcm.googleapis.com/${"a".repeat(2000)}`,
   ])("rechaza %s", (url) => {
