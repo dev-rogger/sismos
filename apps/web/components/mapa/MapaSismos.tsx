@@ -695,7 +695,8 @@ export default function MapaSismos({
       {errorConexion && (
         <div
           style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
-          className="absolute left-1/2 z-10 -translate-x-1/2 rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 py-2 text-xs font-medium text-neutral-300 shadow-lg"
+          role="status"
+          className="absolute left-1/2 z-10 -translate-x-1/2 rounded-[var(--radius-control)] bg-superficie px-3.5 py-2.5 text-xs font-medium text-neutral-200 shadow-flotante"
         >
           {t("sinConexion")}
         </div>
@@ -742,7 +743,7 @@ export default function MapaSismos({
       </div>
       <div
         style={{ bottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
-        className="absolute right-3 z-10 flex flex-col items-end gap-2"
+        className="absolute right-3 z-[5] flex flex-col items-end gap-2"
       >
         <button
           type="button"

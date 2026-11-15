@@ -1,5 +1,6 @@
 "use client";
 
+import IconoCerrar from "./IconoCerrar";
 import { useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -89,9 +90,9 @@ export default function InvitacionNotificacionesToastWatcher() {
                 type="button"
                 onClick={() => toast.dismiss(id)}
                 aria-label={tc("cerrar")}
-                className="flex h-8 w-8 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-800 hover:text-neutral-300"
+                className="btn-icono"
               >
-                ✕
+                <IconoCerrar />
               </button>
             </div>
             <button

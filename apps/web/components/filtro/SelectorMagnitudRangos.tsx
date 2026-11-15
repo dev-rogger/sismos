@@ -6,11 +6,13 @@ import { RANGOS_MAGNITUD, type RangoMagnitud } from "../../lib/filtro-tipos";
 interface SelectorMagnitudRangosProps {
   seleccionados: RangoMagnitud[];
   onChange: (rangos: RangoMagnitud[]) => void;
+  className?: string;
 }
 
 export default function SelectorMagnitudRangos({
   seleccionados,
   onChange,
+  className = "flex flex-wrap gap-2",
 }: SelectorMagnitudRangosProps) {
   const t = useTranslations("filtro");
 
@@ -27,7 +29,7 @@ export default function SelectorMagnitudRangos({
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className={className}>
       {RANGOS_MAGNITUD.map((rango) => {
         const activo = seleccionados.includes(rango.valor);
         // Mismo caso que el `return` temprano de `alternar`: si este es el

@@ -84,17 +84,19 @@ export default function ListaHistorial({
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setFiltro((f) => ({ ...f, soloChile: !f.soloChile }))}
-          aria-pressed={filtro.soloChile}
-          className="chip mt-2 w-full"
-        >
-          {t("soloChile")}
-        </button>
-
-        <div className="mt-2">
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              setFiltro((f) => ({ ...f, soloChile: !f.soloChile }))
+            }
+            aria-pressed={filtro.soloChile}
+            className="chip"
+          >
+            {t("soloChile")}
+          </button>
           <SelectorMagnitudRangos
+            className="contents"
             seleccionados={filtro.rangos}
             onChange={(rangos) => setFiltro((f) => ({ ...f, rangos }))}
           />
@@ -126,7 +128,7 @@ export default function ListaHistorial({
           </button>
         </div>
       ) : (
-        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 py-3">
+        <ul className="lista-cv flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 py-3">
           {eventosFiltrados.map((evento) => {
             const seleccionado =
               evento.externalId === sismoSeleccionado?.externalId;

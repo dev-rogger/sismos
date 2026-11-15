@@ -158,7 +158,7 @@ export default function PantallaEstadisticas({
                     type="button"
                     onClick={() => setGranularidad(opcion)}
                     aria-pressed={granularidad === opcion}
-                    className={`min-h-9 touch-manipulation rounded-md px-2.5 text-xs font-medium transition active:scale-[0.97] ${
+                    className={`min-h-11 touch-manipulation rounded-[0.625rem] px-3 text-xs font-medium transition-colors active:scale-[0.97] ${
                       granularidad === opcion
                         ? "bg-neutral-700 text-neutral-100"
                         : "text-neutral-400 hover:text-neutral-200"
@@ -189,7 +189,7 @@ export default function PantallaEstadisticas({
                 {t(`sinSismosVentana.${granularidad}`)}
               </p>
             ) : (
-              <ul className="mt-3 flex flex-col gap-2">
+              <ul className="lista-cv mt-3 flex flex-col gap-2">
                 {resumen.sismos.map((sismo) => {
                   const region =
                     sismo.bandera === "🇨🇱"

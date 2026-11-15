@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useState, type FormEvent } from "react";
+import IconoCerrar from "../../components/IconoCerrar";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -80,7 +81,7 @@ function LoginForm() {
             aria-label={tc("cerrar")}
             className="btn-icono"
           >
-            ✕
+            <IconoCerrar />
           </button>
         </div>
         <p className="mb-5 text-xs text-neutral-400">{t("subtitulo")}</p>
@@ -91,7 +92,7 @@ function LoginForm() {
             marcarLogin();
             signIn("google", { callbackUrl: "/" });
           }}
-          className="flex min-h-11 w-full touch-manipulation items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm font-medium text-neutral-200 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
+          className="btn w-full"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden="true">
             <path
@@ -127,7 +128,7 @@ function LoginForm() {
               placeholder={t("nombrePlaceholder")}
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-sky-500 focus:outline-none"
+              className="campo placeholder:text-neutral-500"
             />
           )}
           <input
@@ -136,7 +137,7 @@ function LoginForm() {
             placeholder={t("emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-sky-500 focus:outline-none"
+            className="campo placeholder:text-neutral-500"
           />
           <input
             type="password"
@@ -144,7 +145,7 @@ function LoginForm() {
             placeholder={t("contrasenaPlaceholder")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="min-h-11 rounded-lg border border-neutral-700 bg-neutral-800 px-3 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-sky-500 focus:outline-none"
+            className="campo placeholder:text-neutral-500"
           />
 
           {error && <p className="text-xs text-red-400">{error}</p>}
@@ -152,7 +153,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={cargando}
-            className="mt-1 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border border-sky-500 bg-sky-500/10 px-3 text-sm font-medium text-sky-400 transition active:scale-[0.97] active:brightness-95 disabled:opacity-50"
+            className="btn btn--primario mt-1 w-full"
           >
             {cargando ? (
               <IconoSpinner className="h-4 w-4" label={tc("cargando")} />

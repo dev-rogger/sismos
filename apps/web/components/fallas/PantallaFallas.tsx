@@ -157,7 +157,7 @@ export default function PantallaFallas({
           {t("sinResultados", { busqueda })}
         </div>
       ) : (
-        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 py-3">
+        <ul className="lista-cv flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 py-3">
           {fallasFiltradas.map((falla) => (
             <li key={falla.id}>
               <button
