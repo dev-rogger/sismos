@@ -1,9 +1,14 @@
+import { createHash } from "node:crypto";
 import webpush from "web-push";
 import {
   findSubscripcionesParaSismo,
   deletePushSubscription,
 } from "@sismos/db";
-import { regionChilePorLatitud, type SismoNormalizado } from "@sismos/shared";
+import {
+  regionChilePorLatitud,
+  TOPE_ANTIGUEDAD_NOTIFICACION_MS,
+  type SismoNormalizado,
+} from "@sismos/shared";
 
 // M8+ dejaba fuera la mayoría de los sismos realmente peligrosos para la
 // vida (varios terremotos con víctimas y daño real en Chile han estado en
@@ -11,7 +16,25 @@ import { regionChilePorLatitud, type SismoNormalizado } from "@sismos/shared";
 // para que más eventos con riesgo real reciban urgency:"high" +
 // requireInteraction + vibración más intensa.
 const UMBRAL_TERREMOTO = 6.5;
-const TOPE_ANTIGUEDAD_PUSH_MS = 60 * 60 * 1000;
+// Si el servicio de push no logra entregar en 1 h (mismo tope que la decisión
+// de avisar), el aviso ya no sirve: que lo descarte en vez de entregarlo tarde.
+const TTL_SEGUNDOS = 60 * 60;
+const MAX_ENVIOS_SIMULTANEOS = 50;
+
+export interface ResultadoEnvioPush {
+  enviados: number;
+  fallidos: number;
+  eliminados: number;
+}
+
+/**
+ * `Topic` de web-push: máx. 32 caracteres, solo base64url. Un hash corto del
+ * externalId garantiza ambas cosas sea cual sea el id; permite que el servicio
+ * de push reemplace un aviso pendiente del mismo sismo.
+ */
+export function topicParaSismo(externalId: string): string {
+  return createHash("sha256").update(externalId).digest("base64url").slice(0, 32);
+}
 
 const REGIONES_CON_DEL = new Set([
   "Biobío",
@@ -52,13 +75,15 @@ function esErrorConStatusCode(error: unknown): error is { statusCode: number } {
 
 export async function enviarPushParaSismo(
   evento: SismoNormalizado,
-): Promise<void> {
+  opts: { motivo?: "nuevo" | "revision" } = {},
+): Promise<ResultadoEnvioPush> {
+  const resultado: ResultadoEnvioPush = { enviados: 0, fallidos: 0, eliminados: 0 };
   const antiguedadMs = Date.now() - evento.fecha.getTime();
-  if (antiguedadMs > TOPE_ANTIGUEDAD_PUSH_MS) {
+  if (antiguedadMs > TOPE_ANTIGUEDAD_NOTIFICACION_MS) {
     console.log(
-      `[send-push] omitiendo push para ${evento.externalId}: antigüedad ${Math.round(antiguedadMs / 60000)}min supera el tope de 60min`,
+      `[send-push] omitiendo push para ${evento.externalId}: antigüedad ${Math.round(antiguedadMs / 60000)}min supera el tope de ${TOPE_ANTIGUEDAD_NOTIFICACION_MS / 60000}min`,
     );
-    return;
+    return resultado;
   }
 
   configurarVapid();
@@ -69,8 +94,9 @@ export async function enviarPushParaSismo(
     longitud: evento.longitud,
     fuente: evento.fuente,
   });
-  if (suscripciones.length === 0) return;
+  if (suscripciones.length === 0) return resultado;
 
+  const esRevision = opts.motivo === "revision";
   const url = `/?sismo=${evento.externalId}&lat=${evento.latitud}&lon=${evento.longitud}&mag=${evento.magnitud}&prof=${evento.profundidadKm}&lugar=${encodeURIComponent(evento.lugar)}`;
   const nombreRegion =
     evento.fuente === "csn" ? regionChilePorLatitud(evento.latitud) : null;
@@ -81,45 +107,67 @@ export async function enviarPushParaSismo(
   const hora = evento.fecha.toLocaleTimeString("es-CL", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "America/Santiago",
   });
+  const titulo = esRevision
+    ? `${emoji} ${tipoEvento} actualizado: magnitud ${evento.magnitud} en ${region}`
+    : `${emoji} ${tipoEvento} de magnitud ${evento.magnitud} en ${region}`;
   const payload = JSON.stringify({
-    title: `${emoji} ${tipoEvento} de magnitud ${evento.magnitud} en ${region}`,
-    body: `${evento.lugar} · ${hora} hrs · Toca para ver el mapa`,
+    title: titulo,
+    body: `${evento.lugar} · ${hora} hrs · Aviso informativo posterior al sismo, no es una alerta temprana`,
     url,
     severo: esTerremoto,
+    tag: `sismo-${evento.externalId}`,
+    timestamp: evento.fecha.getTime(),
+    renotify: esRevision,
   });
 
   // "high" le pide a los servicios de push (FCM/APNs/Mozilla) que entreguen
   // de inmediato en vez de demorar por ahorro de batería del dispositivo —
-  // para un terremoto (M8+) esa demora le hace perder el propósito al
-  // aviso. Los sismos regulares usan "normal" para no saturar de avisos
-  // urgentes por eventos menores.
-  const opciones = { urgency: esTerremoto ? "high" : "normal" } as const;
+  // para un terremoto esa demora le hace perder el propósito al aviso. Los
+  // sismos regulares usan "normal" para no saturar de avisos urgentes.
+  const opciones = {
+    urgency: esTerremoto ? "high" : "normal",
+    TTL: TTL_SEGUNDOS,
+    topic: topicParaSismo(evento.externalId),
+  } as const;
 
-  const resultados = await Promise.allSettled(
-    suscripciones.map((sub) =>
-      webpush.sendNotification(
-        { endpoint: sub.endpoint, keys: sub.keys },
-        payload,
-        opciones,
+  for (let i = 0; i < suscripciones.length; i += MAX_ENVIOS_SIMULTANEOS) {
+    const lote = suscripciones.slice(i, i + MAX_ENVIOS_SIMULTANEOS);
+    const resultados = await Promise.allSettled(
+      lote.map((sub) =>
+        webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: sub.keys },
+          payload,
+          opciones,
+        ),
       ),
-    ),
-  );
+    );
+    await Promise.all(
+      resultados.map((r, j) => {
+        if (r.status === "fulfilled") {
+          resultado.enviados++;
+          return undefined;
+        }
+        resultado.fallidos++;
+        const sub = lote[j];
+        if (
+          sub &&
+          esErrorConStatusCode(r.reason) &&
+          (r.reason.statusCode === 404 || r.reason.statusCode === 410)
+        ) {
+          resultado.eliminados++;
+          return deletePushSubscription(sub.endpoint);
+        }
+        return undefined;
+      }),
+    );
+  }
 
-  await Promise.all(
-    resultados.map((resultado, i) => {
-      const suscripcion = suscripciones[i];
-      if (
-        suscripcion &&
-        resultado.status === "rejected" &&
-        esErrorConStatusCode(resultado.reason) &&
-        resultado.reason.statusCode === 410
-      ) {
-        return deletePushSubscription(suscripcion.endpoint);
-      }
-      return undefined;
-    }),
+  console.log(
+    `[send-push] ${evento.externalId} (${opts.motivo ?? "nuevo"}): enviados=${resultado.enviados} fallidos=${resultado.fallidos} eliminados=${resultado.eliminados}`,
   );
+  return resultado;
 }
 
 export async function enviarAlertaAdmin(mensaje: string): Promise<void> {

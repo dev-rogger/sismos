@@ -57,7 +57,7 @@ async function notificarSiCorresponde(
   });
   if (!decision.enviar) return;
   try {
-    await enviarPushParaSismo(evento);
+    await enviarPushParaSismo(evento, { motivo: decision.motivo ?? "nuevo" });
   } catch (error) {
     console.error("[ingest] push notification failed:", error);
     return;

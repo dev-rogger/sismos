@@ -85,7 +85,7 @@ beforeEach(() => {
   m(db.findRecentByFuentes).mockResolvedValue([]);
   m(db.findUltimoCsnPreciso).mockResolvedValue(new Date());
   m(db.marcarNotificado).mockResolvedValue(undefined);
-  m(enviarPushParaSismo).mockResolvedValue(undefined);
+  m(enviarPushParaSismo).mockResolvedValue({ enviados: 1, fallidos: 0, eliminados: 0 });
   m(db.upsertSismo).mockImplementation(async (e: SismoNormalizado) => ({
     sismo: fila(e),
     esNuevo: true,
@@ -97,6 +97,9 @@ describe("runIngest: notificación", () => {
     m(fetchCsnRecent).mockResolvedValue([evento()]);
     await runIngest();
     expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
+    expect(enviarPushParaSismo).toHaveBeenCalledWith(expect.anything(), {
+      motivo: "nuevo",
+    });
     expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 4.5);
   });
 
@@ -134,6 +137,9 @@ describe("runIngest: notificación", () => {
     });
     await runIngest();
     expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
+    expect(enviarPushParaSismo).toHaveBeenCalledWith(expect.anything(), {
+      motivo: "revision",
+    });
     expect(db.marcarNotificado).toHaveBeenCalledWith("csn", "csn-1", 5.8);
   });
 
