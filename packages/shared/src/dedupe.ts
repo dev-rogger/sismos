@@ -21,10 +21,18 @@ export function haversineDistanceKm(
   return EARTH_RADIUS_KM * c;
 }
 
+/**
+ * Devuelve el candidato duplicado más probable: entre los que cumplen
+ * ventana de tiempo, distancia y magnitud, el de menor puntaje
+ * `distanciaKm / MAX_DISTANCE_KM + dtMs / TIME_WINDOW_MS`.
+ */
 export function findDuplicate(
   candidate: SismoNormalizado,
   others: SismoNormalizado[],
 ): SismoNormalizado | null {
+  let best: SismoNormalizado | null = null;
+  let bestScore = Infinity;
+
   for (const other of others) {
     const timeDiffMs = Math.abs(
       candidate.fecha.getTime() - other.fecha.getTime(),
@@ -42,7 +50,11 @@ export function findDuplicate(
     const magnitudeDiff = Math.abs(candidate.magnitud - other.magnitud);
     if (magnitudeDiff > MAX_MAGNITUDE_DIFF) continue;
 
-    return other;
+    const score = distanceKm / MAX_DISTANCE_KM + timeDiffMs / TIME_WINDOW_MS;
+    if (score < bestScore) {
+      bestScore = score;
+      best = other;
+    }
   }
-  return null;
+  return best;
 }
