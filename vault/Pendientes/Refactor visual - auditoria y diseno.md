@@ -60,3 +60,19 @@ El peso lo domina MapLibre; el CSS propio es pequeño. Regla del refactor: CSS c
 3. Aplicar: controles del mapa, popup, historial, filtros/modales (hoja inferior), estadísticas, menú, configuración, estados con skeleton.
 4. Re-medir build, contraste, `aria-*`, tests/lint/types.
 5. Validación visual en 390x844 y 1440x900, con y sin reduced-motion (proxy temporal no commiteado).
+
+## Resultado (implementado)
+
+| Métrica (gzip -9) | Antes | Después |
+|---|---|---|
+| JS estático total | 825 098 B | 824 784 B |
+| CSS estático total | 17 902 B | 19 255 B (+1 353 B) |
+| Chunks cliente de `/` | 549 809 B | 549 562 B |
+| main + polyfills | 166 542 B | 166 542 B |
+
+Implementado: hallazgos 1-10, 12 y 13 (tokens, `.btn`/`.btn-mapa`/`.btn-icono`/`.chip`/`.campo`/`.item-menu`/`.pantalla-overlay`/`.hoja`/`.panel-lateral`/`.tarjeta-sismo`/`.skeleton`/`.lista-cv`). Notas:
+- Los controles inferiores del mapa pasaron a `z-[5]` porque el modal de filtro vive dentro del contenedor `z-10` de los controles superiores y las hojas móviles quedaban tapadas por los botones compartir/ubicación.
+- Paneles cerrados usan `visibility:hidden` + `inert` (antes sus botones seguían en el orden de tabulación fuera de pantalla).
+- Sin tests nuevos: no hay lógica con ramas nuevas salvo `escaparHtml` (interna a `MapaSismos.tsx`).
+- Pendiente (gusto, no verificable): View Transitions, spring con `linear()`, arrastrar para cerrar las hojas.
+- En `next dev` con React StrictMode el mapa recrea el `Map` pero conserva `marcadoresRef`, y los marcadores iniciales no aparecen (solo dev; en producción no ocurre). No se tocó.
