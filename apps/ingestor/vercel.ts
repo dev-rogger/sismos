@@ -1,6 +1,10 @@
 import type { VercelConfig } from "@vercel/config/v1";
 
 export const config: VercelConfig = {
+  // Aplica las migraciones pendientes de la base ANTES de compilar: así el
+  // schema siempre va un paso adelante del código. Si la migración falla, el
+  // build falla y Vercel sigue sirviendo el deploy anterior.
+  buildCommand: "pnpm --filter @sismos/db db:migrate:deploy && next build",
   crons: [
     {
       path: "/api/ingest",
