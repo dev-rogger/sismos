@@ -30,7 +30,10 @@
     "tuUbicacion": "Your location",
     "marcadorAriaLabel": "M{magnitud} earthquake in {lugar}",
     "marcadorSeleccionadoAriaLabel": "Selected earthquake: M{magnitud} in {lugar}",
-    "ubicacionAproximada": "(approximate location)"
+    "ubicacionAproximada": "(approximate location)",
+    "popupProfundidad": "{n} km deep",
+    "popupUbicacionAproximada": "Approximate location",
+    "fallaSinNombre": "Unnamed fault"
   },
   "filtro": {
     "titulo": "Filter map",
@@ -65,7 +68,7 @@
     "sinResultados": "No earthquakes match these filters",
     "quitarFiltros": "Clear filters",
     "profundidad": "{n} km deep",
-    "magnitudFecha": "M{magnitud} — {fecha}",
+    "magnitudEtiqueta": "Magnitude",
     "tipo": {
       "ultimos10dias": "Last 10 days",
       "top10anios": "Top 10 of the last 10 years",
@@ -112,6 +115,7 @@
   },
   "fallas": {
     "titulo": "Geological faults",
+    "buscarAria": "Search fault by name",
     "buscarPlaceholder": "Search faults by name…",
     "cargando": "Loading faults…",
     "errorCarga": "We couldn't load the list of faults.",
@@ -138,6 +142,7 @@
       "mes": "Month",
       "anio": "Year"
     },
+    "magnitudEtiqueta": "Magnitude",
     "graficoAriaLabel": "Chart of earthquake count by period",
     "sismosConteo": "{n} earthquakes",
     "sinDatosGrafico": "Not enough data for this chart yet",

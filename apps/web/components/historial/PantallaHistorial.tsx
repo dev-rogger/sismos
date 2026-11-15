@@ -32,21 +32,16 @@ export default function PantallaHistorial({
 
   return (
     <div
-      aria-hidden={!abierto}
-      style={{
-        paddingTop: "env(safe-area-inset-top)",
-        paddingBottom: "env(safe-area-inset-bottom)",
-      }}
-      className={`fixed inset-0 z-40 flex flex-col bg-neutral-900 transition-transform duration-200 ease-out motion-reduce:transition-none lg:hidden ${
-        abierto ? "translate-x-0" : "pointer-events-none translate-x-full"
-      }`}
+      inert={!abierto}
+      data-abierto={abierto}
+      className="pantalla-overlay lg:hidden"
     >
-      <div className="flex shrink-0 items-center gap-2 border-b border-neutral-800 px-3 py-3">
+      <div className="cabecera-pantalla">
         <button
           type="button"
           onClick={onCerrar}
           aria-label={tc("volver")}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-300 hover:bg-neutral-800"
+          className="btn-icono"
         >
           <svg
             viewBox="0 0 24 24"
@@ -60,7 +55,7 @@ export default function PantallaHistorial({
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
-        <h1 className="text-base font-semibold text-neutral-100">
+        <h1 className="titulo-pantalla">
           {t("titulo")}
         </h1>
       </div>

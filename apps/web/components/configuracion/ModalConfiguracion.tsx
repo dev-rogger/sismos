@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import IconoCerrar from "../IconoCerrar";
 import { usePushNotifications } from "../../lib/use-push-notifications";
 import IconoSpinner from "../IconoSpinner";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
@@ -48,11 +49,8 @@ export default function ModalConfiguracion({
     <div
       aria-hidden={!abierto}
       onClick={onCerrar}
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none ${
-        abierto
-          ? "pointer-events-auto opacity-100"
-          : "pointer-events-none opacity-0"
-      }`}
+      className="hoja-fondo"
+      data-abierto={abierto}
     >
       <div
         ref={contenedorRef}
@@ -60,9 +58,7 @@ export default function ModalConfiguracion({
         aria-modal="true"
         aria-label={t("titulo")}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
-          abierto ? "scale-100" : "scale-95"
-        }`}
+        className="hoja"
       >
         <ModalConfiguracionContenido
           key={aperturaId}
@@ -101,12 +97,12 @@ function SwitchToggle({
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      className={`relative flex h-7 w-12 shrink-0 touch-manipulation items-center rounded-full transition active:scale-[0.97] active:brightness-95 disabled:opacity-50 ${
+      className={`relative flex h-7 w-12 shrink-0 touch-manipulation items-center rounded-full transition-colors duration-200 before:absolute before:-inset-2 before:content-[''] disabled:opacity-50 ${
         checked ? "bg-sky-500" : "bg-neutral-700"
       }`}
     >
       <span
-        className={`h-5 w-5 rounded-full bg-white shadow transition-transform ${
+        className={`h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ease-[var(--ease-salida)] ${
           checked ? "translate-x-6" : "translate-x-1"
         }`}
       />
@@ -250,16 +246,16 @@ function ModalConfiguracionContenido({
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-neutral-100">
+        <h2 className="titulo-pantalla">
           {t("titulo")}
         </h2>
         <button
           type="button"
           onClick={onCerrar}
           aria-label={tc("cerrar")}
-          className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
+          className="btn-icono"
         >
-          ✕
+          <IconoCerrar />
         </button>
       </div>
 
@@ -304,11 +300,7 @@ function ModalConfiguracionContenido({
                 });
             }}
             aria-pressed={suscrito}
-            className={`flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:scale-[0.97] active:brightness-95 disabled:opacity-50 ${
-              suscrito
-                ? "border-sky-500 bg-sky-500/10 text-sky-400"
-                : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
-            }`}
+            className="chip w-full"
           >
             {loading ? (
               <IconoSpinner className="h-4 w-4" label={tc("cargando")} />
@@ -484,10 +476,10 @@ function ModalConfiguracionContenido({
                       })
                       .finally(() => setGuardando(false));
                   }}
-                  className={`mt-4 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition duration-200 ease-out active:scale-[0.97] active:brightness-95 disabled:opacity-50 ${
+                  className={`btn mt-4 w-full ${
                     estadoGuardado === "guardado"
                       ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
-                      : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
+                      : "text-neutral-300"
                   }`}
                 >
                   {guardando

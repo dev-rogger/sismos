@@ -60,21 +60,16 @@ export default function PantallaReportes({
 
   return (
     <div
-      aria-hidden={!abierto}
-      style={{
-        paddingTop: "env(safe-area-inset-top)",
-        paddingBottom: "env(safe-area-inset-bottom)",
-      }}
-      className={`fixed inset-0 z-40 flex flex-col bg-neutral-950 transition-transform duration-200 ease-out motion-reduce:transition-none ${
-        abierto ? "translate-x-0" : "pointer-events-none translate-x-full"
-      }`}
+      inert={!abierto}
+      data-abierto={abierto}
+      className="pantalla-overlay"
     >
-      <div className="flex shrink-0 items-center gap-2 border-b border-neutral-800 px-3 py-3">
+      <div className="cabecera-pantalla">
         <button
           type="button"
           onClick={onCerrar}
           aria-label={tc("volver")}
-          className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
+          className="btn-icono"
         >
           <svg
             viewBox="0 0 24 24"
@@ -88,7 +83,7 @@ export default function PantallaReportes({
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
-        <h1 className="text-base font-semibold text-neutral-100">
+        <h1 className="titulo-pantalla">
           {t("reportes")}
         </h1>
       </div>
@@ -104,7 +99,7 @@ export default function PantallaReportes({
             <button
               type="button"
               onClick={() => setReintentos((n) => n + 1)}
-              className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
+              className="btn"
             >
               {t("reintentar")}
             </button>

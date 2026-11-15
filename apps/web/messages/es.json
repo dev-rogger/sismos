@@ -30,7 +30,10 @@
     "tuUbicacion": "Tu ubicación",
     "marcadorAriaLabel": "Sismo M{magnitud} en {lugar}",
     "marcadorSeleccionadoAriaLabel": "Sismo seleccionado: M{magnitud} en {lugar}",
-    "ubicacionAproximada": "(ubicación aproximada)"
+    "ubicacionAproximada": "(ubicación aproximada)",
+    "popupProfundidad": "{n} km de profundidad",
+    "popupUbicacionAproximada": "Ubicación aproximada",
+    "fallaSinNombre": "Falla sin nombre registrado"
   },
   "filtro": {
     "titulo": "Filtrar mapa",
@@ -65,7 +68,7 @@
     "sinResultados": "Sin sismos para estos filtros",
     "quitarFiltros": "Quitar filtros",
     "profundidad": "{n} km de profundidad",
-    "magnitudFecha": "M{magnitud} — {fecha}",
+    "magnitudEtiqueta": "Magnitud",
     "tipo": {
       "ultimos10dias": "Últimos 10 días",
       "top10anios": "Top 10 últimos 10 años",
@@ -112,6 +115,7 @@
   },
   "fallas": {
     "titulo": "Fallas geológicas",
+    "buscarAria": "Buscar falla por nombre",
     "buscarPlaceholder": "Buscar falla por nombre…",
     "cargando": "Cargando fallas…",
     "errorCarga": "No se pudo cargar la lista de fallas.",
@@ -138,6 +142,7 @@
       "mes": "Mes",
       "anio": "Año"
     },
+    "magnitudEtiqueta": "Magnitud",
     "graficoAriaLabel": "Gráfico de cantidad de sismos por período",
     "sismosConteo": "{n} sismos",
     "sinDatosGrafico": "Sin datos suficientes para este gráfico todavía",

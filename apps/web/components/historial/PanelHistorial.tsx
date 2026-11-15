@@ -17,7 +17,7 @@ export default function PanelHistorial({
   return (
     <div className="hidden h-full w-[360px] flex-col border-l border-neutral-800 bg-neutral-900 lg:flex">
       <div className="shrink-0 px-4 pt-4 pb-2">
-        <h2 className="text-base font-semibold text-neutral-100">
+        <h2 className="titulo-pantalla">
           {t("titulo")}
         </h2>
       </div>

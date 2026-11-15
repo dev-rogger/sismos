@@ -78,7 +78,7 @@ function LoginForm() {
             type="button"
             onClick={() => router.push("/")}
             aria-label={tc("cerrar")}
-            className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
+            className="btn-icono"
           >
             ✕
           </button>

@@ -1,5 +1,6 @@
 "use client";
 
+import IconoCerrar from "../IconoCerrar";
 import { useRef } from "react";
 import { useTranslations } from "next-intl";
 import SelectorMagnitudRangos from "../filtro/SelectorMagnitudRangos";
@@ -29,11 +30,8 @@ export default function ModalFiltroMapa({
     <div
       aria-hidden={!abierto}
       onClick={onCerrar}
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none ${
-        abierto
-          ? "pointer-events-auto opacity-100"
-          : "pointer-events-none opacity-0"
-      }`}
+      className="hoja-fondo"
+      data-abierto={abierto}
     >
       <div
         ref={contenedorRef}
@@ -41,21 +39,19 @@ export default function ModalFiltroMapa({
         aria-modal="true"
         aria-label={t("titulo")}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-sm rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
-          abierto ? "scale-100" : "scale-95"
-        }`}
+        className="hoja"
       >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-neutral-100">
+          <h2 className="titulo-pantalla">
             {t("titulo")}
           </h2>
           <button
             type="button"
             onClick={onCerrar}
             aria-label={tc("cerrar")}
-            className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
+            className="btn-icono"
           >
-            ✕
+            <IconoCerrar />
           </button>
         </div>
 
@@ -65,11 +61,7 @@ export default function ModalFiltroMapa({
             onFiltroChange({ ...filtro, soloChile: !filtro.soloChile })
           }
           aria-pressed={filtro.soloChile}
-          className={`flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:scale-[0.97] active:brightness-95 ${
-            filtro.soloChile
-              ? "border-sky-500 bg-sky-500/10 text-sky-400"
-              : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
-          }`}
+          className="chip w-full"
         >
           🇨🇱 {t("soloChile")}
         </button>
@@ -99,7 +91,7 @@ export default function ModalFiltroMapa({
                   ventana: e.target.value as FiltroMapa["ventana"],
                 })
               }
-              className="min-h-11 w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
+              className="campo appearance-none pr-8"
             >
               {VENTANAS_TIEMPO.map((v) => (
                 <option key={v.valor} value={v.valor}>

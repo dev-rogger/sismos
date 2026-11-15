@@ -73,9 +73,26 @@ function pasaFiltro(sismo: SismoMapa, filtro: FiltroMapa): boolean {
   return true;
 }
 
+// El popup se arma como HTML (setHTML de MapLibre): todo texto que venga de
+// los datos (lugar, región) se escapa para que un nombre raro de la fuente
+// no pueda inyectar markup.
+function escaparHtml(texto: string): string {
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+interface TextosPopup {
+  profundidad: (km: number) => string;
+  ubicacionAproximada: string;
+}
+
 function construirHtmlPopup(
   sismo: SismoSeleccionado,
   localeFecha: string,
+  textos: TextosPopup,
 ): string {
   const region =
     sismo.bandera === "🇨🇱" ? regionChilePorLatitud(sismo.latitud) : null;
@@ -95,7 +112,7 @@ function construirHtmlPopup(
       </div>
       <div class="popup-sismo-info">
         <div class="popup-sismo-titulo">
-          <span>${sismo.bandera ?? "🌎"}</span> ${sismo.lugar}
+          <span>${sismo.bandera ?? "🌎"}</span> ${escaparHtml(sismo.lugar)}
         </div>
         ${region ? `<div class="popup-sismo-region">${region}</div>` : ""}
         ${
@@ -103,7 +120,7 @@ function construirHtmlPopup(
             ? `<div class="popup-sismo-fecha">${[
                 fechaTexto,
                 sismo.profundidadKm != null
-                  ? `${Math.round(sismo.profundidadKm)} km de profundidad`
+                  ? textos.profundidad(Math.round(sismo.profundidadKm))
                   : null,
               ]
                 .filter(Boolean)
@@ -112,7 +129,7 @@ function construirHtmlPopup(
         }
         ${
           sismo.ubicacionAproximada
-            ? `<div class="popup-sismo-region">📍 Ubicación aproximada</div>`
+            ? `<div class="popup-sismo-region">📍 ${escaparHtml(textos.ubicacionAproximada)}</div>`
             : ""
         }
       </div>
@@ -162,12 +179,14 @@ export default function MapaSismos({
   const fallasCargadasRef = useRef(false);
   const onSeleccionarFallaRef = useRef(onSeleccionarFalla);
   onSeleccionarFallaRef.current = onSeleccionarFalla;
+  const fallaSinNombreRef = useRef("");
   const [errorConexion, setErrorConexion] = useState(errorCargaInicial ?? false);
   const { compartir } = useCompartir();
   const t = useTranslations("mapa");
   const tCompartir = useTranslations("compartir");
   const locale = useLocale();
   const localeFecha = locale === "en" ? "en-US" : "es-CL";
+  fallaSinNombreRef.current = t("fallaSinNombre");
 
   function crearMarcador(
     map: maplibregl.Map,
@@ -402,7 +421,12 @@ export default function MapaSismos({
       offset: 12,
       className: "popup-sismo",
       closeOnClick: false,
-    }).setHTML(construirHtmlPopup(sismoSeleccionado, localeFecha));
+    }).setHTML(
+      construirHtmlPopup(sismoSeleccionado, localeFecha, {
+        profundidad: (km) => t("popupProfundidad", { n: km }),
+        ubicacionAproximada: t("popupUbicacionAproximada"),
+      }),
+    );
     const marker = new maplibregl.Marker({ element: el })
       .setLngLat([sismoSeleccionado.longitud, sismoSeleccionado.latitud])
       .setPopup(popup)
@@ -624,7 +648,7 @@ export default function MapaSismos({
           onSeleccionarFallaRef.current({
             lat: e.lngLat.lat,
             lon: e.lngLat.lng,
-            nombre: propiedadesFalla?.name ?? "Falla sin nombre registrado",
+            nombre: propiedadesFalla?.name ?? fallaSinNombreRef.current,
           });
         });
         fallasCargadasRef.current = true;
@@ -648,7 +672,7 @@ export default function MapaSismos({
     const popup = new maplibregl.Popup({ className: "popup-sismo" })
       .setLngLat([fallaSeleccionada.lon, fallaSeleccionada.lat])
       .setHTML(
-        `<div class="popup-sismo-titulo">${fallaSeleccionada.nombre}</div>`,
+        `<div class="popup-sismo-titulo">${escaparHtml(fallaSeleccionada.nombre)}</div>`,
       )
       .addTo(map);
 
@@ -697,7 +721,7 @@ export default function MapaSismos({
             })
           }
           aria-label={t("verTodoChile")}
-          className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center gap-2 rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
+          className="btn-mapa min-w-11"
         >
           <svg
             viewBox="0 0 24 24"
@@ -724,7 +748,7 @@ export default function MapaSismos({
           type="button"
           onClick={compartir}
           aria-label={tCompartir("boton")}
-          className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
+          className="btn-mapa min-w-11"
         >
           <IconoCompartir />
         </button>
@@ -744,7 +768,7 @@ export default function MapaSismos({
             }
           }}
           aria-label={t("miUbicacion")}
-          className="flex min-h-11 min-w-11 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 px-3 text-xs font-medium text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
+          className="btn-mapa min-w-11"
         >
           <svg
             viewBox="0 0 24 24"

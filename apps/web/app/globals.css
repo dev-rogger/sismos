@@ -308,6 +308,33 @@ body {
     }
   }
 
+  /* Menú lateral: mismo ritmo que las pantallas (entra lento, sale rápido). */
+  .panel-lateral {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    display: flex;
+    width: 18rem;
+    max-width: 80vw;
+    flex-direction: column;
+    border-right: 1px solid var(--color-neutral-800);
+    background: var(--color-superficie);
+    box-shadow: var(--shadow-hoja);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform 130ms ease-in,
+      visibility 0s linear 130ms;
+  }
+  .panel-lateral[data-abierto="true"] {
+    transform: none;
+    visibility: visible;
+    transition:
+      transform var(--dur-base) var(--ease-mover),
+      visibility 0s;
+  }
+
   /* Tarjeta de sismo (historial, estadísticas): la magnitud es el dato
      principal, con el mismo lenguaje de color que el marcador y el popup. */
   .tarjeta-sismo {
@@ -382,6 +409,7 @@ body {
 /* Reduced motion: las hojas y pantallas no se desplazan, solo aparecen. */
 @media (prefers-reduced-motion: reduce) {
   .pantalla-overlay,
+  .panel-lateral,
   .hoja,
   .hoja-fondo {
     transition-duration: 0s !important;
@@ -513,9 +541,10 @@ body {
 .popup-sismo .maplibregl-popup-content {
   background: linear-gradient(175deg, #1e1e20, #151516);
   color: #ededed;
-  border-radius: 1rem;
+  border-radius: var(--radius-tarjeta);
   padding: 0.875rem 1rem 0.875rem 0.875rem;
   font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
   line-height: 1.35;
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.5),
@@ -524,7 +553,8 @@ body {
 
 @media (prefers-reduced-motion: no-preference) {
   .popup-sismo .maplibregl-popup-content {
-    animation: popup-sismo-entrada 0.15s ease-out;
+    transform-origin: bottom center;
+    animation: popup-sismo-entrada var(--dur-base) var(--ease-salida);
   }
 }
 
@@ -542,13 +572,13 @@ body {
 .popup-sismo .maplibregl-popup-close-button {
   top: 0.5rem;
   right: 0.5rem;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  color: #a3a3a3;
+  color: #b4b4b4;
   font-size: 0.9rem;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
@@ -556,6 +586,13 @@ body {
 .popup-sismo .maplibregl-popup-close-button:hover {
   background-color: rgba(255, 255, 255, 0.08);
   color: #ededed;
+}
+
+/* Área táctil >= 44px sin agrandar el botón visible. */
+.popup-sismo .maplibregl-popup-close-button::before {
+  content: "";
+  position: absolute;
+  inset: -0.625rem;
 }
 
 .popup-sismo-fila {
@@ -593,13 +630,13 @@ body {
 .popup-sismo-region {
   margin-top: 0.1875rem;
   font-size: 0.75rem;
-  color: #a3a3a3;
+  color: #b4b4b4;
 }
 
 .popup-sismo-fecha {
   margin-top: 0.375rem;
-  font-size: 0.6875rem;
-  color: #737373;
+  font-size: 0.75rem;
+  color: #a3a3a3;
   letter-spacing: 0.01em;
 }
 

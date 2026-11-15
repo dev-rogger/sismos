@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import IconoCerrar from "../IconoCerrar";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
 
 interface ModalInstalarAppProps {
@@ -79,20 +80,15 @@ export default function ModalInstalarApp({
     <div
       aria-hidden={!visible}
       onClick={onDescartar}
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 transition-opacity duration-200 motion-reduce:transition-none ${
-        visible
-          ? "pointer-events-auto opacity-100"
-          : "pointer-events-none opacity-0"
-      }`}
+      className="hoja-fondo"
+      data-abierto={visible}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label={t("ariaLabel")}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-sm overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 p-5 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
-          visible ? "scale-100" : "scale-95"
-        }`}
+        className="hoja"
       >
         <ModalInstalarAppContenido
           key={aperturaId}
@@ -127,7 +123,7 @@ function ModalInstalarAppContenido({
       <div key="picker" className="pantalla-entrada">
         <div className="mb-1 flex items-center justify-between">
           <div className="relative flex items-center gap-1">
-            <h2 className="text-base font-semibold text-neutral-100">
+            <h2 className="titulo-pantalla">
               {t("titulo")}
             </h2>
             <button
@@ -135,7 +131,7 @@ function ModalInstalarAppContenido({
               onClick={() => setMostrarInfoPwa((v) => !v)}
               aria-label={t("queEsPwaLabel")}
               aria-expanded={mostrarInfoPwa}
-              className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-500 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-300"
+              className="btn-icono"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -164,9 +160,9 @@ function ModalInstalarAppContenido({
             type="button"
             onClick={onDescartar}
             aria-label={tc("cerrar")}
-            className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
+            className="btn-icono"
           >
-            ✕
+            <IconoCerrar />
           </button>
         </div>
         <p className="mb-4 text-center text-sm text-neutral-400">
@@ -237,11 +233,11 @@ function ModalInstalarAppContenido({
           type="button"
           onClick={() => setVista("picker")}
           aria-label={tc("volver")}
-          className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
+          className="btn-icono"
         >
           <IconoVolver />
         </button>
-        <h2 className="text-base font-semibold text-neutral-100">
+        <h2 className="titulo-pantalla">
           {t("titulo")}
         </h2>
       </div>

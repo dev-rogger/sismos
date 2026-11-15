@@ -1,5 +1,6 @@
 "use client";
 
+import SkeletonLista from "../SkeletonLista";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useOverlayAccesible } from "../../lib/use-overlay-accesible";
@@ -97,21 +98,16 @@ export default function PantallaFallas({
 
   return (
     <div
-      aria-hidden={!abierto}
-      style={{
-        paddingTop: "env(safe-area-inset-top)",
-        paddingBottom: "env(safe-area-inset-bottom)",
-      }}
-      className={`fixed inset-0 z-40 flex flex-col bg-neutral-900 transition-transform duration-200 ease-out motion-reduce:transition-none ${
-        abierto ? "translate-x-0" : "pointer-events-none translate-x-full"
-      }`}
+      inert={!abierto}
+      data-abierto={abierto}
+      className="pantalla-overlay"
     >
-      <div className="flex shrink-0 items-center gap-2 border-b border-neutral-800 px-3 py-3">
+      <div className="cabecera-pantalla">
         <button
           type="button"
           onClick={onCerrar}
           aria-label={tc("volver")}
-          className="flex h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg text-neutral-300 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
+          className="btn-icono"
         >
           <svg
             viewBox="0 0 24 24"
@@ -125,32 +121,33 @@ export default function PantallaFallas({
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
-        <h1 className="text-base font-semibold text-neutral-100">
+        <h1 className="titulo-pantalla">
           {t("titulo")}
         </h1>
       </div>
 
       <div className="shrink-0 border-b border-neutral-800 px-4 py-3">
         <input
-          type="text"
+          type="search"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           placeholder={t("buscarPlaceholder")}
-          className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 transition-colors placeholder:text-neutral-500 hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
+          aria-label={t("buscarAria")}
+          autoComplete="off"
+          enterKeyHint="search"
+          className="campo placeholder:text-neutral-500"
         />
       </div>
 
       {loading ? (
-        <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-neutral-500">
-          {t("cargando")}
-        </div>
+        <SkeletonLista etiqueta={t("cargando")} alto="h-12" filas={8} />
       ) : error ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center text-sm text-neutral-500">
           <p>{t("errorCarga")}</p>
           <button
             type="button"
             onClick={() => setReintentos((n) => n + 1)}
-            className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
+            className="btn"
           >
             {t("reintentar")}
           </button>
@@ -160,13 +157,13 @@ export default function PantallaFallas({
           {t("sinResultados", { busqueda })}
         </div>
       ) : (
-        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
+        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 py-3">
           {fallasFiltradas.map((falla) => (
             <li key={falla.id}>
               <button
                 type="button"
                 onClick={() => onSeleccionar(falla)}
-                className="w-full touch-manipulation rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-left text-sm text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800/60"
+                className="tarjeta-sismo min-h-11 items-center py-2 text-neutral-100"
               >
                 {falla.nombre}
               </button>

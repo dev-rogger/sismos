@@ -14,6 +14,7 @@ import { cambiarIdioma } from "../../lib/actions/cambiar-idioma";
 import IconoCompartir from "../IconoCompartir";
 import IconoChevron from "../IconoChevron";
 import IconoCheck from "../IconoCheck";
+import IconoCerrar from "../IconoCerrar";
 
 interface MenuLateralProps {
   onAbrirHistorial: () => void;
@@ -236,7 +237,7 @@ export default function MenuLateral({
         onClick={() => setAbierto(true)}
         aria-label={t("abrirMenu")}
         style={{ top: "calc(0.75rem + env(safe-area-inset-top))" }}
-        className="fixed left-3 z-10 flex min-h-11 w-11 shrink-0 touch-manipulation items-center justify-center rounded-lg border border-neutral-700 bg-neutral-900/90 text-neutral-100 shadow-lg transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800"
+        className="btn-mapa fixed left-3 z-10 w-11 px-0"
       >
         <svg
           viewBox="0 0 24 24"
@@ -254,11 +255,8 @@ export default function MenuLateral({
       <div
         aria-hidden={!abierto}
         onClick={() => setAbierto(false)}
-        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-200 motion-reduce:transition-none ${
-          abierto
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
-        }`}
+        className="hoja-fondo z-40"
+        data-abierto={abierto}
       />
 
       <div
@@ -274,21 +272,21 @@ export default function MenuLateral({
           // Medimos el alto real con JS en vez de confiar en esa cuenta.
           height: alturaPx !== null ? `${alturaPx}px` : "100dvh",
         }}
-        className={`fixed top-0 left-0 z-50 flex w-72 max-w-[80vw] flex-col border-r border-neutral-800 bg-neutral-900 shadow-lg transition-transform duration-200 ease-out motion-reduce:transition-none ${
-          abierto ? "translate-x-0" : "-translate-x-full"
-        }`}
+        inert={!abierto}
+        data-abierto={abierto}
+        className="panel-lateral"
       >
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <h2 className="text-base font-semibold text-neutral-100">
+          <h2 className="titulo-pantalla">
             {t("titulo")}
           </h2>
           <button
             type="button"
             onClick={() => setAbierto(false)}
             aria-label={t("cerrarMenu")}
-            className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg text-neutral-400 transition active:scale-[0.97] active:brightness-95 hover:bg-neutral-800 hover:text-neutral-100"
+            className="btn-icono"
           >
-            ✕
+            <IconoCerrar />
           </button>
         </div>
 
@@ -296,7 +294,7 @@ export default function MenuLateral({
           <button
             type="button"
             onClick={() => elegir(onAbrirHistorial)}
-            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95 lg:hidden"
+            className="item-menu lg:hidden"
           >
             <IconoHistorial />
             {t("sismos")}
@@ -304,7 +302,7 @@ export default function MenuLateral({
           <button
             type="button"
             onClick={() => elegir(onAbrirFallas)}
-            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+            className="item-menu"
           >
             <IconoFallas />
             {t("fallas")}
@@ -312,7 +310,7 @@ export default function MenuLateral({
           <button
             type="button"
             onClick={() => elegir(onAbrirNotificaciones)}
-            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+            className="item-menu"
           >
             <IconoNotificaciones />
             {t("notificaciones")}
@@ -320,7 +318,7 @@ export default function MenuLateral({
           <button
             type="button"
             onClick={() => elegir(onAbrirEstadisticas)}
-            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+            className="item-menu"
           >
             <IconoEstadisticas />
             {t("estadisticas")}
@@ -328,7 +326,7 @@ export default function MenuLateral({
           <button
             type="button"
             onClick={compartir}
-            className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+            className="item-menu"
           >
             <IconoCompartir />
             {enlaceCopiado ? tCompartir("enlaceCopiado") : tCompartir("boton")}
@@ -339,7 +337,7 @@ export default function MenuLateral({
                 type="button"
                 onClick={() => setAdminAbierto((v) => !v)}
                 aria-expanded={adminAbierto}
-                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+                className="item-menu"
               >
                 <IconoAdmin />
                 {t("admin")}
@@ -354,14 +352,14 @@ export default function MenuLateral({
                   <button
                     type="button"
                     onClick={() => elegir(onAbrirUsuarios)}
-                    className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+                    className="item-menu text-neutral-400 hover:text-neutral-200"
                   >
                     {t("usuarios")}
                   </button>
                   <button
                     type="button"
                     onClick={() => elegir(onAbrirReportes)}
-                    className="flex min-h-11 items-center rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+                    className="item-menu text-neutral-400 hover:text-neutral-200"
                   >
                     {t("reportes")}
                   </button>
@@ -376,7 +374,7 @@ export default function MenuLateral({
             <button
               type="button"
               onClick={() => elegir(onAbrirInstalarApp)}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+              className="item-menu"
             >
               <IconoInstalar />
               {t("instalarApp")}
@@ -388,7 +386,7 @@ export default function MenuLateral({
               onClick={() => setIdiomaAbierto((v) => !v)}
               aria-expanded={idiomaAbierto}
               aria-label={t("idioma")}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+              className="item-menu"
             >
               <IconoIdioma />
               <span className="min-w-0 flex-1 truncate">{t("idioma")}</span>
@@ -414,7 +412,7 @@ export default function MenuLateral({
                       }),
                     );
                   }}
-                  className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+                  className="item-menu text-neutral-400 hover:text-neutral-200"
                 >
                   <span className="min-w-0 flex-1 truncate">Español</span>
                   {locale === "es" && (
@@ -435,7 +433,7 @@ export default function MenuLateral({
                       }),
                     );
                   }}
-                  className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-400 touch-manipulation transition duration-150 hover:bg-neutral-800 hover:text-neutral-200 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+                  className="item-menu text-neutral-400 hover:text-neutral-200"
                 >
                   <span className="min-w-0 flex-1 truncate">English</span>
                   {locale === "en" && (
@@ -451,7 +449,7 @@ export default function MenuLateral({
                 type="button"
                 onClick={() => setCuentaAbierta((v) => !v)}
                 aria-expanded={cuentaAbierta}
-                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+                className="item-menu"
               >
                 {session.user?.image ? (
                   <Image
@@ -507,7 +505,7 @@ export default function MenuLateral({
             <button
               type="button"
               onClick={() => navegarA("/login")}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-neutral-200 touch-manipulation transition duration-150 hover:bg-neutral-800 active:scale-[0.97] active:bg-neutral-800 active:brightness-95"
+              className="item-menu"
             >
               <IconoUsuario />
               {t("iniciarSesion")}

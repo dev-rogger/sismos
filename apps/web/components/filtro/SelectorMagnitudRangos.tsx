@@ -42,15 +42,7 @@ export default function SelectorMagnitudRangos({
             aria-pressed={activo}
             aria-disabled={bloqueado || undefined}
             title={bloqueado ? t("rangoBloqueado") : undefined}
-            className={`flex min-h-11 touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:brightness-95 ${
-              bloqueado
-                ? "cursor-not-allowed opacity-50"
-                : "active:scale-[0.97]"
-            } ${
-              activo
-                ? "border-sky-500 bg-sky-500/10 text-sky-400"
-                : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
-            }`}
+            className={bloqueado ? "chip cursor-not-allowed opacity-50" : "chip"}
           >
             {t(rango.valor)}
           </button>

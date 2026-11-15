@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { formatearCoordenadas } from "../../lib/coordenadas";
-import { colorPorMagnitud } from "../../lib/magnitud";
+import { colorPorMagnitud, colorTextoPorMagnitud } from "../../lib/magnitud";
 import { regionChilePorLatitud } from "@sismos/shared";
 import {
   useHistorial,
@@ -16,6 +16,7 @@ import {
 } from "../../lib/filtro-tipos";
 import SelectorMagnitudRangos from "../filtro/SelectorMagnitudRangos";
 import IconoChevron from "../IconoChevron";
+import SkeletonLista from "../SkeletonLista";
 import type { SismoSeleccionado } from "../../lib/tipos-sismo";
 
 function sismoDesdeEvento(evento: ItemHistorial): SismoSeleccionado {
@@ -70,7 +71,7 @@ export default function ListaHistorial({
               setTipo(e.target.value as (typeof OPCIONES_TIPO)[number]["valor"])
             }
             aria-label={t("tipoAria")}
-            className="w-full appearance-none rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 pr-8 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-sky-500 focus:outline-none"
+            className="campo appearance-none pr-8"
           >
             {OPCIONES_TIPO.map((opcion) => (
               <option key={opcion.valor} value={opcion.valor}>
@@ -87,11 +88,7 @@ export default function ListaHistorial({
           type="button"
           onClick={() => setFiltro((f) => ({ ...f, soloChile: !f.soloChile }))}
           aria-pressed={filtro.soloChile}
-          className={`mt-2 flex min-h-11 w-full touch-manipulation items-center justify-center rounded-lg border px-3 text-sm font-medium transition active:scale-[0.97] active:brightness-95 ${
-            filtro.soloChile
-              ? "border-sky-500 bg-sky-500/10 text-sky-400"
-              : "border-neutral-700 bg-neutral-800 text-neutral-300 hover:border-neutral-600"
-          }`}
+          className="chip mt-2 w-full"
         >
           {t("soloChile")}
         </button>
@@ -105,16 +102,14 @@ export default function ListaHistorial({
       </div>
 
       {loading ? (
-        <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-neutral-500">
-          {t("cargando")}
-        </div>
+        <SkeletonLista etiqueta={t("cargando")} />
       ) : error ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center text-sm text-neutral-500">
           <p>{t("errorCarga")}</p>
           <button
             type="button"
             onClick={reintentar}
-            className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
+            className="btn"
           >
             {t("reintentar")}
           </button>
@@ -125,13 +120,13 @@ export default function ListaHistorial({
           <button
             type="button"
             onClick={() => setFiltro(FILTRO_HISTORIAL_DEFAULT)}
-            className="min-h-11 touch-manipulation rounded-lg border border-neutral-700 bg-neutral-800 px-4 text-sm font-medium text-neutral-100 transition active:scale-[0.97] active:brightness-95 hover:border-neutral-600"
+            className="btn"
           >
             {t("quitarFiltros")}
           </button>
         </div>
       ) : (
-        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
+        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-4 py-3">
           {eventosFiltrados.map((evento) => {
             const seleccionado =
               evento.externalId === sismoSeleccionado?.externalId;
@@ -151,35 +146,43 @@ export default function ListaHistorial({
                   onClick={() =>
                     onSeleccionar(sismoDesdeEvento(evento), seleccionado)
                   }
-                  style={{ borderLeftColor: colorPorMagnitud(evento.magnitud) }}
-                  className={`w-full touch-manipulation rounded-lg border border-l-4 px-3 py-2 text-left text-sm transition active:scale-[0.97] active:brightness-95 ${
-                    seleccionado
-                      ? "border-neutral-600 bg-neutral-800"
-                      : "border-neutral-800 bg-neutral-900 hover:bg-neutral-800/60"
-                  }`}
+                  aria-current={seleccionado ? "true" : undefined}
+                  className="tarjeta-sismo"
                 >
-                  <div className="font-semibold text-neutral-100">
-                    {evento.bandera ?? "🌎"} {evento.lugar}
-                  </div>
-                  {region && (
-                    <div className="text-xs text-neutral-500">{region}</div>
-                  )}
-                  <div className="text-xs text-neutral-500">
-                    {formatearCoordenadas(
-                      evento.latitud,
-                      evento.longitud,
-                      locale,
+                  <span
+                    className="insignia-magnitud"
+                    style={{
+                      backgroundColor: colorPorMagnitud(evento.magnitud),
+                      color: colorTextoPorMagnitud(evento.magnitud),
+                    }}
+                  >
+                    <span className="sr-only">{t("magnitudEtiqueta")} </span>
+                    {evento.magnitud}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold text-neutral-100">
+                      {evento.bandera ?? "🌎"} {evento.lugar}
+                    </span>
+                    {region && (
+                      <span className="block text-xs text-neutral-400">
+                        {region}
+                      </span>
                     )}
-                  </div>
-                  <div className="text-neutral-400">
-                    {t("magnitudFecha", {
-                      magnitud: evento.magnitud,
-                      fecha: new Date(evento.fecha).toLocaleString(localeFecha),
-                    })}
-                  </div>
-                  <div className="text-xs text-neutral-500">
-                    {t("profundidad", { n: Math.round(evento.profundidadKm) })}
-                  </div>
+                    <span className="mt-1 block text-xs text-neutral-400">
+                      {new Date(evento.fecha).toLocaleString(localeFecha)}
+                      {" · "}
+                      {t("profundidad", {
+                        n: Math.round(evento.profundidadKm),
+                      })}
+                    </span>
+                    <span className="block text-xs text-neutral-500">
+                      {formatearCoordenadas(
+                        evento.latitud,
+                        evento.longitud,
+                        locale,
+                      )}
+                    </span>
+                  </span>
                 </button>
               </li>
             );

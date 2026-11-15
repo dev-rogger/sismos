@@ -24,11 +24,8 @@ export default function BotonFiltroMapa({
         type="button"
         onClick={() => setAbierto(true)}
         aria-label={filtroActivo ? t("abrirActivo") : t("abrir")}
-        className={`relative flex min-h-11 touch-manipulation items-center gap-2 rounded-lg border px-3 text-xs font-medium shadow-lg transition active:scale-[0.97] active:brightness-95 ${
-          filtroActivo
-            ? "border-sky-500 bg-neutral-900/90 text-sky-400 hover:bg-neutral-800"
-            : "border-neutral-700 bg-neutral-900/90 text-neutral-100 hover:bg-neutral-800"
-        }`}
+        data-activo={filtroActivo}
+        className="btn-mapa"
       >
         <svg
           viewBox="0 0 24 24"
