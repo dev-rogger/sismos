@@ -24,6 +24,8 @@ vi.mock("@sismos/db", () => ({
   getUltimaAlertaEnviada: vi.fn(),
   marcarAlertaEnviada: vi.fn(),
   marcarNotificado: vi.fn(),
+  registrarIngestaOk: vi.fn(),
+  registrarIngestaError: vi.fn(),
 }));
 vi.mock("./fetch-csn", () => ({ fetchCsnRecent: vi.fn() }));
 vi.mock("./fetch-gael", () => ({ fetchGaelRecent: vi.fn() }));
@@ -305,5 +307,55 @@ describe("runIngest: candidatos (M6)", () => {
     expect(db.upsertSismo).toHaveBeenCalledTimes(1);
     expect(db.reemplazarConPrecision).toHaveBeenCalledWith("a", b);
     expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("runIngest: estado de salud (A1)", () => {
+  beforeEach(() => {
+    m(db.registrarIngestaOk).mockResolvedValue(undefined);
+    m(db.registrarIngestaError).mockResolvedValue(undefined);
+  });
+
+  it("corrida normal registra ok de csn, usgs", async () => {
+    await runIngest();
+    expect(db.registrarIngestaOk).toHaveBeenCalledWith("csn");
+    expect(db.registrarIngestaOk).toHaveBeenCalledWith("usgs");
+    expect(db.registrarIngestaError).not.toHaveBeenCalled();
+  });
+
+  it("CSN cae y GAEL responde: error csn, ok gael y ok csn (ingesta completó)", async () => {
+    m(fetchCsnRecent).mockRejectedValue(new Error("xor caído"));
+    await runIngest();
+    expect(db.registrarIngestaError).toHaveBeenCalledWith("csn", "xor caído");
+    expect(db.registrarIngestaOk).toHaveBeenCalledWith("gael");
+    expect(db.registrarIngestaOk).toHaveBeenCalledWith("csn");
+  });
+
+  it("falla de USGS registra error usgs", async () => {
+    m(fetchUsgsRecent).mockRejectedValue(new Error("usgs 500"));
+    await runIngest();
+    expect(db.registrarIngestaError).toHaveBeenCalledWith("usgs", "usgs 500");
+  });
+
+  it("falla de push registra error push; éxito registra ok push", async () => {
+    m(fetchCsnRecent).mockResolvedValue([evento()]);
+    m(enviarPushParaSismo).mockRejectedValueOnce(new Error("vapid"));
+    await runIngest();
+    expect(db.registrarIngestaError).toHaveBeenCalledWith("push", "vapid");
+    vi.mocked(db.registrarIngestaOk).mockClear();
+    m(enviarPushParaSismo).mockResolvedValue({ enviados: 1, fallidos: 0, eliminados: 0 });
+    await runIngest();
+    expect(db.registrarIngestaOk).toHaveBeenCalledWith("push");
+  });
+
+  it("si registrar el estado lanza, la ingesta igual termina y notifica", async () => {
+    m(db.registrarIngestaOk).mockRejectedValue(new Error("bd caída"));
+    m(db.registrarIngestaError).mockRejectedValue(new Error("bd caída"));
+    m(fetchUsgsRecent).mockRejectedValue(new Error("usgs 500"));
+    m(fetchCsnRecent).mockResolvedValue([evento()]);
+    const resumen = await runIngest();
+    expect(resumen.csn.inserted).toBe(1);
+    expect(enviarPushParaSismo).toHaveBeenCalledTimes(1);
+    expect(db.marcarNotificado).toHaveBeenCalled();
   });
 });

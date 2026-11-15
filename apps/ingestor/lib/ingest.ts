@@ -18,6 +18,9 @@ import {
   upsertSismo,
   getUltimaAlertaEnviada,
   marcarAlertaEnviada,
+  registrarIngestaOk,
+  registrarIngestaError,
+  type FuenteIngesta,
 } from "@sismos/db";
 import { fetchCsnRecent } from "./fetch-csn";
 import { fetchGaelRecent } from "./fetch-gael";
@@ -38,6 +41,27 @@ export interface IngestSummary {
 
 const DEDUPE_WINDOW_MS = 10 * 60 * 1000;
 const RECONCILIACION_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+
+// Registrar el estado de salud nunca debe romper ni frenar la ingesta.
+async function okSeguro(fuente: FuenteIngesta): Promise<void> {
+  try {
+    await registrarIngestaOk(fuente);
+  } catch (error) {
+    console.error(`[ingest] no se pudo registrar ok de ${fuente}:`, error);
+  }
+}
+
+async function errorSeguro(
+  fuente: FuenteIngesta,
+  error: unknown,
+): Promise<void> {
+  try {
+    const msg = error instanceof Error ? error.message : String(error);
+    await registrarIngestaError(fuente, msg);
+  } catch (e) {
+    console.error(`[ingest] no se pudo registrar error de ${fuente}:`, e);
+  }
+}
 
 // Decide con el estado persistido de la fila (no con "es nuevo") y marca el
 // sismo como notificado solo si el envío no lanzó. Si el push falla, la fila
@@ -60,8 +84,10 @@ async function notificarSiCorresponde(
     await enviarPushParaSismo(evento, { motivo: decision.motivo ?? "nuevo" });
   } catch (error) {
     console.error("[ingest] push notification failed:", error);
+    await errorSeguro("push", error);
     return;
   }
+  await okSeguro("push");
   try {
     await marcarNotificado(fila.fuente, fila.externalId, evento.magnitud);
   } catch (error) {
@@ -99,6 +125,7 @@ export async function runIngest(): Promise<IngestSummary> {
     csnEventos = raw.map(normalizeCsnSismo);
     summary.csn.fetched = csnEventos.length;
   } catch (error) {
+    await errorSeguro("csn", error);
     console.error(
       "[ingest] CSN fetch failed, intentando respaldo GAEL:",
       error,
@@ -122,8 +149,10 @@ export async function runIngest(): Promise<IngestSummary> {
           return evento;
         })
         .filter((evento): evento is SismoNormalizado => evento !== null);
+      await okSeguro("gael");
     } catch (gaelError) {
       console.error("[ingest] GAEL fetch failed:", gaelError);
+      await errorSeguro("gael", gaelError);
     }
   }
 
@@ -132,8 +161,10 @@ export async function runIngest(): Promise<IngestSummary> {
     const raw = await fetchUsgsRecent();
     usgsEventos = raw.map(normalizeUsgsFeature);
     summary.usgs.fetched = usgsEventos.length;
+    await okSeguro("usgs");
   } catch (error) {
     console.error("[ingest] USGS fetch failed:", error);
+    await errorSeguro("usgs", error);
     summary.usgs.errors = 1;
   }
 
@@ -287,6 +318,12 @@ export async function runIngest(): Promise<IngestSummary> {
   } catch (error) {
     console.error("[ingest] revisión de alerta CSN falló:", error);
   }
+
+  // "csn ok" = la ingesta completa corrió hasta el final sin lanzar (BD
+  // alcanzable, procesamiento terminado), con CSN preciso o con el respaldo
+  // GAEL. Lo que /api/health necesita detectar es que el cron dejó de correr o
+  // que la BD no responde; que CSN esté desactualizado lo cubre la alerta de 2h.
+  await okSeguro("csn");
 
   return summary;
 }
