@@ -1,5 +1,9 @@
-import { eq, lte } from "drizzle-orm";
-import { distanciaKm, UMBRAL_MAGNITUD_MUNDIAL, type SismoFuente } from "@sismos/shared";
+import { eq } from "drizzle-orm";
+import {
+  seleccionarDestinatarios,
+  UMBRAL_MAGNITUD_MUNDIAL,
+  type SismoFuente,
+} from "@sismos/shared";
 import { getDb } from "../connection";
 import { pushSubscriptions } from "../schema";
 
@@ -110,6 +114,7 @@ export async function findSubscripcionesParaSismo(evento: {
   magnitud: number;
   latitud: number;
   longitud: number;
+  profundidadKm: number | null;
   fuente: SismoFuente;
 }): Promise<PushSubscription[]> {
   if (evento.fuente !== "csn") {
@@ -121,20 +126,8 @@ export async function findSubscripcionesParaSismo(evento: {
     return rows.map(toPushSubscription);
   }
 
-  const rows = await getDb()
-    .select()
-    .from(pushSubscriptions)
-    .where(lte(pushSubscriptions.magnitudMinima, evento.magnitud));
-
-  return rows.map(toPushSubscription).filter((sub) => {
-    if (sub.radioKm === null || sub.centro === null) return true;
-    return (
-      distanciaKm(
-        sub.centro.lat,
-        sub.centro.lon,
-        evento.latitud,
-        evento.longitud,
-      ) <= sub.radioKm
-    );
-  });
+  // CSN: se leen todas las filas (tabla chica) porque la regla de rescate por
+  // radio de percepción no se puede expresar solo con magnitudMinima en SQL.
+  const rows = await getDb().select().from(pushSubscriptions);
+  return seleccionarDestinatarios(rows.map(toPushSubscription), evento);
 }

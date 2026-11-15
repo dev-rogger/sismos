@@ -67,6 +67,17 @@ describe("enviarPushParaSismo", () => {
     expect(r).toEqual({ enviados: 0, fallidos: 3, eliminados: 2 });
   });
 
+  it("pasa la profundidad del sismo a la búsqueda de destinatarios", async () => {
+    await enviarPushParaSismo(evento());
+    expect(db.findSubscripcionesParaSismo).toHaveBeenCalledWith({
+      magnitud: 5.2,
+      latitud: -33.4,
+      longitud: -70.6,
+      profundidadKm: 30,
+      fuente: "csn",
+    });
+  });
+
   it("(b) envía TTL 3600 y topic válido", async () => {
     await enviarPushParaSismo(evento());
     const opts = send.mock.calls[0]![2] as { TTL: number; topic: string };
