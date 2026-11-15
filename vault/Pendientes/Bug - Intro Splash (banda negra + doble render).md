@@ -136,6 +136,10 @@ Los `env(safe-area-inset-bottom)` de los botones flotantes del mapa (`MapaSismos
 - **Framer Motion**: el problema es layout, no orquestación.
 - **Splash nativo del manifest**: iOS no lo implementa bien (`apple-touch-startup-image` por resolución, ~20 archivos, sin animación) y se perdería la coreografía de la cinta sismográfica. Mantener el splash en React es correcto — lo que estaba mal era que competía por el alto con `<main>`.
 
+## Actualización (2026-11-15): intro más corta
+
+Se aplicó parte de P2: piso 1900 ms (antes 2100), versión corta de ~750 ms en visitas repetidas (<12 h) y ~500 ms con reduced-motion, y `data-mapa-listo` para no perder el evento si el mapa carga antes del efecto. Ver [[01 - Arquitectura del Sistema]]. El bug de la franja negra sigue sin confirmarse en iPhone real.
+
 ## Pendiente (P1/P2, opcional)
 
 - **P1**: limpiar andamiaje muerto — `.splash-pwa::after` y quizá las reglas `display:none` de `.maplibregl-ctrl-*`.

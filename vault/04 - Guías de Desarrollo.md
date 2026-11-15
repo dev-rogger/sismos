@@ -21,7 +21,7 @@ pnpm dev                     # turbo run dev — levanta web (3000) e ingestor (
 
 ### Variables de entorno (`.env.example`)
 
-`DATABASE_URL`, `CRON_SECRET`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ALERTA_PUSH_ENDPOINT`, `ALERTA_PUSH_P256DH`, `ALERTA_PUSH_AUTH`. Listadas por nombre solamente — nunca commitear valores reales (`.env*` está en `.gitignore`, excepto `.env.example`).
+`DATABASE_URL`, `CRON_SECRET`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ALERTA_PUSH_ENDPOINT`, `ALERTA_PUSH_P256DH`, `ALERTA_PUSH_AUTH`, `ALERTA_WEBHOOK_URL` (opcional, canal alterno de alertas al admin). Listadas por nombre solamente — nunca commitear valores reales (`.env*` está en `.gitignore`, excepto `.env.example`).
 
 ### Con Docker
 
@@ -40,7 +40,7 @@ Levanta `postgres` (puerto 5432), `web` (3000), `ingestor` (3001) y un servicio 
 | `pnpm build` | `turbo run build` |
 | `pnpm lint` | `turbo run lint` (ESLint, `--max-warnings 0` en cada app) |
 | `pnpm check-types` | `turbo run check-types` (`next typegen && tsc --noEmit` en cada app Next) |
-| `pnpm test` | `turbo run test` |
+| `pnpm test` | `turbo run test` — vitest en `apps/web`, `apps/ingestor` y `packages/shared` (`vitest run`; archivos `*.test.ts` junto al código) |
 | `pnpm format` | `prettier --write "**/*.{ts,tsx,md}"` |
 
 ## Comandos específicos

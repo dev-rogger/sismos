@@ -15,13 +15,13 @@ tags: [base-de-datos]
 ## Migraciones
 
 - Drizzle Kit. Config en `packages/db/drizzle.config.ts`.
-- Migraciones SQL versionadas en `packages/db/drizzle/000N_*.sql` (6 migraciones al momento de escribir esto, `0000` a `0006`).
+- Migraciones SQL versionadas en `packages/db/drizzle/000N_*.sql` (9 migraciones al momento de escribir esto, `0000` a `0008`; `0007` agrega el estado de notificación a `sismos`, `0008` crea `ingesta_estado`).
 - Scripts: `pnpm --filter @sismos/db db:generate` (genera migración desde el schema) y `db:migrate` (aplica).
 
 ## Schema (`packages/db/src/schema.ts`)
 
 ### `sismos`
-Eventos activos/recientes. Columnas clave: `fuente`, `externalId` (unique compuesto con `fuente`), `fecha`, `magnitud`, `profundidadKm`, `latitud`/`longitud`, `lugar`, `bandera`, `refCruzadaFuente`/`refCruzadaExternalId` (para dedupe entre CSN/GAEL y USGS cuando el mismo sismo aparece en ambas fuentes), `ubicacionAproximada` (bool — cuando se geocodificó de forma aproximada).
+Eventos activos/recientes. Columnas clave: `fuente`, `externalId` (unique compuesto con `fuente`), `fecha`, `magnitud`, `profundidadKm`, `latitud`/`longitud`, `lugar`, `bandera`, `refCruzadaFuente`/`refCruzadaExternalId` (para dedupe entre CSN/GAEL y USGS cuando el mismo sismo aparece en ambas fuentes), `ubicacionAproximada` (bool — cuando se geocodificó de forma aproximada), `notificadoAt` / `magnitudNotificada` (nullable — estado de notificación push: cuándo se avisó y con qué magnitud; solo los escribe `marcarNotificado()`, ningún upsert/replace los pisa, así el estado sobrevive a que CSN reemplace una fila USGS).
 
 ### `sismosHistoricos`
 Top históricos. Tiene `alcance` (`"mundial" | "chile"`, default `"mundial"`) — un mismo evento puede existir una vez por alcance (ej. Valdivia 1960 aparece en el top mundial y en el top de Chile como dos filas). Unique compuesto `(externalId, alcance)`.
@@ -35,13 +35,17 @@ Suscripción Web Push: `endpoint`/`p256dh`/`auth` (credenciales del navegador), 
 ### `estadoIngesta`
 Una fila por `fuente` (PK), guarda `ultimaAlertaEnviada` — throttling de notificaciones para no re-alertar el mismo tipo de evento repetidamente.
 
+### `ingestaEstado` (tabla `ingesta_estado`)
+Salud de la ingesta, una fila por `fuente` (PK: `"csn" | "usgs" | "gael" | "push"`): `ultimoOk`, `ultimoError`, `ultimoErrorMsg` (recortado a 500 caracteres). Alimenta `GET /api/health` del ingestor. **No confundir con `estadoIngesta`** (tabla `estado_ingesta`, arriba), que solo guarda el throttle de alertas al admin.
+
 ## Queries (`packages/db/src/queries/`)
 
 | Archivo | Qué expone |
 |---|---|
-| `sismo.ts` | CRUD/lecturas de `sismos` (usado por `apps/web` para el mapa/API `/api/sismos` y por el ingestor para guardar) |
+| `sismo.ts` | CRUD/lecturas de `sismos` (incluye `findRecentByFuentes` — carga única de candidatos por ciclo — y `marcarNotificado`; usado por `apps/web` para el mapa/API `/api/sismos` y por el ingestor para guardar) |
 | `sismo-historico.ts` | Lecturas de `sismosHistoricos` (usado por `/api/historial`), incluye `GranularidadConteo` para agrupar conteos (día/semana/mes/año) usado en `/api/estadisticas` |
-| `push-subscription.ts` | Alta/baja/lectura de `pushSubscriptions` |
+| `push-subscription.ts` | Alta/baja/lectura de `pushSubscriptions`; `findSubscripcionesParaSismo` delega en `seleccionarDestinatarios` (`@sismos/shared`) para CSN |
+| `ingesta-estado.ts` | `registrarIngestaOk` / `registrarIngestaError` / `getEstadoIngesta` — salud de la ingesta por fuente (`ingesta_estado`) |
 | `estado-ingesta.ts` | `getUltimaAlertaEnviada` / `marcarAlertaEnviada` — throttling de alertas por fuente |
 | `user.ts` | `findUserByEmail`, `createUserConPassword`, `upsertUsuarioGoogle`, `listUsers` |
 

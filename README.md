@@ -18,4 +18,8 @@ pnpm install
 pnpm dev
 ```
 
+Copia `.env.example` a `.env.local` y completa las variables (solo nombres en el repo, nunca valores). `pnpm dev` levanta web (3000) e ingestor (3001).
+
+Scripts raíz: `pnpm build`, `pnpm lint`, `pnpm check-types`, `pnpm test` (vitest), `pnpm docker:dev` (Postgres local + web + ingestor + poller).
+
 Ver `docs/superpowers/specs/` para las decisiones de diseño y `/vault/` (abrible en Obsidian) para la documentación de referencia del estado actual del proyecto.

@@ -8,7 +8,7 @@ PWA gratuita e informativa que muestra sismos de Chile (CSN, con fallback GAEL C
 - **apps/web**: Next.js 16 App Router (Webpack, no Turbopack), React 19, TypeScript, Tailwind v4, MapLibre GL (mapa), Serwist (PWA/service worker), NextAuth v5 beta (Google + Credentials), next-intl (es/en)
 - **apps/ingestor**: Next.js 16, function serverless en Vercel, consulta CSN + GAEL (fallback) + USGS y guarda en Postgres, dispara Web Push
 - **packages/db**: PostgreSQL vía **Drizzle ORM** (`drizzle-orm/node-postgres` + `pg`) — **no MongoDB/Mongoose**, pese a lo que dice el CLAUDE.md del workspace (`~/Sites/CLAUDE.md`), que quedó desactualizado tras la migración (ver `docs/superpowers/plans/2026-07-15-sismos-postgres-migration.md`)
-- **packages/shared**: tipos y normalización de datos entre las 3 fuentes externas
+- **packages/shared**: tipos y normalización de datos entre las 3 fuentes externas, más la lógica pura de notificación (`decidirNotificacion`, `seleccionarDestinatarios`, `radioMmiKm`)
 
 ## Estructura
 
@@ -29,7 +29,7 @@ pnpm dev                  # turbo run dev — web:3000, ingestor:3001
 pnpm build                # turbo run build
 pnpm lint                 # turbo run lint
 pnpm check-types          # turbo run check-types
-pnpm test                 # turbo run test
+pnpm test                 # turbo run test (vitest en web, ingestor y shared)
 pnpm docker:dev           # docker compose up --build (Postgres local + web + ingestor + poller)
 ```
 
