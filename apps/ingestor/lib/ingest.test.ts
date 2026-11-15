@@ -399,3 +399,28 @@ describe("runIngest: estado de salud (A1)", () => {
     expect(db.marcarNotificado).toHaveBeenCalled();
   });
 });
+
+describe("runIngest: salud de csn (M3)", () => {
+  it("CSN responde -> registra ok de csn", async () => {
+    await runIngest();
+    expect(db.registrarIngestaOk).toHaveBeenCalledWith("csn");
+  });
+
+  it("CSN cae pero GAEL responde -> registra ok de csn", async () => {
+    m(fetchCsnRecent).mockRejectedValue(new Error("xor.cl caído"));
+    await runIngest();
+    expect(db.registrarIngestaOk).toHaveBeenCalledWith("csn");
+    expect(db.registrarIngestaOk).toHaveBeenCalledWith("gael");
+  });
+
+  it("CSN y GAEL fallan -> registra error de csn y NO ok de csn", async () => {
+    m(fetchCsnRecent).mockRejectedValue(new Error("xor.cl caído"));
+    m(fetchGaelRecent).mockRejectedValue(new Error("gael caído"));
+    await runIngest();
+    expect(db.registrarIngestaOk).not.toHaveBeenCalledWith("csn");
+    expect(db.registrarIngestaError).toHaveBeenCalledWith(
+      "csn",
+      expect.any(String),
+    );
+  });
+});

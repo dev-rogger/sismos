@@ -146,6 +146,8 @@ export async function runIngest(): Promise<IngestSummary> {
 
   let csnEventos: SismoNormalizado[] = [];
   let csnPreciso = true;
+  // Alguna fuente nacional (CSN o el respaldo GAEL) respondió en este ciclo.
+  let nacionalRespondio = true;
   try {
     const raw = await fetchCsnRecent();
     csnEventos = raw.map(normalizeCsnSismo);
@@ -158,6 +160,7 @@ export async function runIngest(): Promise<IngestSummary> {
     );
     summary.csn.errors = 1;
     csnPreciso = false;
+    nacionalRespondio = false;
     try {
       const rawGael = await fetchGaelRecent();
       // `fetched` cuenta lo que entregó la fuente, no lo que sobrevivió a la
@@ -175,6 +178,7 @@ export async function runIngest(): Promise<IngestSummary> {
           return evento;
         })
         .filter((evento): evento is SismoNormalizado => evento !== null);
+      nacionalRespondio = true;
       await okSeguro("gael");
     } catch (gaelError) {
       console.error("[ingest] GAEL fetch failed:", gaelError);
@@ -345,11 +349,11 @@ export async function runIngest(): Promise<IngestSummary> {
     console.error("[ingest] revisión de alerta CSN falló:", error);
   }
 
-  // "csn ok" = la ingesta completa corrió hasta el final sin lanzar (BD
-  // alcanzable, procesamiento terminado), con CSN preciso o con el respaldo
-  // GAEL. Lo que /api/health necesita detectar es que el cron dejó de correr o
-  // que la BD no responde; que CSN esté desactualizado lo cubre la alerta de 2h.
-  await okSeguro("csn");
+  // "csn ok" = la ingesta corrió hasta el final y alguna fuente nacional (CSN
+  // preciso o el respaldo GAEL) respondió. Si ambas fallaron, el error de csn
+  // ya quedó registrado arriba y no se pisa con un ok: así /api/health lo
+  // refleja. Que CSN esté desactualizado lo cubre la alerta de 2h.
+  if (nacionalRespondio) await okSeguro("csn");
 
   return summary;
 }
