@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("web-push", () => ({
   default: { setVapidDetails: vi.fn(), sendNotification: vi.fn() },
@@ -11,7 +11,7 @@ vi.mock("@sismos/db", () => ({
 import webpush from "web-push";
 import * as db from "@sismos/db";
 import type { SismoNormalizado } from "@sismos/shared";
-import { enviarPushParaSismo, topicParaSismo } from "./send-push";
+import { enviarAlertaAdmin, enviarPushParaSismo, topicParaSismo } from "./send-push";
 
 const send = vi.mocked(webpush.sendNotification);
 const subs = (n: number) =>
@@ -162,5 +162,62 @@ describe("enviarPushParaSismo", () => {
     );
     expect(send).not.toHaveBeenCalled();
     expect(r).toEqual({ enviados: 0, fallidos: 0, eliminados: 0 });
+  });
+});
+
+describe("enviarAlertaAdmin: canal webhook", () => {
+  const fetchMock = vi.fn();
+  beforeEach(() => {
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue({ ok: true, status: 200 });
+    vi.stubGlobal("fetch", fetchMock);
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    delete process.env.ALERTA_WEBHOOK_URL;
+    delete process.env.ALERTA_PUSH_ENDPOINT;
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete process.env.ALERTA_WEBHOOK_URL;
+  });
+
+  it("sin ALERTA_WEBHOOK_URL no hace fetch ni falla", async () => {
+    await expect(enviarAlertaAdmin("hola")).resolves.toBeUndefined();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("con la env hace POST JSON {text} con timeout de 5 s, aunque el push no esté configurado", async () => {
+    process.env.ALERTA_WEBHOOK_URL = "https://hooks.example.com/abc";
+    await enviarAlertaAdmin("CSN caído");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("https://hooks.example.com/abc");
+    expect(init.method).toBe("POST");
+    expect(init.headers["Content-Type"]).toBe("application/json");
+    expect(JSON.parse(init.body).text).toContain("CSN caído");
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("no lanza si el webhook falla o responde error, y no loguea la URL", async () => {
+    process.env.ALERTA_WEBHOOK_URL = "https://hooks.example.com/token-secreto";
+    fetchMock.mockRejectedValueOnce(new Error("timeout token-secreto"));
+    await expect(enviarAlertaAdmin("x")).resolves.toBeUndefined();
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 500 });
+    await expect(enviarAlertaAdmin("x")).resolves.toBeUndefined();
+    const logs = JSON.stringify(vi.mocked(console.error).mock.calls);
+    expect(logs).not.toContain("token-secreto");
+  });
+
+  it("un fallo del push no impide el webhook", async () => {
+    process.env.ALERTA_WEBHOOK_URL = "https://hooks.example.com/abc";
+    process.env.ALERTA_PUSH_ENDPOINT = "https://fcm.googleapis.com/x";
+    process.env.ALERTA_PUSH_P256DH = "p";
+    process.env.ALERTA_PUSH_AUTH = "a";
+    send.mockRejectedValueOnce(new Error("push caído"));
+    await enviarAlertaAdmin("x");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    delete process.env.ALERTA_PUSH_ENDPOINT;
+    delete process.env.ALERTA_PUSH_P256DH;
+    delete process.env.ALERTA_PUSH_AUTH;
   });
 });

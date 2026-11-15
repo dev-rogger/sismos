@@ -20,3 +20,21 @@ jobs:
             echo "Ingest endpoint returned status $status"
             exit 1
           fi
+
+  # Segundo disparador independiente: avisa (GitHub envía correo si el job
+  # falla) cuando la ingesta dejó de registrar ok o la BD no responde.
+  # /api/health no requiere secreto ni expone datos sensibles.
+  watchdog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check ingest health
+        run: |
+          status=$(curl -s -o /tmp/health-response.json -w "%{http_code}" \
+            --max-time 20 \
+            https://sismos-realtime.vercel.app/api/health || true)
+          cat /tmp/health-response.json 2>/dev/null || true
+          echo
+          if [ "$status" != "200" ]; then
+            echo "Health endpoint returned status $status"
+            exit 1
+          fi

@@ -170,7 +170,38 @@ export async function enviarPushParaSismo(
   return resultado;
 }
 
+const WEBHOOK_TIMEOUT_MS = 5000;
+
+// Canal alterno (Slack/Discord/ntfy-compatible: POST JSON {text}). Solo si
+// ALERTA_WEBHOOK_URL existe. Nunca lanza, y no loguea la URL (lleva token).
+async function enviarAlertaWebhook(mensaje: string): Promise<void> {
+  const url = process.env.ALERTA_WEBHOOK_URL;
+  if (!url) return;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: `Sismos — alerta de ingesta: ${mensaje}` }),
+      signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      console.error(`[send-push] webhook de alerta respondió ${res.status}`);
+    }
+  } catch (error) {
+    console.error(
+      "[send-push] error enviando alerta por webhook:",
+      error instanceof Error ? error.name : "desconocido",
+    );
+  }
+}
+
 export async function enviarAlertaAdmin(mensaje: string): Promise<void> {
+  // Los dos canales son independientes: que uno no esté configurado o falle
+  // no impide el otro.
+  await Promise.all([enviarAlertaPush(mensaje), enviarAlertaWebhook(mensaje)]);
+}
+
+async function enviarAlertaPush(mensaje: string): Promise<void> {
   const endpoint = process.env.ALERTA_PUSH_ENDPOINT;
   const p256dh = process.env.ALERTA_PUSH_P256DH;
   const auth = process.env.ALERTA_PUSH_AUTH;
@@ -181,14 +212,13 @@ export async function enviarAlertaAdmin(mensaje: string): Promise<void> {
     return;
   }
 
-  configurarVapid();
-  const payload = JSON.stringify({
-    title: "Sismos — alerta de ingesta",
-    body: mensaje,
-    url: "/",
-  });
-
   try {
+    configurarVapid();
+    const payload = JSON.stringify({
+      title: "Sismos — alerta de ingesta",
+      body: mensaje,
+      url: "/",
+    });
     await webpush.sendNotification(
       { endpoint, keys: { p256dh, auth } },
       payload,
