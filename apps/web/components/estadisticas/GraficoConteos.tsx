@@ -61,7 +61,6 @@ export default function GraficoConteos({
   // Al cambiar de granularidad (o de Chile/mundial) llega un `conteos`
   // nuevo con otra cantidad de barras — sin esto, `activo` se queda con el
   // índice viejo, que puede apuntar a una barra distinta o no existir.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setActivo(conteos.length > 0 ? conteos.length - 1 : null);
   }, [conteos]);
